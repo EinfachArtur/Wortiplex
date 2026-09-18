@@ -36,6 +36,7 @@ class UserProfile {
     Map<String, DateTime>? lastDailyPuzzleCompletedAt,
     int? skipsAvailable,
     DateTime? lastSkipRefillAt,
+    bool clearLastSkipRefillAt = false,
   }) {
     return UserProfile(
       id: id,
@@ -45,7 +46,7 @@ class UserProfile {
       subscription: subscription ?? this.subscription,
       lastDailyPuzzleCompletedAt: lastDailyPuzzleCompletedAt ?? this.lastDailyPuzzleCompletedAt,
       skipsAvailable: skipsAvailable ?? this.skipsAvailable,
-      lastSkipRefillAt: lastSkipRefillAt ?? this.lastSkipRefillAt,
+      lastSkipRefillAt: clearLastSkipRefillAt ? null : (lastSkipRefillAt ?? this.lastSkipRefillAt),
     );
   }
 

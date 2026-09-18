@@ -4,10 +4,16 @@ import '../../core/config/economy_config.dart';
 import '../../data/repositories/profile_repository.dart';
 import '../../domain/economy/coin_ledger.dart';
 import '../../domain/economy/coin_transaction.dart';
+import '../../domain/economy/skip_refill.dart';
 import '../../domain/models/game_stats.dart';
 import '../../domain/models/language.dart';
 import '../../domain/models/subscription_status.dart';
 import '../../domain/models/user_profile.dart';
+
+const _skipRefillCalculator = SkipRefillCalculator(
+  maxAllowance: EconomyConfig.dailySkipAllowance,
+  refillInterval: EconomyConfig.skipRefillInterval,
+);
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return HiveProfileRepository();
@@ -107,10 +113,37 @@ class ProfileController extends AsyncNotifier<UserProfile> {
     await _persist(profile.copyWith(subscription: status));
   }
 
+  /// Applies any regenerated skip charges based on elapsed time. Safe to
+  /// call on every profile load/screen entry; it is a no-op if nothing has
+  /// regenerated yet.
+  Future<void> refreshSkips() async {
+    final profile = state.valueOrNull;
+    if (profile == null) return;
+    final refilled = _skipRefillCalculator.refill(
+      SkipState(available: profile.skipsAvailable, refillStartedAt: profile.lastSkipRefillAt),
+    );
+    if (refilled.available == profile.skipsAvailable &&
+        refilled.refillStartedAt == profile.lastSkipRefillAt) {
+      return;
+    }
+    await _persist(profile.copyWith(
+      skipsAvailable: refilled.available,
+      lastSkipRefillAt: refilled.refillStartedAt,
+      clearLastSkipRefillAt: refilled.refillStartedAt == null,
+    ));
+  }
+
   Future<bool> useSkip() async {
+    await refreshSkips();
     final profile = state.valueOrNull;
     if (profile == null || profile.skipsAvailable <= 0) return false;
-    await _persist(profile.copyWith(skipsAvailable: profile.skipsAvailable - 1));
+    final consumed = _skipRefillCalculator.consume(
+      SkipState(available: profile.skipsAvailable, refillStartedAt: profile.lastSkipRefillAt),
+    );
+    await _persist(profile.copyWith(
+      skipsAvailable: consumed.available,
+      lastSkipRefillAt: consumed.refillStartedAt,
+    ));
     return true;
   }
 }

@@ -30,7 +30,10 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeLoadBanner());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeLoadBanner();
+      ref.read(profileControllerProvider.notifier).refreshSkips();
+    });
   }
 
   void _maybeLoadBanner() {
@@ -133,6 +136,13 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     }
   }
 
+  Future<void> _skipRound() async {
+    final used = await ref.read(profileControllerProvider.notifier).useSkip();
+    if (!used) return;
+    await ref.read(roundControllerProvider(_params).notifier).newRound(_params);
+    setState(() => _currentInput = '');
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -160,6 +170,9 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
         data: (round) {
           final controller = ref.read(roundControllerProvider(_params).notifier);
           final keyboardStates = controller.keyboardStates();
+          final skipsAvailable = ref.watch(
+            profileControllerProvider.select((p) => p.valueOrNull?.skipsAvailable ?? 0),
+          );
           return Column(
             children: [
               Expanded(
@@ -185,6 +198,15 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
                               cost: EconomyConfig.letterStrikeoutCost,
                               tooltip: l10n.strikeOutLetter,
                               onTap: round.isFinished ? null : _buyStrikeout,
+                            ),
+                            const SizedBox(width: 16),
+                            Tooltip(
+                              message: l10n.skip,
+                              child: OutlinedButton.icon(
+                                onPressed: skipsAvailable > 0 ? _skipRound : null,
+                                icon: const Icon(Icons.fast_forward, size: 18),
+                                label: Text('$skipsAvailable'),
+                              ),
                             ),
                           ],
                         ),
