@@ -12,6 +12,10 @@ class EconomyConfig {
   static const Duration skipRefillInterval = Duration(hours: 8);
   static const int interstitialAdEveryNRounds = 4;
 
+  static const int dailyLoginBaseCoins = 10;
+  static const int dailyLoginStreakBonus = 2;
+  static const int dailyLoginMaxStreakDays = 7;
+
   /// Coin packages shown in the shop. `productId` maps to the store SKU;
   /// `priceLabel` is a fallback until the store returns localized pricing.
   static const List<CoinPackage> coinPackages = [

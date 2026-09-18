@@ -309,6 +309,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You already solved today\'s puzzle. Come back tomorrow!'**
   String get dailyAlreadyPlayed;
+
+  /// No description provided for @dailyLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily gift'**
+  String get dailyLoginTitle;
+
+  /// No description provided for @dailyLoginClaim.
+  ///
+  /// In en, this message translates to:
+  /// **'Claim {coins} coins'**
+  String dailyLoginClaim(Object coins);
+
+  /// No description provided for @dailyLoginClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Come back tomorrow for more'**
+  String get dailyLoginClaimed;
+
+  /// No description provided for @spinWheelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Spin the wheel'**
+  String get spinWheelTitle;
+
+  /// No description provided for @spinWheelAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Spin now'**
+  String get spinWheelAction;
+
+  /// No description provided for @spinWheelUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Come back tomorrow to spin again'**
+  String get spinWheelUsed;
+
+  /// No description provided for @spinWheelWon.
+  ///
+  /// In en, this message translates to:
+  /// **'You won {coins} coins!'**
+  String spinWheelWon(Object coins);
 }
 
 class _AppLocalizationsDelegate

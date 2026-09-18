@@ -35,5 +35,14 @@
   "play": "Spielen",
   "mostPopular": "Beliebteste",
   "bestValue": "Bestes Angebot",
-  "dailyAlreadyPlayed": "Du hast das heutige Rätsel schon gelöst. Komm morgen wieder!"
+  "dailyAlreadyPlayed": "Du hast das heutige Rätsel schon gelöst. Komm morgen wieder!",
+  "dailyLoginTitle": "Tagesgeschenk",
+  "dailyLoginClaim": "{coins} Münzen abholen",
+  "@dailyLoginClaim": { "placeholders": { "coins": {} } },
+  "dailyLoginClaimed": "Komm morgen wieder für mehr",
+  "spinWheelTitle": "Glücksrad",
+  "spinWheelAction": "Jetzt drehen",
+  "spinWheelUsed": "Komm morgen wieder zum Drehen",
+  "spinWheelWon": "Du hast {coins} Münzen gewonnen!",
+  "@spinWheelWon": { "placeholders": { "coins": {} } }
 }

@@ -35,5 +35,14 @@
   "play": "Play",
   "mostPopular": "Most popular",
   "bestValue": "Best value",
-  "dailyAlreadyPlayed": "You already solved today's puzzle. Come back tomorrow!"
+  "dailyAlreadyPlayed": "You already solved today's puzzle. Come back tomorrow!",
+  "dailyLoginTitle": "Daily gift",
+  "dailyLoginClaim": "Claim {coins} coins",
+  "@dailyLoginClaim": { "placeholders": { "coins": {} } },
+  "dailyLoginClaimed": "Come back tomorrow for more",
+  "spinWheelTitle": "Spin the wheel",
+  "spinWheelAction": "Spin now",
+  "spinWheelUsed": "Come back tomorrow to spin again",
+  "spinWheelWon": "You won {coins} coins!",
+  "@spinWheelWon": { "placeholders": { "coins": {} } }
 }

@@ -115,4 +115,29 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get dailyAlreadyPlayed =>
       'Вы уже решили сегодняшнюю задачу. Возвращайтесь завтра!';
+
+  @override
+  String get dailyLoginTitle => 'Подарок дня';
+
+  @override
+  String dailyLoginClaim(Object coins) {
+    return 'Забрать $coins монет';
+  }
+
+  @override
+  String get dailyLoginClaimed => 'Возвращайтесь завтра за новым подарком';
+
+  @override
+  String get spinWheelTitle => 'Колесо удачи';
+
+  @override
+  String get spinWheelAction => 'Крутить';
+
+  @override
+  String get spinWheelUsed => 'Возвращайтесь завтра, чтобы крутить снова';
+
+  @override
+  String spinWheelWon(Object coins) {
+    return 'Вы выиграли $coins монет!';
+  }
 }

@@ -115,4 +115,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dailyAlreadyPlayed =>
       'You already solved today\'s puzzle. Come back tomorrow!';
+
+  @override
+  String get dailyLoginTitle => 'Daily gift';
+
+  @override
+  String dailyLoginClaim(Object coins) {
+    return 'Claim $coins coins';
+  }
+
+  @override
+  String get dailyLoginClaimed => 'Come back tomorrow for more';
+
+  @override
+  String get spinWheelTitle => 'Spin the wheel';
+
+  @override
+  String get spinWheelAction => 'Spin now';
+
+  @override
+  String get spinWheelUsed => 'Come back tomorrow to spin again';
+
+  @override
+  String spinWheelWon(Object coins) {
+    return 'You won $coins coins!';
+  }
 }

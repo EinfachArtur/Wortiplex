@@ -35,5 +35,14 @@
   "play": "Играть",
   "mostPopular": "Популярно",
   "bestValue": "Выгодно",
-  "dailyAlreadyPlayed": "Вы уже решили сегодняшнюю задачу. Возвращайтесь завтра!"
+  "dailyAlreadyPlayed": "Вы уже решили сегодняшнюю задачу. Возвращайтесь завтра!",
+  "dailyLoginTitle": "Подарок дня",
+  "dailyLoginClaim": "Забрать {coins} монет",
+  "@dailyLoginClaim": { "placeholders": { "coins": {} } },
+  "dailyLoginClaimed": "Возвращайтесь завтра за новым подарком",
+  "spinWheelTitle": "Колесо удачи",
+  "spinWheelAction": "Крутить",
+  "spinWheelUsed": "Возвращайтесь завтра, чтобы крутить снова",
+  "spinWheelWon": "Вы выиграли {coins} монет!",
+  "@spinWheelWon": { "placeholders": { "coins": {} } }
 }

@@ -5,6 +5,7 @@ import '../../../core/localization/app_localizations.dart';
 import '../../../domain/models/game_mode.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/coin_hud.dart';
+import '../../widgets/daily_rewards_card.dart';
 import '../game_board/game_board_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shop/shop_screen.dart';
@@ -40,6 +41,8 @@ class HomeScreen extends ConsumerWidget {
         data: (profile) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            const DailyRewardsCard(),
+            const SizedBox(height: 16),
             _ModeTile(
               icon: Icons.grid_on,
               title: l10n.menuClassic,

@@ -11,6 +11,9 @@ class UserProfile {
   final Map<String, DateTime> lastDailyPuzzleCompletedAt; // per language code
   final int skipsAvailable;
   final DateTime? lastSkipRefillAt;
+  final DateTime? lastDailyLoginClaimedAt;
+  final int dailyLoginStreak;
+  final DateTime? lastSpinAt;
 
   const UserProfile({
     required this.id,
@@ -21,6 +24,9 @@ class UserProfile {
     this.lastDailyPuzzleCompletedAt = const {},
     this.skipsAvailable = 3,
     this.lastSkipRefillAt,
+    this.lastDailyLoginClaimedAt,
+    this.dailyLoginStreak = 0,
+    this.lastSpinAt,
   });
 
   static String statsKey(String mode, Language language) => '${mode}_${language.code}';
@@ -37,6 +43,9 @@ class UserProfile {
     int? skipsAvailable,
     DateTime? lastSkipRefillAt,
     bool clearLastSkipRefillAt = false,
+    DateTime? lastDailyLoginClaimedAt,
+    int? dailyLoginStreak,
+    DateTime? lastSpinAt,
   }) {
     return UserProfile(
       id: id,
@@ -47,6 +56,9 @@ class UserProfile {
       lastDailyPuzzleCompletedAt: lastDailyPuzzleCompletedAt ?? this.lastDailyPuzzleCompletedAt,
       skipsAvailable: skipsAvailable ?? this.skipsAvailable,
       lastSkipRefillAt: clearLastSkipRefillAt ? null : (lastSkipRefillAt ?? this.lastSkipRefillAt),
+      lastDailyLoginClaimedAt: lastDailyLoginClaimedAt ?? this.lastDailyLoginClaimedAt,
+      dailyLoginStreak: dailyLoginStreak ?? this.dailyLoginStreak,
+      lastSpinAt: lastSpinAt ?? this.lastSpinAt,
     );
   }
 
@@ -60,6 +72,9 @@ class UserProfile {
             lastDailyPuzzleCompletedAt.map((k, v) => MapEntry(k, v.toIso8601String())),
         'skipsAvailable': skipsAvailable,
         'lastSkipRefillAt': lastSkipRefillAt?.toIso8601String(),
+        'lastDailyLoginClaimedAt': lastDailyLoginClaimedAt?.toIso8601String(),
+        'dailyLoginStreak': dailyLoginStreak,
+        'lastSpinAt': lastSpinAt?.toIso8601String(),
       };
 
   factory UserProfile.fromMap(Map<dynamic, dynamic> map) {
@@ -77,6 +92,11 @@ class UserProfile {
       skipsAvailable: (map['skipsAvailable'] as num?)?.toInt() ?? 3,
       lastSkipRefillAt:
           map['lastSkipRefillAt'] != null ? DateTime.tryParse(map['lastSkipRefillAt'] as String) : null,
+      lastDailyLoginClaimedAt: map['lastDailyLoginClaimedAt'] != null
+          ? DateTime.tryParse(map['lastDailyLoginClaimedAt'] as String)
+          : null,
+      dailyLoginStreak: (map['dailyLoginStreak'] as num?)?.toInt() ?? 0,
+      lastSpinAt: map['lastSpinAt'] != null ? DateTime.tryParse(map['lastSpinAt'] as String) : null,
     );
   }
 

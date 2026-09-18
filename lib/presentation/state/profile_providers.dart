@@ -4,7 +4,9 @@ import '../../core/config/economy_config.dart';
 import '../../data/repositories/profile_repository.dart';
 import '../../domain/economy/coin_ledger.dart';
 import '../../domain/economy/coin_transaction.dart';
+import '../../domain/economy/daily_reward.dart';
 import '../../domain/economy/skip_refill.dart';
+import '../../domain/economy/spin_wheel.dart';
 import '../../domain/models/game_stats.dart';
 import '../../domain/models/language.dart';
 import '../../domain/models/subscription_status.dart';
@@ -14,6 +16,14 @@ const _skipRefillCalculator = SkipRefillCalculator(
   maxAllowance: EconomyConfig.dailySkipAllowance,
   refillInterval: EconomyConfig.skipRefillInterval,
 );
+
+const _dailyLoginReward = DailyLoginReward(
+  baseCoins: EconomyConfig.dailyLoginBaseCoins,
+  streakBonusPerDay: EconomyConfig.dailyLoginStreakBonus,
+  maxStreakBonusDays: EconomyConfig.dailyLoginMaxStreakDays,
+);
+
+const _spinWheel = SpinWheel();
 
 final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
   return HiveProfileRepository();
@@ -145,5 +155,54 @@ class ProfileController extends AsyncNotifier<UserProfile> {
       lastSkipRefillAt: consumed.refillStartedAt,
     ));
     return true;
+  }
+
+  bool isDailyLoginRewardAvailable() {
+    final profile = state.valueOrNull;
+    if (profile == null) return false;
+    return _dailyLoginReward.isAvailable(profile.lastDailyLoginClaimedAt);
+  }
+
+  /// Returns the coins granted, or null if the reward was already claimed today.
+  Future<int?> claimDailyLoginReward() async {
+    final profile = state.valueOrNull;
+    if (profile == null || !_dailyLoginReward.isAvailable(profile.lastDailyLoginClaimedAt)) {
+      return null;
+    }
+    final now = DateTime.now();
+    final streak = _dailyLoginReward.nextStreak(profile.dailyLoginStreak, profile.lastDailyLoginClaimedAt, now: now);
+    final coins = _dailyLoginReward.coinsForStreak(streak);
+
+    final ledger = CoinLedger(balance: profile.coins).earn(
+      amount: coins,
+      reason: CoinTransactionReason.dailyLoginBonus,
+      transactionId: _nextTxId(),
+    );
+    await _persist(profile.copyWith(
+      coins: ledger.balance,
+      lastDailyLoginClaimedAt: now,
+      dailyLoginStreak: streak,
+    ));
+    return coins;
+  }
+
+  bool isSpinAvailable() {
+    final profile = state.valueOrNull;
+    if (profile == null) return false;
+    return _spinWheel.isAvailable(profile.lastSpinAt);
+  }
+
+  /// Returns the coins won, or null if today's spin was already used.
+  Future<int?> spinWheel() async {
+    final profile = state.valueOrNull;
+    if (profile == null || !_spinWheel.isAvailable(profile.lastSpinAt)) return null;
+    final outcome = _spinWheel.spin();
+    final ledger = CoinLedger(balance: profile.coins).earn(
+      amount: outcome.coins,
+      reason: CoinTransactionReason.spinWheelReward,
+      transactionId: _nextTxId(),
+    );
+    await _persist(profile.copyWith(coins: ledger.balance, lastSpinAt: DateTime.now()));
+    return outcome.coins;
   }
 }
