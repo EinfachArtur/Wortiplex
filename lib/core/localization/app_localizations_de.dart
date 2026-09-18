@@ -149,4 +149,56 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notAWord => 'Kein Wort';
+
+  @override
+  String get spinButton => 'DREHEN';
+
+  @override
+  String get free => 'GRATIS';
+
+  @override
+  String get claim => 'ABHOLEN';
+
+  @override
+  String get prizeHint => 'Tipp';
+
+  @override
+  String get prizeStrikeout => 'Streichen';
+
+  @override
+  String get prizeSkip => 'Skip';
+
+  @override
+  String get prizeSpin => 'Drehung';
+
+  @override
+  String get tabPuzzles => 'Rätsel';
+
+  @override
+  String get tabTrophies => 'Trophäen';
+
+  @override
+  String get monthlyPrizes => 'Monatspreise';
+
+  @override
+  String winsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Siege',
+      one: '$count Sieg',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playDate(String date) {
+    return '$date SPIELEN';
+  }
+
+  @override
+  String get puzzleLocked => 'Dieses Rätsel ist noch nicht verfügbar';
+
+  @override
+  String get prizeClaimed => 'Preis abgeholt!';
 }

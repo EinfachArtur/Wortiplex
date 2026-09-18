@@ -29,13 +29,18 @@ List<String> alphabetFor(Language language) => _alphabets[language]!.split('');
 class GameParams {
   final GameMode mode;
   final Language language;
-  const GameParams({required this.mode, required this.language});
+
+  /// Calendar day of a daily puzzle (time of day is ignored). Null for other modes.
+  final DateTime? date;
+
+  GameParams({required this.mode, required this.language, DateTime? date})
+      : date = date == null ? null : DateTime(date.year, date.month, date.day);
 
   @override
   bool operator ==(Object other) =>
-      other is GameParams && other.mode == mode && other.language == language;
+      other is GameParams && other.mode == mode && other.language == language && other.date == date;
   @override
-  int get hashCode => Object.hash(mode, language);
+  int get hashCode => Object.hash(mode, language, date);
 }
 
 final roundControllerProvider =
@@ -62,7 +67,11 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
     String solution;
     if (params.mode == GameMode.daily) {
       final service = ref.read(dailyPuzzleServiceProvider);
-      solution = service.solutionFor(language: params.language, solutionPool: _wordList.solutions);
+      solution = service.solutionFor(
+        language: params.language,
+        solutionPool: _wordList.solutions,
+        date: params.date ?? DateTime.now(),
+      );
     } else {
       solution = _wordList.solutions[Random().nextInt(_wordList.solutions.length)];
     }
@@ -95,7 +104,11 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
               guessesUsed: won ? outcome.round.attemptsUsed : null,
             );
         if (outcome.round.mode == GameMode.daily) {
-          await ref.read(profileControllerProvider.notifier).markDailyPuzzleCompleted(outcome.round.language);
+          await ref.read(profileControllerProvider.notifier).recordDailyResult(
+                outcome.round.language,
+                arg.date ?? DateTime.now(),
+                won: won,
+              );
         }
       }
     }
@@ -117,9 +130,9 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
   Future<HintResult?> buyHint() async {
     final round = state.valueOrNull;
     if (round == null) return null;
-    final affordable = await ref
-        .read(profileControllerProvider.notifier)
-        .spendCoins(EconomyConfig.hintCost, CoinTransactionReason.hintPurchase);
+    final profile = ref.read(profileControllerProvider.notifier);
+    final affordable = await profile.useHintToken() ||
+        await profile.spendCoins(EconomyConfig.hintCost, CoinTransactionReason.hintPurchase);
     if (!affordable) return null;
     final rules = ref.read(boosterRulesProvider);
     return rules.revealHint(round);
@@ -128,9 +141,9 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
   Future<String?> buyLetterStrikeout() async {
     final round = state.valueOrNull;
     if (round == null) return null;
-    final affordable = await ref
-        .read(profileControllerProvider.notifier)
-        .spendCoins(EconomyConfig.letterStrikeoutCost, CoinTransactionReason.letterStrikeoutPurchase);
+    final profile = ref.read(profileControllerProvider.notifier);
+    final affordable = await profile.useStrikeoutToken() ||
+        await profile.spendCoins(EconomyConfig.letterStrikeoutCost, CoinTransactionReason.letterStrikeoutPurchase);
     if (!affordable) return null;
     final rules = ref.read(boosterRulesProvider);
     final letter = rules.pickLetterToStrikeOut(round, alphabet: alphabetFor(round.language));

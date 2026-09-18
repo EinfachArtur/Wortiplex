@@ -1,3 +1,5 @@
+import '../../domain/economy/monthly_prizes.dart';
+
 /// Central, non-hardcoded-in-UI configuration for all coin/economy values.
 /// Kept as static constants for the MVP; swap the reads in here for a
 /// Firebase Remote Config lookup later without touching call sites.
@@ -15,6 +17,13 @@ class EconomyConfig {
   static const int dailyLoginBaseCoins = 10;
   static const int dailyLoginStreakBonus = 2;
   static const int dailyLoginMaxStreakDays = 7;
+
+  static const int spinCost = 150;
+  static const MonthlyPrizes monthlyPrizes = MonthlyPrizes([
+    MonthlyPrizeTier(3, 50),
+    MonthlyPrizeTier(10, 150),
+    MonthlyPrizeTier(30, 500),
+  ]);
 
   /// Coin packages shown in the shop. `productId` maps to the store SKU;
   /// `priceLabel` is a fallback until the store returns localized pricing.

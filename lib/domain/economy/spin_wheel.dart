@@ -2,41 +2,56 @@ import 'dart:math';
 
 import 'daily_reward.dart';
 
-/// A single wedge on the spin wheel.
-class SpinOutcome {
-  final int coins;
-  final double weight; // relative probability weight, weights need not sum to 1
-  const SpinOutcome({required this.coins, required this.weight});
+enum PrizeKind { coins, hint, strikeout, skip, spin }
+
+class SpinPrize {
+  final PrizeKind kind;
+  final int amount;
+  final double weight; // relative probability, weights need not sum to 1
+
+  const SpinPrize(this.kind, this.amount, this.weight);
 }
 
-/// Once-per-calendar-day weighted random coin reward.
+class SpinResult {
+  final int index;
+  final SpinPrize prize;
+  const SpinResult(this.index, this.prize);
+}
+
+/// The wedges in clockwise visual order. Neighbouring wedges avoid the same
+/// prize kind so the wheel stays colourful.
+const defaultWheelWedges = <SpinPrize>[
+  SpinPrize(PrizeKind.coins, 250, 2),
+  SpinPrize(PrizeKind.strikeout, 1, 8),
+  SpinPrize(PrizeKind.coins, 50, 14),
+  SpinPrize(PrizeKind.skip, 1, 8),
+  SpinPrize(PrizeKind.coins, 75, 8),
+  SpinPrize(PrizeKind.hint, 1, 8),
+  SpinPrize(PrizeKind.coins, 25, 20),
+  SpinPrize(PrizeKind.spin, 2, 4),
+  SpinPrize(PrizeKind.coins, 100, 5),
+  SpinPrize(PrizeKind.strikeout, 2, 5),
+];
+
+/// Weighted random prize wheel with one free spin per calendar day.
 class SpinWheel {
-  final List<SpinOutcome> outcomes;
+  final List<SpinPrize> wedges;
 
-  const SpinWheel({
-    this.outcomes = const [
-      SpinOutcome(coins: 10, weight: 30),
-      SpinOutcome(coins: 20, weight: 25),
-      SpinOutcome(coins: 30, weight: 20),
-      SpinOutcome(coins: 50, weight: 15),
-      SpinOutcome(coins: 100, weight: 8),
-      SpinOutcome(coins: 250, weight: 2),
-    ],
-  });
+  const SpinWheel({this.wedges = defaultWheelWedges});
 
-  bool isAvailable(DateTime? lastSpinAt, {DateTime? now}) {
-    if (lastSpinAt == null) return true;
-    return !isSameCalendarDay(lastSpinAt, now ?? DateTime.now());
+  bool isFreeSpinAvailable(DateTime? lastFreeSpinAt, {DateTime? now}) {
+    if (lastFreeSpinAt == null) return true;
+    return !isSameCalendarDay(lastFreeSpinAt, now ?? DateTime.now());
   }
 
-  SpinOutcome spin({Random? random}) {
+  SpinResult spin({Random? random}) {
     final rng = random ?? Random();
-    final totalWeight = outcomes.fold<double>(0, (sum, o) => sum + o.weight);
+    final totalWeight = wedges.fold<double>(0, (sum, w) => sum + w.weight);
     var roll = rng.nextDouble() * totalWeight;
-    for (final outcome in outcomes) {
-      if (roll < outcome.weight) return outcome;
-      roll -= outcome.weight;
+    for (var i = 0; i < wedges.length; i++) {
+      if (roll < wedges[i].weight) return SpinResult(i, wedges[i]);
+      roll -= wedges[i].weight;
     }
-    return outcomes.last;
+    return SpinResult(wedges.length - 1, wedges.last);
   }
 }

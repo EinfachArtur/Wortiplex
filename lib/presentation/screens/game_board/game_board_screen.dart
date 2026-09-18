@@ -11,13 +11,17 @@ import '../../state/ads_providers.dart';
 import '../../state/game_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/coin_hud.dart';
+import '../../widgets/game_result_dialog.dart';
 import '../../widgets/tile_grid.dart';
 import '../../widgets/virtual_keyboard.dart';
 import '../shop/shop_screen.dart';
 
 class GameBoardScreen extends ConsumerStatefulWidget {
   final GameMode mode;
-  const GameBoardScreen({super.key, required this.mode});
+
+  /// The calendar day of the daily puzzle to play (today if null).
+  final DateTime? dailyDate;
+  const GameBoardScreen({super.key, required this.mode, this.dailyDate});
 
   @override
   ConsumerState<GameBoardScreen> createState() => _GameBoardScreenState();
@@ -57,6 +61,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   GameParams get _params => GameParams(
         mode: widget.mode,
         language: ref.read(profileControllerProvider).requireValue.language,
+        date: widget.mode == GameMode.daily ? (widget.dailyDate ?? DateTime.now()) : null,
       );
 
   RoundController get _controller => ref.read(roundControllerProvider(_params).notifier);
@@ -100,29 +105,19 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   }
 
   void _showResultDialog(Round round) {
-    final l10n = AppLocalizations.of(context);
-    final won = round.result == RoundResult.won;
+    final streak = ref.read(profileControllerProvider).valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0;
     final isDaily = round.mode == GameMode.daily;
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(won ? l10n.youWon : l10n.youLost),
-        content: Text(l10n.solutionWas(round.solutionWord)),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              if (isDaily) {
-                Navigator.of(context).pop(); // the daily puzzle can only be played once
-              } else {
-                _controller.newRound(_params);
-              }
-            },
-            child: Text(isDaily ? 'OK' : l10n.newGame),
-          ),
-        ],
-      ),
+    GameResultDialog.show(
+      context,
+      round: round,
+      streak: streak,
+      onNextRound: () {
+        if (isDaily) {
+          Navigator.of(context).pop(); // the daily puzzle can only be played once
+        } else {
+          _controller.newRound(_params);
+        }
+      },
     );
   }
 

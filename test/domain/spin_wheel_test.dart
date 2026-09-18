@@ -6,27 +6,44 @@ import 'package:wortiplex/domain/economy/spin_wheel.dart';
 void main() {
   const wheel = SpinWheel();
 
-  test('is available when never spun', () {
-    expect(wheel.isAvailable(null), isTrue);
+  test('free spin is available when never spun', () {
+    expect(wheel.isFreeSpinAvailable(null), isTrue);
   });
 
-  test('is not available again on the same calendar day', () {
+  test('free spin is used up for the rest of the calendar day', () {
     final now = DateTime(2024, 5, 10, 20);
-    final spunEarlier = DateTime(2024, 5, 10, 8);
-    expect(wheel.isAvailable(spunEarlier, now: now), isFalse);
+    expect(wheel.isFreeSpinAvailable(DateTime(2024, 5, 10, 8), now: now), isFalse);
+    expect(wheel.isFreeSpinAvailable(DateTime(2024, 5, 9, 23), now: now), isTrue);
   });
 
-  test('spin always returns one of the configured outcomes', () {
-    final rng = Random(42);
-    for (var i = 0; i < 100; i++) {
-      final outcome = wheel.spin(random: rng);
-      expect(wheel.outcomes.map((o) => o.coins), contains(outcome.coins));
+  test('wheel has 10 wedges and no two neighbours share a prize kind', () {
+    final w = wheel.wedges;
+    expect(w.length, 10);
+    for (var i = 0; i < w.length; i++) {
+      expect(w[i].kind == w[(i + 1) % w.length].kind, isFalse, reason: 'wedge $i');
     }
   });
 
-  test('a roll of 0 returns the first outcome', () {
-    final outcome = wheel.spin(random: _FixedRandom(0));
-    expect(outcome.coins, wheel.outcomes.first.coins);
+  test('spin always returns a real wedge index with its prize', () {
+    final rng = Random(42);
+    for (var i = 0; i < 200; i++) {
+      final result = wheel.spin(random: rng);
+      expect(result.index, inInclusiveRange(0, wheel.wedges.length - 1));
+      expect(identical(result.prize, wheel.wedges[result.index]), isTrue);
+    }
+  });
+
+  test('a roll of 0 lands on the first wedge', () {
+    expect(wheel.spin(random: _FixedRandom(0)).index, 0);
+  });
+
+  test('heavier wedges are hit more often than the 250 coin jackpot', () {
+    final rng = Random(7);
+    final hits = List.filled(wheel.wedges.length, 0);
+    for (var i = 0; i < 5000; i++) {
+      hits[wheel.spin(random: rng).index]++;
+    }
+    expect(hits[6], greaterThan(hits[0])); // 25 coins (weight 20) vs 250 coins (weight 2)
   });
 }
 

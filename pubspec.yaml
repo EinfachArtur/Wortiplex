@@ -76,6 +76,11 @@ flutter:
 
   generate: true
 
+  fonts:
+    - family: LilitaOne
+      fonts:
+        - asset: assets/fonts/LilitaOne-Regular.ttf
+
   assets:
     - assets/words/de_5.json
     - assets/words/en_5.json

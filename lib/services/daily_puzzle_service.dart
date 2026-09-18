@@ -5,8 +5,11 @@ import '../domain/models/language.dart';
 class DailyPuzzleService {
   const DailyPuzzleService();
 
+  /// The calendar day of [date] (or now) as a timezone-free key. Only the
+  /// year/month/day fields count, so a local-midnight date never slips to the
+  /// previous day the way it would if converted to UTC first.
   DateTime todayKey([DateTime? now]) {
-    final n = (now ?? DateTime.now()).toUtc();
+    final n = now ?? DateTime.now();
     return DateTime.utc(n.year, n.month, n.day);
   }
 

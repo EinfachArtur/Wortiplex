@@ -5,6 +5,7 @@ import '../../data/repositories/profile_repository.dart';
 import '../../domain/economy/coin_ledger.dart';
 import '../../domain/economy/coin_transaction.dart';
 import '../../domain/economy/daily_reward.dart';
+import '../../domain/economy/monthly_prizes.dart';
 import '../../domain/economy/skip_refill.dart';
 import '../../domain/economy/spin_wheel.dart';
 import '../../domain/models/game_stats.dart';
@@ -101,20 +102,40 @@ class ProfileController extends AsyncNotifier<UserProfile> {
     await _persist(profile.copyWith(statsByKey: statsByKey, coins: ledger.balance));
   }
 
-  Future<void> markDailyPuzzleCompleted(Language language) async {
+  Future<void> recordDailyResult(Language language, DateTime date, {required bool won}) async {
     final profile = state.valueOrNull;
     if (profile == null) return;
-    final map = {...profile.lastDailyPuzzleCompletedAt, language.code: DateTime.now()};
-    await _persist(profile.copyWith(lastDailyPuzzleCompletedAt: map));
+    await _persist(profile.copyWith(
+      dailyHistory: profile.dailyHistory.withResult(language, date, won: won),
+    ));
   }
 
   bool hasCompletedDailyToday(Language language) {
     final profile = state.valueOrNull;
     if (profile == null) return false;
-    final last = profile.lastDailyPuzzleCompletedAt[language.code];
-    if (last == null) return false;
-    final now = DateTime.now();
-    return last.year == now.year && last.month == now.month && last.day == now.day;
+    return profile.dailyHistory.hasPlayed(language, DateTime.now());
+  }
+
+  /// Returns the coins granted, or null if the tier isn't reached / already claimed.
+  Future<int?> claimMonthlyPrize(Language language, int year, int month, int tierIndex) async {
+    final profile = state.valueOrNull;
+    if (profile == null) return null;
+    final prizes = EconomyConfig.monthlyPrizes;
+    final key = MonthlyPrizes.claimKey(language.code, year, month, tierIndex);
+    final wins = profile.dailyHistory.winsInMonth(language, year, month);
+    if (!prizes.isReached(tierIndex, wins) || profile.claimedMonthlyPrizes.contains(key)) return null;
+
+    final coins = prizes.tiers[tierIndex].coins;
+    final ledger = CoinLedger(balance: profile.coins).earn(
+      amount: coins,
+      reason: CoinTransactionReason.monthlyPrize,
+      transactionId: _nextTxId(),
+    );
+    await _persist(profile.copyWith(
+      coins: ledger.balance,
+      claimedMonthlyPrizes: {...profile.claimedMonthlyPrizes, key},
+    ));
+    return coins;
   }
 
   Future<void> applySubscriptionUpdate(SubscriptionStatus status) async {
@@ -193,23 +214,71 @@ class ProfileController extends AsyncNotifier<UserProfile> {
     return coins;
   }
 
-  bool isSpinAvailable() {
+  bool isFreeSpinAvailable() {
     final profile = state.valueOrNull;
     if (profile == null) return false;
-    return _spinWheel.isAvailable(profile.lastSpinAt);
+    return _spinWheel.isFreeSpinAvailable(profile.lastSpinAt);
   }
 
-  /// Returns the coins won, or null if today's spin was already used.
-  Future<int?> spinWheel() async {
+  /// Spins that cost nothing right now: today's free spin plus won tickets.
+  int freeSpinsAvailable() {
     final profile = state.valueOrNull;
-    if (profile == null || !_spinWheel.isAvailable(profile.lastSpinAt)) return null;
-    final outcome = _spinWheel.spin();
-    final ledger = CoinLedger(balance: profile.coins).earn(
-      amount: outcome.coins,
-      reason: CoinTransactionReason.spinWheelReward,
-      transactionId: _nextTxId(),
-    );
-    await _persist(profile.copyWith(coins: ledger.balance, lastSpinAt: DateTime.now()));
-    return outcome.coins;
+    if (profile == null) return 0;
+    return (isFreeSpinAvailable() ? 1 : 0) + profile.spinTickets;
+  }
+
+  /// Phase 1 of a spin: pays for it (daily free spin, then a ticket, then
+  /// coins) and picks the outcome. The prize is only granted by
+  /// [grantSpinPrize] once the wheel has stopped, so the HUD does not spoil it.
+  /// Returns null if the player can't afford a spin.
+  Future<SpinResult?> beginSpin() async {
+    final profile = state.valueOrNull;
+    if (profile == null) return null;
+
+    if (_spinWheel.isFreeSpinAvailable(profile.lastSpinAt)) {
+      await _persist(profile.copyWith(lastSpinAt: DateTime.now()));
+    } else if (profile.spinTickets > 0) {
+      await _persist(profile.copyWith(spinTickets: profile.spinTickets - 1));
+    } else {
+      final paid = await spendCoins(EconomyConfig.spinCost, CoinTransactionReason.spinPurchase);
+      if (!paid) return null;
+    }
+    return _spinWheel.spin();
+  }
+
+  Future<void> grantSpinPrize(SpinPrize prize) async {
+    final profile = state.valueOrNull;
+    if (profile == null) return;
+    switch (prize.kind) {
+      case PrizeKind.coins:
+        final ledger = CoinLedger(balance: profile.coins).earn(
+          amount: prize.amount,
+          reason: CoinTransactionReason.spinWheelReward,
+          transactionId: _nextTxId(),
+        );
+        await _persist(profile.copyWith(coins: ledger.balance));
+      case PrizeKind.hint:
+        await _persist(profile.copyWith(hintTokens: profile.hintTokens + prize.amount));
+      case PrizeKind.strikeout:
+        await _persist(profile.copyWith(strikeoutTokens: profile.strikeoutTokens + prize.amount));
+      case PrizeKind.skip:
+        await _persist(profile.copyWith(skipsAvailable: profile.skipsAvailable + prize.amount));
+      case PrizeKind.spin:
+        await _persist(profile.copyWith(spinTickets: profile.spinTickets + prize.amount));
+    }
+  }
+
+  Future<bool> useHintToken() async {
+    final profile = state.valueOrNull;
+    if (profile == null || profile.hintTokens <= 0) return false;
+    await _persist(profile.copyWith(hintTokens: profile.hintTokens - 1));
+    return true;
+  }
+
+  Future<bool> useStrikeoutToken() async {
+    final profile = state.valueOrNull;
+    if (profile == null || profile.strikeoutTokens <= 0) return false;
+    await _persist(profile.copyWith(strikeoutTokens: profile.strikeoutTokens - 1));
+    return true;
   }
 }

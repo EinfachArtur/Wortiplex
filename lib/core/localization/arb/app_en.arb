@@ -47,5 +47,21 @@
   "@spinWheelWon": { "placeholders": { "coins": {} } },
   "score": "Score",
   "submit": "Submit",
-  "notAWord": "Not a word"
+  "notAWord": "Not a word",
+  "spinButton": "SPIN",
+  "free": "FREE",
+  "claim": "CLAIM",
+  "prizeHint": "Hint",
+  "prizeStrikeout": "Strike-out",
+  "prizeSkip": "Skip",
+  "prizeSpin": "Spin",
+  "tabPuzzles": "Puzzles",
+  "tabTrophies": "Trophies",
+  "monthlyPrizes": "Monthly prizes",
+  "winsCount": "{count, plural, one{{count} win} other{{count} wins}}",
+  "@winsCount": { "placeholders": { "count": { "type": "int" } } },
+  "playDate": "PLAY {date}",
+  "@playDate": { "placeholders": { "date": { "type": "String" } } },
+  "puzzleLocked": "This puzzle is not available yet",
+  "prizeClaimed": "Prize claimed!"
 }

@@ -8,6 +8,8 @@ enum CoinTransactionReason {
   subscriptionBonus,
   dailyLoginBonus,
   spinWheelReward,
+  spinPurchase,
+  monthlyPrize,
 }
 
 class CoinTransaction {

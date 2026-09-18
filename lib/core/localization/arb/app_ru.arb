@@ -47,5 +47,19 @@
   "@spinWheelWon": { "placeholders": { "coins": {} } },
   "score": "Серия",
   "submit": "Ввод",
-  "notAWord": "Нет такого слова"
+  "notAWord": "Нет такого слова",
+  "spinButton": "КРУТИТЬ",
+  "free": "БЕСПЛАТНО",
+  "claim": "ЗАБРАТЬ",
+  "prizeHint": "Подсказка",
+  "prizeStrikeout": "Вычеркнуть",
+  "prizeSkip": "Пропуск",
+  "prizeSpin": "Вращение",
+  "tabPuzzles": "Задачи",
+  "tabTrophies": "Трофеи",
+  "monthlyPrizes": "Призы месяца",
+  "winsCount": "{count, plural, one{{count} победа} few{{count} победы} many{{count} побед} other{{count} побед}}",
+  "playDate": "ИГРАТЬ {date}",
+  "puzzleLocked": "Эта задача пока недоступна",
+  "prizeClaimed": "Приз получен!"
 }

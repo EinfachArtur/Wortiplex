@@ -369,6 +369,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not a word'**
   String get notAWord;
+
+  /// No description provided for @spinButton.
+  ///
+  /// In en, this message translates to:
+  /// **'SPIN'**
+  String get spinButton;
+
+  /// No description provided for @free.
+  ///
+  /// In en, this message translates to:
+  /// **'FREE'**
+  String get free;
+
+  /// No description provided for @claim.
+  ///
+  /// In en, this message translates to:
+  /// **'CLAIM'**
+  String get claim;
+
+  /// No description provided for @prizeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint'**
+  String get prizeHint;
+
+  /// No description provided for @prizeStrikeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Strike-out'**
+  String get prizeStrikeout;
+
+  /// No description provided for @prizeSkip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get prizeSkip;
+
+  /// No description provided for @prizeSpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Spin'**
+  String get prizeSpin;
+
+  /// No description provided for @tabPuzzles.
+  ///
+  /// In en, this message translates to:
+  /// **'Puzzles'**
+  String get tabPuzzles;
+
+  /// No description provided for @tabTrophies.
+  ///
+  /// In en, this message translates to:
+  /// **'Trophies'**
+  String get tabTrophies;
+
+  /// No description provided for @monthlyPrizes.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly prizes'**
+  String get monthlyPrizes;
+
+  /// No description provided for @winsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} win} other{{count} wins}}'**
+  String winsCount(int count);
+
+  /// No description provided for @playDate.
+  ///
+  /// In en, this message translates to:
+  /// **'PLAY {date}'**
+  String playDate(String date);
+
+  /// No description provided for @puzzleLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'This puzzle is not available yet'**
+  String get puzzleLocked;
+
+  /// No description provided for @prizeClaimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Prize claimed!'**
+  String get prizeClaimed;
 }
 
 class _AppLocalizationsDelegate

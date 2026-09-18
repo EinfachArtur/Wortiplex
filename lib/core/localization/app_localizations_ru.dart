@@ -149,4 +149,58 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notAWord => 'Нет такого слова';
+
+  @override
+  String get spinButton => 'КРУТИТЬ';
+
+  @override
+  String get free => 'БЕСПЛАТНО';
+
+  @override
+  String get claim => 'ЗАБРАТЬ';
+
+  @override
+  String get prizeHint => 'Подсказка';
+
+  @override
+  String get prizeStrikeout => 'Вычеркнуть';
+
+  @override
+  String get prizeSkip => 'Пропуск';
+
+  @override
+  String get prizeSpin => 'Вращение';
+
+  @override
+  String get tabPuzzles => 'Задачи';
+
+  @override
+  String get tabTrophies => 'Трофеи';
+
+  @override
+  String get monthlyPrizes => 'Призы месяца';
+
+  @override
+  String winsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count побед',
+      many: '$count побед',
+      few: '$count победы',
+      one: '$count победа',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playDate(String date) {
+    return 'ИГРАТЬ $date';
+  }
+
+  @override
+  String get puzzleLocked => 'Эта задача пока недоступна';
+
+  @override
+  String get prizeClaimed => 'Приз получен!';
 }

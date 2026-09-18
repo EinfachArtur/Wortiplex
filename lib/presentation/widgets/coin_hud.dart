@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../state/profile_providers.dart';
+import 'coin_icon.dart';
 
 class CoinHud extends ConsumerWidget {
   final VoidCallback onAddPressed;
@@ -23,7 +24,7 @@ class CoinHud extends ConsumerWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.monetization_on, color: AppColors.coinGold, size: 20),
+          const CoinIcon(size: 22),
           const SizedBox(width: 4),
           Text('$coins', style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(width: 6),

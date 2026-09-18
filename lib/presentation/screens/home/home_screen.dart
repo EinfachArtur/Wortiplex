@@ -6,6 +6,7 @@ import '../../../domain/models/game_mode.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/coin_hud.dart';
 import '../../widgets/daily_rewards_card.dart';
+import '../daily/daily_puzzle_screen.dart';
 import '../game_board/game_board_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shop/shop_screen.dart';
@@ -55,17 +56,9 @@ class HomeScreen extends ConsumerWidget {
               icon: Icons.today,
               title: l10n.menuDaily,
               subtitle: _dateLabel(),
-              onTap: () {
-                if (ref.read(profileControllerProvider.notifier).hasCompletedDailyToday(profile.language)) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text(l10n.dailyAlreadyPlayed)));
-                  return;
-                }
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const GameBoardScreen(mode: GameMode.daily)),
-                );
-              },
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const DailyPuzzleScreen()),
+              ),
             ),
             _ModeTile(
               icon: Icons.bolt,

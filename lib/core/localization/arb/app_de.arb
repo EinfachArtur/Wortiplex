@@ -47,5 +47,19 @@
   "@spinWheelWon": { "placeholders": { "coins": {} } },
   "score": "Serie",
   "submit": "Senden",
-  "notAWord": "Kein Wort"
+  "notAWord": "Kein Wort",
+  "spinButton": "DREHEN",
+  "free": "GRATIS",
+  "claim": "ABHOLEN",
+  "prizeHint": "Tipp",
+  "prizeStrikeout": "Streichen",
+  "prizeSkip": "Skip",
+  "prizeSpin": "Drehung",
+  "tabPuzzles": "Rätsel",
+  "tabTrophies": "Trophäen",
+  "monthlyPrizes": "Monatspreise",
+  "winsCount": "{count, plural, one{{count} Sieg} other{{count} Siege}}",
+  "playDate": "{date} SPIELEN",
+  "puzzleLocked": "Dieses Rätsel ist noch nicht verfügbar",
+  "prizeClaimed": "Preis abgeholt!"
 }

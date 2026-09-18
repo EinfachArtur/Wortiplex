@@ -149,4 +149,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notAWord => 'Not a word';
+
+  @override
+  String get spinButton => 'SPIN';
+
+  @override
+  String get free => 'FREE';
+
+  @override
+  String get claim => 'CLAIM';
+
+  @override
+  String get prizeHint => 'Hint';
+
+  @override
+  String get prizeStrikeout => 'Strike-out';
+
+  @override
+  String get prizeSkip => 'Skip';
+
+  @override
+  String get prizeSpin => 'Spin';
+
+  @override
+  String get tabPuzzles => 'Puzzles';
+
+  @override
+  String get tabTrophies => 'Trophies';
+
+  @override
+  String get monthlyPrizes => 'Monthly prizes';
+
+  @override
+  String winsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count wins',
+      one: '$count win',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playDate(String date) {
+    return 'PLAY $date';
+  }
+
+  @override
+  String get puzzleLocked => 'This puzzle is not available yet';
+
+  @override
+  String get prizeClaimed => 'Prize claimed!';
 }

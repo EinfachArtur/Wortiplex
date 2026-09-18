@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/localization/app_localizations.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/config/economy_config.dart';
+import '../screens/spin/spin_wheel_screen.dart';
 import '../state/profile_providers.dart';
+import 'reward_dialog.dart';
 
 /// Combines the "free gifts" daily login bonus and the spin wheel into one
 /// compact home-screen card, matching the reference screenshots' daily
@@ -12,32 +15,21 @@ class DailyRewardsCard extends ConsumerWidget {
   const DailyRewardsCard({super.key});
 
   Future<void> _claimDailyLogin(BuildContext context, WidgetRef ref) async {
-    final l10n = AppLocalizations.of(context);
     final coins = await ref.read(profileControllerProvider.notifier).claimDailyLoginReward();
     if (!context.mounted) return;
     if (coins != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('+$coins ${l10n.coins}')),
+      RewardCelebrationDialog.show(
+        context,
+        coins: coins,
+        title: 'TÄGLICHER BONUS! 🎁',
+        message: 'Danke fürs Vorbeischauen! Dein tägliches Geschenk wartet.',
+        icon: Icons.card_giftcard_rounded,
       );
     }
   }
 
-  Future<void> _spin(BuildContext context, WidgetRef ref) async {
-    final l10n = AppLocalizations.of(context);
-    final coins = await ref.read(profileControllerProvider.notifier).spinWheel();
-    if (!context.mounted) return;
-    if (coins != null) {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Icon(Icons.celebration, color: AppColors.coinGold, size: 48),
-          content: Text(l10n.spinWheelWon(coins), textAlign: TextAlign.center),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('OK')),
-          ],
-        ),
-      );
-    }
+  void _openWheel(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SpinWheelScreen()));
   }
 
   @override
@@ -48,7 +40,7 @@ class DailyRewardsCard extends ConsumerWidget {
     ref.watch(profileControllerProvider);
     final controller = ref.read(profileControllerProvider.notifier);
     final loginAvailable = controller.isDailyLoginRewardAvailable();
-    final spinAvailable = controller.isSpinAvailable();
+    final freeSpins = controller.freeSpinsAvailable();
 
     return Row(
       children: [
@@ -66,9 +58,9 @@ class DailyRewardsCard extends ConsumerWidget {
           child: _RewardTile(
             icon: Icons.casino,
             title: l10n.spinWheelTitle,
-            actionLabel: spinAvailable ? l10n.spinWheelAction : l10n.spinWheelUsed,
-            enabled: spinAvailable,
-            onTap: () => _spin(context, ref),
+            actionLabel: freeSpins > 0 ? '${l10n.spinButton} · ${l10n.free}' : '${l10n.spinButton} · ${EconomyConfig.spinCost}',
+            enabled: true,
+            onTap: () => _openWheel(context),
           ),
         ),
       ],

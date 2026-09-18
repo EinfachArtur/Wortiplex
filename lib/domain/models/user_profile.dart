@@ -1,3 +1,4 @@
+import 'daily_history.dart';
 import 'game_stats.dart';
 import 'language.dart';
 import 'subscription_status.dart';
@@ -14,6 +15,11 @@ class UserProfile {
   final DateTime? lastDailyLoginClaimedAt;
   final int dailyLoginStreak;
   final DateTime? lastSpinAt;
+  final int hintTokens;
+  final int strikeoutTokens;
+  final int spinTickets;
+  final DailyHistory dailyHistory;
+  final Set<String> claimedMonthlyPrizes;
 
   const UserProfile({
     required this.id,
@@ -27,6 +33,11 @@ class UserProfile {
     this.lastDailyLoginClaimedAt,
     this.dailyLoginStreak = 0,
     this.lastSpinAt,
+    this.hintTokens = 0,
+    this.strikeoutTokens = 0,
+    this.spinTickets = 0,
+    this.dailyHistory = const DailyHistory(),
+    this.claimedMonthlyPrizes = const {},
   });
 
   static String statsKey(String mode, Language language) => '${mode}_${language.code}';
@@ -46,6 +57,11 @@ class UserProfile {
     DateTime? lastDailyLoginClaimedAt,
     int? dailyLoginStreak,
     DateTime? lastSpinAt,
+    int? hintTokens,
+    int? strikeoutTokens,
+    int? spinTickets,
+    DailyHistory? dailyHistory,
+    Set<String>? claimedMonthlyPrizes,
   }) {
     return UserProfile(
       id: id,
@@ -59,6 +75,11 @@ class UserProfile {
       lastDailyLoginClaimedAt: lastDailyLoginClaimedAt ?? this.lastDailyLoginClaimedAt,
       dailyLoginStreak: dailyLoginStreak ?? this.dailyLoginStreak,
       lastSpinAt: lastSpinAt ?? this.lastSpinAt,
+      hintTokens: hintTokens ?? this.hintTokens,
+      strikeoutTokens: strikeoutTokens ?? this.strikeoutTokens,
+      spinTickets: spinTickets ?? this.spinTickets,
+      dailyHistory: dailyHistory ?? this.dailyHistory,
+      claimedMonthlyPrizes: claimedMonthlyPrizes ?? this.claimedMonthlyPrizes,
     );
   }
 
@@ -75,6 +96,11 @@ class UserProfile {
         'lastDailyLoginClaimedAt': lastDailyLoginClaimedAt?.toIso8601String(),
         'dailyLoginStreak': dailyLoginStreak,
         'lastSpinAt': lastSpinAt?.toIso8601String(),
+        'hintTokens': hintTokens,
+        'strikeoutTokens': strikeoutTokens,
+        'spinTickets': spinTickets,
+        'dailyHistory': dailyHistory.toMap(),
+        'claimedMonthlyPrizes': claimedMonthlyPrizes.toList(),
       };
 
   factory UserProfile.fromMap(Map<dynamic, dynamic> map) {
@@ -97,6 +123,11 @@ class UserProfile {
           : null,
       dailyLoginStreak: (map['dailyLoginStreak'] as num?)?.toInt() ?? 0,
       lastSpinAt: map['lastSpinAt'] != null ? DateTime.tryParse(map['lastSpinAt'] as String) : null,
+      hintTokens: (map['hintTokens'] as num?)?.toInt() ?? 0,
+      strikeoutTokens: (map['strikeoutTokens'] as num?)?.toInt() ?? 0,
+      spinTickets: (map['spinTickets'] as num?)?.toInt() ?? 0,
+      dailyHistory: DailyHistory.fromMap(map['dailyHistory'] as Map?),
+      claimedMonthlyPrizes: ((map['claimedMonthlyPrizes'] as List?) ?? const []).cast<String>().toSet(),
     );
   }
 
