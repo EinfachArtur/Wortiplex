@@ -77,9 +77,9 @@ flutter:
   generate: true
 
   fonts:
-    - family: LilitaOne
+    - family: Rubik
       fonts:
-        - asset: assets/fonts/LilitaOne-Regular.ttf
+        - asset: assets/fonts/Rubik-Variable.ttf
 
   assets:
     - assets/words/de_5.json

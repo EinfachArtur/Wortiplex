@@ -9,14 +9,16 @@ import '../../../domain/economy/monthly_prizes.dart';
 import '../../../domain/models/game_mode.dart';
 import '../../../domain/models/language.dart';
 import '../../state/profile_providers.dart';
+import '../../widgets/coin_icon.dart';
 import '../../widgets/game_pills.dart';
+import '../../widgets/hex_badge.dart';
 import '../game_board/game_board_screen.dart';
 import '../shop/shop_screen.dart';
 
 const _tierColors = [
-  [Color(0xFFE9A26A), Color(0xFFB8672D)], // bronze
-  [Color(0xFFF3F6F8), Color(0xFF9CA8B3)], // silver
-  [Color(0xFFFFE27A), Color(0xFFE59A00)], // gold
+  [Color(0xFFF2A76B), Color(0xFFB8672D)], // bronze
+  [Color(0xFFE9EEF5), Color(0xFF8E9BB0)], // silver
+  [Color(0xFFFFE08A), Color(0xFFE59A00)], // gold
 ];
 
 /// How many months back the player may catch up on missed puzzles.
@@ -41,10 +43,7 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
 
   bool get _canGoNextMonth => _month.isBefore(DateTime(_today.year, _today.month));
 
-  bool get _canGoPrevMonth {
-    final limit = DateTime(_today.year, _today.month - _monthsBack);
-    return _month.isAfter(limit);
-  }
+  bool get _canGoPrevMonth => _month.isAfter(DateTime(_today.year, _today.month - _monthsBack));
 
   void _snack(String text) {
     ScaffoldMessenger.of(context)
@@ -91,13 +90,13 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
     if (profile == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
-      backgroundColor: GameColors.background,
+      backgroundColor: GameColors.night0,
       body: GameBackground(
         child: SafeArea(
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(4, 4, 16, 8),
+                padding: const EdgeInsets.fromLTRB(0, 8, 16, 0),
                 child: Row(
                   children: [
                     const GameBackButton(),
@@ -108,19 +107,15 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
                   ],
                 ),
               ),
-              _buildTabs(l10n),
-              _buildRibbon(context),
+              const SizedBox(height: 14),
+              _buildSegments(l10n),
+              const SizedBox(height: 14),
+              _buildNavigator(context),
+              const SizedBox(height: 8),
               Expanded(
-                child: Container(
-                  margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                  decoration: const BoxDecoration(
-                    color: GameColors.panel,
-                    borderRadius: BorderRadius.vertical(bottom: Radius.circular(34)),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(34)),
-                    child: _tab == 0 ? _buildPuzzles(context, profile.language) : _buildTrophies(context, profile.language),
-                  ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  child: _tab == 0 ? _buildPuzzles(context, profile.language) : _buildTrophies(context, profile.language),
                 ),
               ),
             ],
@@ -130,72 +125,86 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
     );
   }
 
-  Widget _buildTabs(AppLocalizations l10n) {
-    Widget tab(int index, String label) {
+  Widget _buildSegments(AppLocalizations l10n) {
+    Widget segment(int index, String label, IconData icon) {
       final selected = _tab == index;
       return Expanded(
         child: GestureDetector(
           onTap: () => setState(() => _tab = index),
-          child: Container(
-            height: 54,
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: selected ? GameColors.panelLight : GameColors.panel,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            height: 42,
+            decoration: BoxDecoration(color: selected ? GameColors.mint : Colors.transparent, borderRadius: BorderRadius.circular(21)),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 20, color: selected ? GameColors.night0 : GameColors.textDim),
+                const SizedBox(width: 8),
+                GameText(label, size: 16, color: selected ? GameColors.night0 : GameColors.textDim, shadow: null),
+              ],
             ),
-            child: OutlinedText(label.toUpperCase(), size: 27),
           ),
         ),
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      child: Row(children: [tab(0, l10n.tabPuzzles), tab(1, l10n.tabTrophies)]),
+    return Container(
+      height: 50,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: GameColors.pill,
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: GameColors.glassBorder),
+      ),
+      child: Row(children: [
+        segment(0, l10n.tabPuzzles, Icons.grid_view_rounded),
+        segment(1, l10n.tabTrophies, Icons.workspace_premium_rounded),
+      ]),
     );
   }
 
-  Widget _buildRibbon(BuildContext context) {
+  Widget _buildNavigator(BuildContext context) {
     final locale = Localizations.localeOf(context).toString();
-    final title = _tab == 0 ? DateFormat.yMMMM(locale).format(_month) : '$_year';
+    final title = _tab == 0 ? DateFormat.MMMM(locale).format(_month) : '$_year';
+    final subtitle = _tab == 0 ? '${_month.year}' : '';
     final canPrev = _tab == 0 ? _canGoPrevMonth : _year > _today.year - 2;
     final canNext = _tab == 0 ? _canGoNextMonth : _year < _today.year;
 
-    Widget arrow(bool left, bool enabled, VoidCallback onTap) => SizedBox(
-          width: 56,
+    Widget arrow(IconData icon, bool enabled, VoidCallback onTap) => SizedBox(
+          width: 44,
+          height: 44,
           child: enabled
-              ? IconButton(
-                  onPressed: onTap,
-                  icon: Icon(left ? Icons.arrow_left_rounded : Icons.arrow_right_rounded, color: Colors.white, size: 54),
+              ? GestureDetector(
+                  onTap: onTap,
+                  child: Container(
+                    decoration: BoxDecoration(color: GameColors.glass, shape: BoxShape.circle, border: Border.all(color: GameColors.glassBorder)),
+                    child: Icon(icon, color: Colors.white, size: 26),
+                  ),
                 )
               : null,
         );
 
-    return Container(
-      height: 62,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFF9A55), GameColors.orange],
-        ),
-        borderRadius: const BorderRadius.horizontal(left: Radius.circular(8), right: Radius.circular(8)),
-        border: const Border(bottom: BorderSide(color: GameColors.orangeDark, width: 5)),
-        boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 4))],
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          arrow(true, canPrev, () => setState(() {
+          arrow(Icons.chevron_left_rounded, canPrev, () => setState(() {
                 if (_tab == 0) {
                   _month = DateTime(_month.year, _month.month - 1);
                 } else {
                   _year--;
                 }
               })),
-          Expanded(child: Center(child: OutlinedText(title.toUpperCase(), size: 30, outline: const Color(0xFF9A4310)))),
-          arrow(false, canNext, () => setState(() {
+          Expanded(
+            child: Column(
+              children: [
+                GameText(title.toUpperCase(), size: 26),
+                if (subtitle.isNotEmpty) GameText(subtitle, size: 14, color: GameColors.textDim, shadow: null, weight: 600),
+              ],
+            ),
+          ),
+          arrow(Icons.chevron_right_rounded, canNext, () => setState(() {
                 if (_tab == 0) {
                   _month = DateTime(_month.year, _month.month + 1);
                 } else {
@@ -217,146 +226,108 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
     final todayPlayed = profile.dailyHistory.hasPlayed(language, today);
     final locale = Localizations.localeOf(context).toString();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 22),
+    return Column(
+      children: [
+        _buildGoals(language, wins),
+        const SizedBox(height: 14),
+        _buildCalendar(context, language, locale),
+        const SizedBox(height: 22),
+        ChunkyButton(
+          width: 290,
+          height: 64,
+          onPressed: todayPlayed ? null : () => _play(today),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(todayPlayed ? Icons.check_rounded : Icons.play_arrow_rounded, color: GameColors.night0, size: 30),
+              const SizedBox(width: 8),
+              Flexible(
+                child: GameText(
+                  l10n.playDate(DateFormat.MMMd(locale).format(today).toUpperCase()),
+                  size: 20,
+                  color: GameColors.night0,
+                  shadow: null,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGoals(Language language, int wins) {
+    final l10n = AppLocalizations.of(context);
+    final claimedSet = ref.watch(profileControllerProvider).requireValue.claimedMonthlyPrizes;
+    final prizes = EconomyConfig.monthlyPrizes;
+
+    Widget goal(int i) {
+      final tier = prizes.tiers[i];
+      final reached = prizes.isReached(i, wins);
+      final claimed = claimedSet.contains(MonthlyPrizes.claimKey(language.code, _month.year, _month.month, i));
+      final state = claimed ? BadgeState.claimed : (reached ? BadgeState.claimable : BadgeState.locked);
+
+      return Expanded(
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _onPrizeTap(language, i, wins, claimed),
+          child: Column(
+            children: [
+              HexBadge(colors: _tierColors[i], state: state, size: 78),
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(5),
+                child: SizedBox(
+                  width: 74,
+                  height: 8,
+                  child: LinearProgressIndicator(
+                    value: prizes.tierProgress(i, wins),
+                    backgroundColor: const Color(0x26FFFFFF),
+                    valueColor: AlwaysStoppedAnimation(reached ? GameColors.mint : GameColors.amber),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              GameText('${wins.clamp(0, tier.wins)}/${tier.wins}', size: 15, shadow: null),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CoinIcon(size: 16),
+                  const SizedBox(width: 4),
+                  GameText('+${tier.coins}', size: 14, color: GameColors.amberLight, shadow: null, weight: 700),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return GlassCard(
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
       child: Column(
         children: [
-          Container(
-            width: double.infinity,
-            color: const Color(0xFF808080),
-            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
-            child: Column(
-              children: [
-                Text(l10n.monthlyPrizes, style: const TextStyle(fontFamily: kGameFont, fontSize: 22, color: Colors.black87)),
-                const SizedBox(height: 8),
-                _buildPrizes(language, wins),
-              ],
-            ),
+          Row(
+            children: [
+              Expanded(child: GameText(l10n.monthlyPrizes, size: 18, textAlign: TextAlign.left, shadow: null)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(color: GameColors.pill, borderRadius: BorderRadius.circular(14)),
+                child: GameText(l10n.winsCount(wins), size: 14, color: GameColors.mint, shadow: null),
+              ),
+            ],
           ),
           const SizedBox(height: 14),
-          _buildCalendar(context, language, locale),
-          const SizedBox(height: 18),
-          ChunkyButton(
-            width: 250,
-            height: 66,
-            onPressed: todayPlayed ? null : () => _play(today),
-            child: OutlinedText(
-              l10n.playDate(DateFormat.MMMd(locale).format(today).toUpperCase()),
-              size: 27,
-              outline: const Color(0xFF2E7A10),
-            ),
-          ),
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: [for (var i = 0; i < prizes.tiers.length; i++) goal(i)]),
         ],
       ),
     );
   }
 
-  Widget _buildPrizes(Language language, int wins) {
-    final l10n = AppLocalizations.of(context);
-    final claimedSet = ref.watch(profileControllerProvider).requireValue.claimedMonthlyPrizes;
-    final prizes = EconomyConfig.monthlyPrizes;
-
-    return LayoutBuilder(builder: (context, constraints) {
-      final barWidth = constraints.maxWidth;
-      const knob = 30.0;
-      final progress = prizes.progress(wins);
-
-      Widget positioned(int i, Widget child, {double top = 0}) {
-        final center = barWidth * prizes.markerPosition(i);
-        return Positioned(left: center - 60, top: top, width: 120, child: child);
-      }
-
-      return SizedBox(
-        height: 190,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            for (var i = 0; i < prizes.tiers.length; i++)
-              positioned(
-                i,
-                Center(
-                  child: _PrizeMedal(
-                    colors: _tierColors[i],
-                    reached: prizes.isReached(i, wins),
-                    claimed: claimedSet.contains(MonthlyPrizes.claimKey(language.code, _month.year, _month.month, i)),
-                    onTap: () => _onPrizeTap(
-                      language,
-                      i,
-                      wins,
-                      claimedSet.contains(MonthlyPrizes.claimKey(language.code, _month.year, _month.month, i)),
-                    ),
-                  ),
-                ),
-              ),
-            // Progress bar.
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 112,
-              height: 34,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFA88A2E),
-                  borderRadius: BorderRadius.circular(17),
-                  border: Border.all(color: const Color(0xFFCDBE86), width: 2),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 0,
-              top: 112,
-              height: 34,
-              width: (barWidth * progress).clamp(knob, barWidth),
-              child: Container(
-                decoration: BoxDecoration(color: const Color(0xFFD1B23B), borderRadius: BorderRadius.circular(17)),
-              ),
-            ),
-            for (var i = 0; i < prizes.tiers.length; i++)
-              positioned(
-                i,
-                Center(
-                  child: Container(
-                    width: 12,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8B233),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFFFFE9A0), width: 2),
-                    ),
-                  ),
-                ),
-                top: 107,
-              ),
-            Positioned(
-              left: (barWidth * progress - knob / 2).clamp(0.0, barWidth - knob),
-              top: 114,
-              child: Container(
-                width: knob,
-                height: knob,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF6EE04A),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF5A3D14), width: 4),
-                ),
-                child: Center(child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF5A3D14), shape: BoxShape.circle))),
-              ),
-            ),
-            for (var i = 0; i < prizes.tiers.length; i++)
-              positioned(
-                i,
-                Center(child: OutlinedText(l10n.winsCount(prizes.tiers[i].wins).toUpperCase(), size: 19)),
-                top: 156,
-              ),
-          ],
-        ),
-      );
-    });
-  }
-
   Widget _buildCalendar(BuildContext context, Language language, String locale) {
     final firstDay = MaterialLocalizations.of(context).firstDayOfWeekIndex; // 0 = Sunday
-    final profile = ref.watch(profileControllerProvider).requireValue;
-    final history = profile.dailyHistory;
+    final history = ref.watch(profileControllerProvider).requireValue.dailyHistory;
     final today = _today;
 
     final daysInMonth = DateTime(_month.year, _month.month + 1, 0).day;
@@ -368,19 +339,17 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
       for (var k = 0; k < 7; k++) DateFormat.E(locale).format(DateTime(2023, 1, 1 + (firstDay + k) % 7)),
     ];
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+    return GlassCard(
+      padding: const EdgeInsets.fromLTRB(8, 14, 8, 10),
       child: Column(
         children: [
           Row(
             children: [
               for (final h in headers)
-                Expanded(
-                  child: Center(child: Text(h, style: const TextStyle(fontFamily: kGameFont, fontSize: 17, color: Colors.black87))),
-                ),
+                Expanded(child: Center(child: GameText(h, size: 13, color: GameColors.textDim, shadow: null, weight: 600))),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           for (var r = 0; r < rows; r++)
             Row(
               children: [
@@ -388,7 +357,7 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
                   Expanded(
                     child: Builder(builder: (context) {
                       final day = r * 7 + c - offset + 1;
-                      if (day < 1 || day > daysInMonth) return const SizedBox(height: 56);
+                      if (day < 1 || day > daysInMonth) return const SizedBox(height: 50);
                       final date = DateTime(_month.year, _month.month, day);
                       return _DayCell(
                         day: day,
@@ -410,45 +379,47 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
 
   Widget _buildTrophies(BuildContext context, Language language) {
     final history = ref.watch(profileControllerProvider).requireValue.dailyHistory;
+    final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
     final now = _today;
     final lastMonth = _year == now.year ? now.month : 12;
     final prizes = EconomyConfig.monthlyPrizes;
 
-    return ListView(
-      padding: const EdgeInsets.all(14),
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.08,
       children: [
         for (var m = lastMonth; m >= 1; m--)
-          Container(
-            margin: const EdgeInsets.only(bottom: 14),
-            decoration: BoxDecoration(color: const Color(0xFFC4C4C4), borderRadius: BorderRadius.circular(22)),
-            child: Column(
-              children: [
-                Container(
-                  height: 42,
-                  alignment: Alignment.center,
-                  decoration: const BoxDecoration(
-                    color: GameColors.purple,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          Builder(builder: (context) {
+            final wins = history.winsInMonth(language, _year, m);
+            return GlassCard(
+              padding: const EdgeInsets.fromLTRB(8, 14, 8, 12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GameText(DateFormat.MMMM(locale).format(DateTime(_year, m)).toUpperCase(), size: 15, shadow: null),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 0; i < prizes.tiers.length; i++)
+                        HexBadge(
+                          colors: _tierColors[i],
+                          state: prizes.isReached(i, wins) ? BadgeState.earned : BadgeState.locked,
+                          size: 42,
+                        ),
+                    ],
                   ),
-                  child: OutlinedText(DateFormat.yMMMM(locale).format(DateTime(_year, m)).toUpperCase(), size: 24, outline: const Color(0xFF4A0F6E)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  child: Builder(builder: (context) {
-                    final wins = history.winsInMonth(language, _year, m);
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        for (var i = 0; i < prizes.tiers.length; i++)
-                          _TrophySlot(colors: _tierColors[i], earned: prizes.isReached(i, wins)),
-                      ],
-                    );
-                  }),
-                ),
-              ],
-            ),
-          ),
+                  const SizedBox(height: 10),
+                  GameText(l10n.winsCount(wins), size: 12, color: GameColors.textDim, shadow: null, weight: 600),
+                ],
+              ),
+            );
+          }),
       ],
     );
   }
@@ -471,141 +442,68 @@ class _DayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color? fill;
-    Color textColor;
+    BoxDecoration? decoration;
+    Color textColor = Colors.white;
+    IconData? badge;
+    Color badgeColor = GameColors.mint;
+
     if (isFuture) {
-      textColor = Colors.white.withValues(alpha: 0.35);
+      textColor = Colors.white.withValues(alpha: 0.28);
     } else if (result == true) {
-      fill = const Color(0xFF4CC93A);
-      textColor = Colors.white;
+      decoration = BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [GameColors.mint, GameColors.mintDark]),
+      );
+      textColor = GameColors.night0;
+      badge = Icons.check_rounded;
     } else if (result == false) {
-      fill = const Color(0xFF4A4A4A);
-      textColor = Colors.white;
+      decoration = BoxDecoration(borderRadius: BorderRadius.circular(14), color: GameColors.slate);
+      badge = Icons.close_rounded;
+      badgeColor = GameColors.coral;
     } else if (isToday) {
-      fill = GameColors.blueDay;
-      textColor = Colors.white;
+      decoration = BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: GameColors.amber.withValues(alpha: 0.18),
+        border: Border.all(color: GameColors.amber, width: 2.5),
+        boxShadow: [BoxShadow(color: GameColors.amber.withValues(alpha: 0.45), blurRadius: 12)],
+      );
+      textColor = GameColors.amber;
     } else {
-      textColor = GameColors.missedRed;
+      decoration = BoxDecoration(borderRadius: BorderRadius.circular(14), border: Border.all(color: GameColors.coral.withValues(alpha: 0.7), width: 1.5));
+      textColor = GameColors.coral;
     }
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: SizedBox(
-        height: 56,
+        height: 50,
         child: Center(
-          child: Container(
-            width: 46,
-            height: 46,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: fill,
-              shape: BoxShape.circle,
-              border: isToday && fill != null && result != null ? Border.all(color: GameColors.blueDay, width: 3) : null,
-            ),
-            child: Text('$day', style: TextStyle(fontFamily: kGameFont, fontSize: 27, color: textColor)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PrizeMedal extends StatelessWidget {
-  final List<Color> colors;
-  final bool reached;
-  final bool claimed;
-  final VoidCallback onTap;
-
-  const _PrizeMedal({required this.colors, required this.reached, required this.claimed, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final claimable = reached && !claimed;
-    return GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: reached ? 1 : 0.55,
-        child: SizedBox(
-          width: 104,
-          height: 96,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
-              Positioned(
-                left: 0,
-                top: 2,
-                child: Container(
-                  width: 78,
-                  height: 78,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: colors),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.85), width: 4),
-                    boxShadow: [
-                      BoxShadow(
-                        color: claimable ? GameColors.goldLight : Colors.black38,
-                        blurRadius: claimable ? 22 : 6,
-                        spreadRadius: claimable ? 3 : 0,
-                        offset: claimable ? Offset.zero : const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 44),
-                ),
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: decoration,
+                child: GameText('$day', size: 18, color: textColor, shadow: null),
               ),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 44,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8A5A2B),
-                    borderRadius: BorderRadius.circular(9),
-                    border: Border.all(color: const Color(0xFF5E3A17), width: 3),
-                  ),
-                  child: Icon(claimed ? Icons.check_rounded : Icons.redeem_rounded, color: claimed ? const Color(0xFF7CF06A) : GameColors.goldLight, size: 26),
-                ),
-              ),
-              if (claimable)
+              if (badge != null)
                 Positioned(
-                  left: -4,
+                  right: -4,
                   top: -4,
                   child: Container(
-                    width: 26,
-                    height: 26,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(color: const Color(0xFFE5202A), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-                    child: const Text('!', style: TextStyle(fontFamily: kGameFont, fontSize: 18, color: Colors.white, height: 1)),
+                    width: 17,
+                    height: 17,
+                    decoration: BoxDecoration(color: GameColors.night0, shape: BoxShape.circle, border: Border.all(color: badgeColor, width: 1.5)),
+                    child: Icon(badge, size: 11, color: badgeColor),
                   ),
                 ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _TrophySlot extends StatelessWidget {
-  final List<Color> colors;
-  final bool earned;
-  const _TrophySlot({required this.colors, required this.earned});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 74,
-      height: 74,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: earned ? LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: colors) : null,
-        color: earned ? null : const Color(0xFFB0B0B0),
-        border: earned ? Border.all(color: Colors.white.withValues(alpha: 0.85), width: 4) : null,
-        boxShadow: earned ? const [BoxShadow(color: Colors.black26, blurRadius: 5, offset: Offset(0, 3))] : null,
-      ),
-      child: earned ? const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 40) : null,
     );
   }
 }

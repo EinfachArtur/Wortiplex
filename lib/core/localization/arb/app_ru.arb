@@ -57,7 +57,7 @@
   "prizeSpin": "Вращение",
   "tabPuzzles": "Задачи",
   "tabTrophies": "Трофеи",
-  "monthlyPrizes": "Призы месяца",
+  "monthlyPrizes": "Цели месяца",
   "winsCount": "{count, plural, one{{count} победа} few{{count} победы} many{{count} побед} other{{count} побед}}",
   "playDate": "ИГРАТЬ {date}",
   "puzzleLocked": "Эта задача пока недоступна",

@@ -427,7 +427,7 @@ abstract class AppLocalizations {
   /// No description provided for @monthlyPrizes.
   ///
   /// In en, this message translates to:
-  /// **'Monthly prizes'**
+  /// **'Monthly goals'**
   String get monthlyPrizes;
 
   /// No description provided for @winsCount.

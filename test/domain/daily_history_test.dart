@@ -50,15 +50,12 @@ void main() {
       expect(prizes.isReached(2, 30), isTrue);
     });
 
-    test('progress knob travels marker to marker and stops at the last one', () {
-      expect(prizes.markerPosition(0), closeTo(1 / 6, 1e-9));
-      expect(prizes.markerPosition(2), closeTo(5 / 6, 1e-9));
-      expect(prizes.progress(0), 0);
-      expect(prizes.progress(3), closeTo(1 / 6, 1e-9));
-      expect(prizes.progress(10), closeTo(3 / 6, 1e-9));
-      expect(prizes.progress(30), closeTo(5 / 6, 1e-9));
-      expect(prizes.progress(99), closeTo(5 / 6, 1e-9));
-      expect(prizes.progress(1), closeTo(1 / 18, 1e-9));
+    test('tier progress is capped at 1 and scales with the tier size', () {
+      expect(prizes.tierProgress(0, 0), 0);
+      expect(prizes.tierProgress(0, 1), closeTo(1 / 3, 1e-9));
+      expect(prizes.tierProgress(1, 5), closeTo(0.5, 1e-9));
+      expect(prizes.tierProgress(0, 12), 1);
+      expect(prizes.tierProgress(2, 30), 1);
     });
 
     test('claim keys are unique per language, month and tier', () {

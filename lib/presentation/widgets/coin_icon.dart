@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/game_style.dart';
 
-/// Wortiplex coin: a gold disc with a raised rim and a "W".
+/// Wortiplex coin: a gold disc with a raised rim and an embossed star.
 class CoinIcon extends StatelessWidget {
   final double size;
   const CoinIcon({super.key, this.size = 24});
@@ -17,29 +17,22 @@ class CoinIcon extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [GameColors.goldLight, GameColors.gold, Color(0xFFD48A00)],
+          colors: [GameColors.amberLight, GameColors.amber, Color(0xFFE8920A)],
         ),
-        border: Border.all(color: const Color(0xFFB87400), width: size / 12),
-        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(0, 1.5))],
+        border: Border.all(color: const Color(0xFFC77A00), width: size / 13),
+        boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 3, offset: Offset(0, 1.5))],
       ),
       alignment: Alignment.center,
       child: Container(
-        width: size * 0.66,
-        height: size * 0.66,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: const Color(0x55FFFFFF), width: size / 24),
-        ),
+        width: size * 0.68,
+        height: size * 0.68,
+        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x66FFFFFF), width: size / 26)),
         alignment: Alignment.center,
-        child: Text(
-          'W',
-          style: TextStyle(
-            fontFamily: kGameFont,
-            fontSize: size * 0.48,
-            height: 1,
-            color: const Color(0xFFFFF4C2),
-            shadows: const [Shadow(color: Color(0xFF9A6100), blurRadius: 0, offset: Offset(0, 1))],
-          ),
+        child: Icon(
+          Icons.star_rounded,
+          size: size * 0.5,
+          color: const Color(0xFFFFF6D6),
+          shadows: const [Shadow(color: Color(0xFFB36B00), offset: Offset(0, 1))],
         ),
       ),
     );

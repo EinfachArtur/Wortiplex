@@ -5,7 +5,7 @@ import '../../core/theme/game_style.dart';
 import '../state/profile_providers.dart';
 import 'coin_icon.dart';
 
-/// Dark pill with the coin balance and a green "+" (matches the reference HUD).
+/// Dark glass pill with the coin balance and a mint "+" button.
 class CoinPill extends ConsumerWidget {
   final VoidCallback onAdd;
   const CoinPill({super.key, required this.onAdd});
@@ -16,31 +16,26 @@ class CoinPill extends ConsumerWidget {
     return GestureDetector(
       onTap: onAdd,
       child: Container(
-        height: 40,
-        padding: const EdgeInsets.only(left: 16, right: 6),
-        decoration: BoxDecoration(color: GameColors.pill, borderRadius: BorderRadius.circular(20)),
+        height: 42,
+        padding: const EdgeInsets.only(left: 8, right: 6),
+        decoration: BoxDecoration(
+          color: GameColors.pill,
+          borderRadius: BorderRadius.circular(21),
+          border: Border.all(color: GameColors.glassBorder),
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            OutlinedText('$coins', size: 22),
+            const CoinIcon(size: 28),
             const SizedBox(width: 8),
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const CoinIcon(size: 30),
-                Positioned(
-                  right: -6,
-                  bottom: -6,
-                  child: Container(
-                    width: 17,
-                    height: 17,
-                    decoration: const BoxDecoration(color: Color(0xFF3DC23D), shape: BoxShape.circle),
-                    child: const Icon(Icons.add, size: 14, color: Colors.white),
-                  ),
-                ),
-              ],
+            GameText('$coins', size: 20, shadow: null),
+            const SizedBox(width: 10),
+            Container(
+              width: 28,
+              height: 28,
+              decoration: const BoxDecoration(color: GameColors.mint, shape: BoxShape.circle),
+              child: const Icon(Icons.add_rounded, size: 20, color: GameColors.night0),
             ),
-            const SizedBox(width: 6),
           ],
         ),
       ),
@@ -48,43 +43,50 @@ class CoinPill extends ConsumerWidget {
   }
 }
 
-/// Dark pill with a number and a small icon, e.g. the spin ticket counter.
+/// Dark glass pill with an icon and a number, e.g. the spin ticket counter.
 class CountPill extends StatelessWidget {
   final int count;
   final IconData icon;
   final Color iconColor;
-  const CountPill({super.key, required this.count, required this.icon, this.iconColor = Colors.white});
+  const CountPill({super.key, required this.count, required this.icon, this.iconColor = GameColors.amber});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 40,
-      padding: const EdgeInsets.only(left: 16, right: 10),
-      decoration: BoxDecoration(color: GameColors.pill, borderRadius: BorderRadius.circular(20)),
+      height: 42,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: GameColors.pill,
+        borderRadius: BorderRadius.circular(21),
+        border: Border.all(color: GameColors.glassBorder),
+      ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          OutlinedText('$count', size: 22),
+          Icon(icon, color: iconColor, size: 22),
           const SizedBox(width: 8),
-          Icon(icon, color: iconColor, size: 26),
+          GameText('$count', size: 20, shadow: null),
         ],
       ),
     );
   }
 }
 
-/// Round white back chevron used in the game-style screens.
+/// Round glass back button.
 class GameBackButton extends StatelessWidget {
   const GameBackButton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: () => Navigator.of(context).maybePop(),
-      iconSize: 40,
-      icon: const Icon(Icons.chevron_left_rounded, color: Colors.white, shadows: [
-        Shadow(color: Colors.black38, blurRadius: 4, offset: Offset(0, 2)),
-      ]),
+    return GestureDetector(
+      onTap: () => Navigator.of(context).maybePop(),
+      child: Container(
+        width: 42,
+        height: 42,
+        margin: const EdgeInsets.only(left: 12),
+        decoration: BoxDecoration(color: GameColors.glass, shape: BoxShape.circle, border: Border.all(color: GameColors.glassBorder)),
+        child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 19),
+      ),
     );
   }
 }

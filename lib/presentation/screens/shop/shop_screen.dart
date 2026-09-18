@@ -7,6 +7,7 @@ import '../../../domain/economy/coin_transaction.dart';
 import '../../state/ads_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/coin_hud.dart';
+import '../../widgets/coin_icon.dart';
 import 'subscription_screen.dart';
 
 class ShopScreen extends ConsumerStatefulWidget {
@@ -152,7 +153,7 @@ class _CoinPackageCard extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.monetization_on, size: 28, color: Colors.amber),
+                  const CoinIcon(size: 34),
                   const SizedBox(height: 4),
                   Text('$coins', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   Text(priceLabel, style: Theme.of(context).textTheme.bodySmall),

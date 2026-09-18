@@ -23,14 +23,12 @@ class SpinResult {
 const defaultWheelWedges = <SpinPrize>[
   SpinPrize(PrizeKind.coins, 250, 2),
   SpinPrize(PrizeKind.strikeout, 1, 8),
-  SpinPrize(PrizeKind.coins, 50, 14),
+  SpinPrize(PrizeKind.coins, 50, 16),
   SpinPrize(PrizeKind.skip, 1, 8),
-  SpinPrize(PrizeKind.coins, 75, 8),
+  SpinPrize(PrizeKind.coins, 100, 6),
   SpinPrize(PrizeKind.hint, 1, 8),
-  SpinPrize(PrizeKind.coins, 25, 20),
+  SpinPrize(PrizeKind.coins, 25, 22),
   SpinPrize(PrizeKind.spin, 2, 4),
-  SpinPrize(PrizeKind.coins, 100, 5),
-  SpinPrize(PrizeKind.strikeout, 2, 5),
 ];
 
 /// Weighted random prize wheel with one free spin per calendar day.

@@ -16,9 +16,9 @@ void main() {
     expect(wheel.isFreeSpinAvailable(DateTime(2024, 5, 9, 23), now: now), isTrue);
   });
 
-  test('wheel has 10 wedges and no two neighbours share a prize kind', () {
+  test('wheel has 8 wedges and no two neighbours share a prize kind', () {
     final w = wheel.wedges;
-    expect(w.length, 10);
+    expect(w.length, 8);
     for (var i = 0; i < w.length; i++) {
       expect(w[i].kind == w[(i + 1) % w.length].kind, isFalse, reason: 'wedge $i');
     }

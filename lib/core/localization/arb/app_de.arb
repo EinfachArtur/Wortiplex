@@ -57,7 +57,7 @@
   "prizeSpin": "Drehung",
   "tabPuzzles": "Rätsel",
   "tabTrophies": "Trophäen",
-  "monthlyPrizes": "Monatspreise",
+  "monthlyPrizes": "Monatsziele",
   "winsCount": "{count, plural, one{{count} Sieg} other{{count} Siege}}",
   "playDate": "{date} SPIELEN",
   "puzzleLocked": "Dieses Rätsel ist noch nicht verfügbar",

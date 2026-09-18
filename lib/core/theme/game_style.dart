@@ -1,51 +1,113 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
-const kGameFont = 'LilitaOne';
+/// Wortiplex "night sky" look: deep indigo, mint, coral and amber, with
+/// glassy surfaces and sparkles. Used by the wheel and puzzle screens.
+const kGameFont = 'Rubik';
 
-/// Colours of the playful "game" look used by the wheel and puzzle screens.
 class GameColors {
   const GameColors._();
 
-  static const background = Color(0xFF454545);
-  static const backgroundStripe = Color(0xFF4B4B4B);
-  static const pill = Color(0xFF2E2E2E);
-  static const panel = Color(0xFF8E8E8E);
-  static const panelLight = Color(0xFFA8A8A8);
-  static const green = Color(0xFF5FD62E);
-  static const greenDark = Color(0xFF3C9E1B);
-  static const orange = Color(0xFFF7823C);
-  static const orangeDark = Color(0xFFC25A1E);
-  static const purple = Color(0xFF8422BE);
-  static const blueDay = Color(0xFF8FD8F5);
-  static const missedRed = Color(0xFFE81414);
-  static const gold = Color(0xFFF5B301);
-  static const goldLight = Color(0xFFFFE07A);
+  static const night0 = Color(0xFF130E3A);
+  static const night1 = Color(0xFF2C1C6E);
+  static const ring = Color(0xFF221860);
+  static const glass = Color(0x1FFFFFFF);
+  static const glassBorder = Color(0x2EFFFFFF);
+  static const pill = Color(0x59000000);
+  static const textDim = Color(0xB3FFFFFF);
+
+  static const mint = Color(0xFF1FDDB8);
+  static const mintDark = Color(0xFF0C9A82);
+  static const coral = Color(0xFFFF6B6B);
+  static const amber = Color(0xFFFFC145);
+  static const amberLight = Color(0xFFFFE3A0);
+  static const violet = Color(0xFF8B6CFF);
+  static const sky = Color(0xFF4DA8FF);
+  static const slate = Color(0xFF59607A);
 }
 
-/// Dark background with soft diagonal stripes.
+TextStyle gameText(double size, {Color color = Colors.white, double weight = 800, Color? shadowColor}) {
+  return TextStyle(
+    fontFamily: kGameFont,
+    fontSize: size,
+    color: color,
+    height: 1.1,
+    fontWeight: FontWeight.values[(weight / 100).round().clamp(1, 9) - 1],
+    fontVariations: [FontVariation('wght', weight)],
+    shadows: shadowColor == null ? null : [Shadow(color: shadowColor, offset: Offset(0, size / 14))],
+  );
+}
+
+/// Bold rounded text with a soft "sticker" drop shadow.
+class GameText extends StatelessWidget {
+  final String text;
+  final double size;
+  final Color color;
+  final Color? shadow;
+  final double weight;
+  final TextAlign textAlign;
+
+  const GameText(
+    this.text, {
+    super.key,
+    this.size = 24,
+    this.color = Colors.white,
+    this.shadow = const Color(0x66000000),
+    this.weight = 800,
+    this.textAlign = TextAlign.center,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(text, textAlign: textAlign, style: gameText(size, color: color, weight: weight, shadowColor: shadow));
+  }
+}
+
+Path starPath(Offset c, double outer, double inner, {int points = 5, double rotation = -math.pi / 2}) {
+  final path = Path();
+  for (var i = 0; i < points * 2; i++) {
+    final r = i.isEven ? outer : inner;
+    final a = rotation + i * math.pi / points;
+    final p = c + Offset(math.cos(a), math.sin(a)) * r;
+    if (i == 0) {
+      path.moveTo(p.dx, p.dy);
+    } else {
+      path.lineTo(p.dx, p.dy);
+    }
+  }
+  return path..close();
+}
+
+/// Indigo gradient with a scatter of tiny stars.
 class GameBackground extends StatelessWidget {
   final Widget child;
   const GameBackground({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _StripePainter(),
-      child: SizedBox.expand(child: child),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [GameColors.night1, GameColors.night0]),
+      ),
+      child: CustomPaint(painter: _SparklePainter(), child: SizedBox.expand(child: child)),
     );
   }
 }
 
-class _StripePainter extends CustomPainter {
+class _SparklePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = GameColors.background);
-    final paint = Paint()
-      ..color = GameColors.backgroundStripe
-      ..strokeWidth = 26;
-    const gap = 74.0;
-    for (var x = -size.height; x < size.width; x += gap) {
-      canvas.drawLine(Offset(x, size.height), Offset(x + size.height, 0), paint);
+    final rng = math.Random(11);
+    for (var i = 0; i < 46; i++) {
+      final p = Offset(rng.nextDouble() * size.width, rng.nextDouble() * size.height);
+      final alpha = 0.10 + rng.nextDouble() * 0.30;
+      final paint = Paint()..color = Colors.white.withValues(alpha: alpha);
+      if (i % 5 == 0) {
+        canvas.drawPath(starPath(p, 5 + rng.nextDouble() * 4, 1.6, points: 4), paint);
+      } else {
+        canvas.drawCircle(p, 0.8 + rng.nextDouble() * 1.6, paint);
+      }
     }
   }
 
@@ -53,8 +115,28 @@ class _StripePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Big rounded button with a darker "base" underneath that is pressed down
-/// on tap, like the buttons in the reference design.
+/// Frosted-glass surface.
+class GlassCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final double radius;
+  const GlassCard({super.key, required this.child, this.padding = const EdgeInsets.all(16), this.radius = 28});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: GameColors.glass,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: GameColors.glassBorder),
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Rounded button with a darker base that presses down on tap.
 class ChunkyButton extends StatefulWidget {
   final Widget child;
   final VoidCallback? onPressed;
@@ -67,9 +149,9 @@ class ChunkyButton extends StatefulWidget {
     super.key,
     required this.child,
     required this.onPressed,
-    this.color = GameColors.green,
-    this.baseColor = GameColors.greenDark,
-    this.height = 84,
+    this.color = GameColors.mint,
+    this.baseColor = GameColors.mintDark,
+    this.height = 72,
     this.width,
   });
 
@@ -82,10 +164,11 @@ class _ChunkyButtonState extends State<ChunkyButton> {
 
   @override
   Widget build(BuildContext context) {
-    const lip = 7.0;
+    const lip = 6.0;
     final enabled = widget.onPressed != null;
-    final color = enabled ? widget.color : Colors.grey.shade500;
-    final base = enabled ? widget.baseColor : Colors.grey.shade700;
+    final color = enabled ? widget.color : const Color(0xFF6C6F86);
+    final base = enabled ? widget.baseColor : const Color(0xFF474A5E);
+    final radius = BorderRadius.circular(widget.height / 2.6);
 
     return GestureDetector(
       onTapDown: enabled ? (_) => setState(() => _pressed = true) : null,
@@ -102,12 +185,7 @@ class _ChunkyButtonState extends State<ChunkyButton> {
               right: 0,
               bottom: 0,
               height: widget.height,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: base,
-                  borderRadius: BorderRadius.circular(widget.height / 2),
-                ),
-              ),
+              child: DecoratedBox(decoration: BoxDecoration(color: base, borderRadius: radius)),
             ),
             AnimatedPositioned(
               duration: const Duration(milliseconds: 60),
@@ -117,9 +195,13 @@ class _ChunkyButtonState extends State<ChunkyButton> {
               height: widget.height,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(widget.height / 2),
-                  boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 6))],
+                  borderRadius: radius,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color.lerp(color, Colors.white, 0.22)!, color],
+                  ),
+                  boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 12, offset: Offset(0, 6))],
                 ),
                 child: Center(child: widget.child),
               ),
@@ -127,46 +209,6 @@ class _ChunkyButtonState extends State<ChunkyButton> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Chunky game text with a dark outline.
-class OutlinedText extends StatelessWidget {
-  final String text;
-  final double size;
-  final Color color;
-  final Color outline;
-  final TextAlign textAlign;
-
-  const OutlinedText(
-    this.text, {
-    super.key,
-    this.size = 28,
-    this.color = Colors.white,
-    this.outline = const Color(0xFF2A2A2A),
-    this.textAlign = TextAlign.center,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final base = TextStyle(fontFamily: kGameFont, fontSize: size, height: 1.05);
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Text(
-          text,
-          textAlign: textAlign,
-          style: base.copyWith(
-            foreground: Paint()
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = size / 6
-              ..strokeJoin = StrokeJoin.round
-              ..color = outline,
-          ),
-        ),
-        Text(text, textAlign: textAlign, style: base.copyWith(color: color)),
-      ],
     );
   }
 }

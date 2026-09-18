@@ -178,7 +178,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get tabTrophies => 'Trophäen';
 
   @override
-  String get monthlyPrizes => 'Monatspreise';
+  String get monthlyPrizes => 'Monatsziele';
 
   @override
   String winsCount(int count) {

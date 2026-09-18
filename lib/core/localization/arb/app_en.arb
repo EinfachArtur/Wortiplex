@@ -57,7 +57,7 @@
   "prizeSpin": "Spin",
   "tabPuzzles": "Puzzles",
   "tabTrophies": "Trophies",
-  "monthlyPrizes": "Monthly prizes",
+  "monthlyPrizes": "Monthly goals",
   "winsCount": "{count, plural, one{{count} win} other{{count} wins}}",
   "@winsCount": { "placeholders": { "count": { "type": "int" } } },
   "playDate": "PLAY {date}",
