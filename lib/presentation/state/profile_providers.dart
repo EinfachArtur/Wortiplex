@@ -163,6 +163,13 @@ class ProfileController extends AsyncNotifier<UserProfile> {
     return _dailyLoginReward.isAvailable(profile.lastDailyLoginClaimedAt);
   }
 
+  int nextDailyLoginCoins() {
+    final profile = state.valueOrNull;
+    if (profile == null) return EconomyConfig.dailyLoginBaseCoins;
+    final streak = _dailyLoginReward.nextStreak(profile.dailyLoginStreak, profile.lastDailyLoginClaimedAt);
+    return _dailyLoginReward.coinsForStreak(streak);
+  }
+
   /// Returns the coins granted, or null if the reward was already claimed today.
   Future<int?> claimDailyLoginReward() async {
     final profile = state.valueOrNull;

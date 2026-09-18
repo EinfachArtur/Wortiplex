@@ -27,7 +27,6 @@ class VirtualKeyboard extends StatelessWidget {
   final Map<String, LetterState> letterStates;
   final Set<String> disabledLetters;
   final void Function(String letter) onLetter;
-  final VoidCallback onEnter;
   final VoidCallback onBackspace;
 
   const VirtualKeyboard({
@@ -36,54 +35,72 @@ class VirtualKeyboard extends StatelessWidget {
     required this.letterStates,
     required this.disabledLetters,
     required this.onLetter,
-    required this.onEnter,
     required this.onBackspace,
   });
 
   Color _keyColor(String letter) {
     if (disabledLetters.contains(letter)) return AppColors.absent.withValues(alpha: 0.4);
-    final state = letterStates[letter];
-    return switch (state) {
+    return switch (letterStates[letter]) {
       LetterState.correct => AppColors.correct,
       LetterState.present => AppColors.present,
-      LetterState.absent => AppColors.absent,
+      LetterState.absent => AppColors.absentKey,
       _ => AppColors.keyDefault,
     };
   }
 
   Color _textColor(String letter) {
-    final state = letterStates[letter];
-    final isDisabled = disabledLetters.contains(letter);
-    if (isDisabled || state != null) return Colors.white;
+    if (disabledLetters.contains(letter) || letterStates[letter] != null) return Colors.white;
     return Colors.black87;
   }
 
   @override
   Widget build(BuildContext context) {
     final rows = _layouts[language]!;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < rows.length; i++)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (i == rows.length - 1) _ActionKey(label: 'ENTER', onTap: onEnter, flex: 3),
-                for (final letter in rows[i].split(''))
-                  _LetterKey(
-                    letter: letter,
-                    color: _keyColor(letter),
-                    textColor: _textColor(letter),
-                    enabled: !disabledLetters.contains(letter),
-                    onTap: () => onLetter(letter),
-                  ),
-                if (i == rows.length - 1) _ActionKey(label: '⌫', onTap: onBackspace, flex: 2),
-              ],
+    // Every row is laid out on the width of the longest row so that keys keep
+    // one uniform size regardless of how many letters a language has per row.
+    final maxKeys = rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < rows.length; i++) _buildRow(rows, i, maxKeys),
+        ],
+      ),
+    );
+  }
+
+  // Flex units: one letter key = 4, backspace = 6, remaining space is split
+  // into spacers so every row spans the same width and keys stay uniform.
+  Widget _buildRow(List<String> rows, int i, int maxKeys) {
+    final isLast = i == rows.length - 1;
+    final letters = rows[i].split('');
+    final used = letters.length * 4 + (isLast ? 6 : 0);
+    final remaining = (maxKeys * 4 - used).clamp(0, 1000);
+    final left = remaining ~/ 2;
+    final right = remaining - left;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          if (left > 0) Spacer(flex: left),
+          for (final letter in letters)
+            Expanded(
+              flex: 4,
+              child: _LetterKey(
+                letter: letter,
+                color: _keyColor(letter),
+                textColor: _textColor(letter),
+                enabled: !disabledLetters.contains(letter),
+                onTap: () => onLetter(letter),
+              ),
             ),
-          ),
-      ],
+          if (isLast) Expanded(flex: 6, child: _BackspaceKey(onTap: onBackspace)),
+          if (right > 0) Spacer(flex: right),
+        ],
+      ),
     );
   }
 }
@@ -109,17 +126,16 @@ class _LetterKey extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Material(
         color: color,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
         child: InkWell(
           onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           child: Container(
-            width: 30,
-            height: 44,
+            height: 48,
             alignment: Alignment.center,
             child: Text(
               letter,
-              style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: textColor),
             ),
           ),
         ),
@@ -128,12 +144,9 @@ class _LetterKey extends StatelessWidget {
   }
 }
 
-class _ActionKey extends StatelessWidget {
-  final String label;
+class _BackspaceKey extends StatelessWidget {
   final VoidCallback onTap;
-  final int flex;
-
-  const _ActionKey({required this.label, required this.onTap, required this.flex});
+  const _BackspaceKey({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -141,15 +154,14 @@ class _ActionKey extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Material(
         color: AppColors.keyDefault,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(6),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(6),
           child: Container(
-            width: 22.0 * flex,
-            height: 44,
+            height: 48,
             alignment: Alignment.center,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+            child: const Icon(Icons.backspace_outlined, color: Colors.black87),
           ),
         ),
       ),

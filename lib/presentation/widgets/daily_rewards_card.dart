@@ -17,7 +17,7 @@ class DailyRewardsCard extends ConsumerWidget {
     if (!context.mounted) return;
     if (coins != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.dailyLoginClaim(coins))),
+        SnackBar(content: Text('+$coins ${l10n.coins}')),
       );
     }
   }
@@ -56,7 +56,7 @@ class DailyRewardsCard extends ConsumerWidget {
           child: _RewardTile(
             icon: Icons.card_giftcard,
             title: l10n.dailyLoginTitle,
-            actionLabel: loginAvailable ? null : l10n.dailyLoginClaimed,
+            actionLabel: loginAvailable ? l10n.dailyLoginClaim(controller.nextDailyLoginCoins()) : l10n.dailyLoginClaimed,
             enabled: loginAvailable,
             onTap: () => _claimDailyLogin(context, ref),
           ),

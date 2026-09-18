@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/economy_config.dart';
@@ -41,11 +43,18 @@ final roundControllerProvider =
 
 class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
   late WordList _wordList;
+  late GameSession _gameSession;
+  late WordValidator _validator;
 
   @override
   Future<Round> build(GameParams params) async {
     final repo = ref.read(wordRepositoryProvider);
     _wordList = await repo.loadWordList(params.language);
+    _validator = WordValidator(
+      solutions: _wordList.solutions.toSet(),
+      validGuesses: _wordList.validGuesses.toSet(),
+    );
+    _gameSession = GameSession(validator: _validator);
     return _startNewRound(params);
   }
 
@@ -55,8 +64,7 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
       final service = ref.read(dailyPuzzleServiceProvider);
       solution = service.solutionFor(language: params.language, solutionPool: _wordList.solutions);
     } else {
-      final rnd = _wordList.solutions[DateTime.now().millisecondsSinceEpoch % _wordList.solutions.length];
-      solution = rnd;
+      solution = _wordList.solutions[Random().nextInt(_wordList.solutions.length)];
     }
     return Round(
       id: '${params.mode.name}_${DateTime.now().microsecondsSinceEpoch}',
@@ -67,12 +75,9 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
     );
   }
 
-  GameSession _session() => GameSession(
-        validator: WordValidator(
-          solutions: _wordList.solutions.toSet(),
-          validGuesses: _wordList.validGuesses.toSet(),
-        ),
-      );
+  GameSession _session() => _gameSession;
+
+  bool isValidWord(String word) => _validator.isValid(word);
 
   Future<GuessOutcome> submitGuess(String word) async {
     final round = state.valueOrNull;

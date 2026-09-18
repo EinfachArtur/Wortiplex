@@ -44,5 +44,8 @@
   "spinWheelAction": "Jetzt drehen",
   "spinWheelUsed": "Komm morgen wieder zum Drehen",
   "spinWheelWon": "Du hast {coins} Münzen gewonnen!",
-  "@spinWheelWon": { "placeholders": { "coins": {} } }
+  "@spinWheelWon": { "placeholders": { "coins": {} } },
+  "score": "Serie",
+  "submit": "Senden",
+  "notAWord": "Kein Wort"
 }

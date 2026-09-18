@@ -44,5 +44,8 @@
   "spinWheelAction": "Spin now",
   "spinWheelUsed": "Come back tomorrow to spin again",
   "spinWheelWon": "You won {coins} coins!",
-  "@spinWheelWon": { "placeholders": { "coins": {} } }
+  "@spinWheelWon": { "placeholders": { "coins": {} } },
+  "score": "Score",
+  "submit": "Submit",
+  "notAWord": "Not a word"
 }

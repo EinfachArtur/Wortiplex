@@ -44,5 +44,8 @@
   "spinWheelAction": "Крутить",
   "spinWheelUsed": "Возвращайтесь завтра, чтобы крутить снова",
   "spinWheelWon": "Вы выиграли {coins} монет!",
-  "@spinWheelWon": { "placeholders": { "coins": {} } }
+  "@spinWheelWon": { "placeholders": { "coins": {} } },
+  "score": "Серия",
+  "submit": "Ввод",
+  "notAWord": "Нет такого слова"
 }

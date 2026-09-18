@@ -140,4 +140,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String spinWheelWon(Object coins) {
     return 'Вы выиграли $coins монет!';
   }
+
+  @override
+  String get score => 'Серия';
+
+  @override
+  String get submit => 'Ввод';
+
+  @override
+  String get notAWord => 'Нет такого слова';
 }

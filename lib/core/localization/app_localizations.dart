@@ -351,6 +351,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You won {coins} coins!'**
   String spinWheelWon(Object coins);
+
+  /// No description provided for @score.
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get score;
+
+  /// No description provided for @submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit'**
+  String get submit;
+
+  /// No description provided for @notAWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a word'**
+  String get notAWord;
 }
 
 class _AppLocalizationsDelegate

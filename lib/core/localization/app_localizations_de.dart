@@ -140,4 +140,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String spinWheelWon(Object coins) {
     return 'Du hast $coins Münzen gewonnen!';
   }
+
+  @override
+  String get score => 'Serie';
+
+  @override
+  String get submit => 'Senden';
+
+  @override
+  String get notAWord => 'Kein Wort';
 }

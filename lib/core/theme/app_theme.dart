@@ -8,6 +8,7 @@ class AppColors {
   static const absent = Color(0xFF787C7E);
   static const tileBorder = Color(0xFFD3D6DA);
   static const keyDefault = Color(0xFFD3D6DA);
+  static const absentKey = Color(0xFF3A3A3C);
   static const coinGold = Color(0xFFF5B301);
 }
 

@@ -55,9 +55,17 @@ class HomeScreen extends ConsumerWidget {
               icon: Icons.today,
               title: l10n.menuDaily,
               subtitle: _dateLabel(),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const GameBoardScreen(mode: GameMode.daily)),
-              ),
+              onTap: () {
+                if (ref.read(profileControllerProvider.notifier).hasCompletedDailyToday(profile.language)) {
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(SnackBar(content: Text(l10n.dailyAlreadyPlayed)));
+                  return;
+                }
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const GameBoardScreen(mode: GameMode.daily)),
+                );
+              },
             ),
             _ModeTile(
               icon: Icons.bolt,

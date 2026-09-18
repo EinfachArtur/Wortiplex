@@ -54,10 +54,12 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     super.dispose();
   }
 
-  GameParams get _params {
-    final language = ref.read(profileControllerProvider).valueOrNull?.language;
-    return GameParams(mode: widget.mode, language: language ?? ref.read(profileControllerProvider).value!.language);
-  }
+  GameParams get _params => GameParams(
+        mode: widget.mode,
+        language: ref.read(profileControllerProvider).requireValue.language,
+      );
+
+  RoundController get _controller => ref.read(roundControllerProvider(_params).notifier);
 
   void _onLetter(String letter, Round round) {
     if (round.isFinished) return;
@@ -70,76 +72,80 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     setState(() => _currentInput = _currentInput.substring(0, _currentInput.length - 1));
   }
 
-  Future<void> _onEnter(Round round) async {
+  Future<void> _onSubmit(Round round) async {
     final l10n = AppLocalizations.of(context);
+    if (round.isFinished) return;
     if (_currentInput.length != round.solutionWord.length) {
       _showSnack(l10n.notEnoughLetters);
       return;
     }
-    final controller = ref.read(roundControllerProvider(_params).notifier);
-    final outcome = await controller.submitGuess(_currentInput);
-    if (outcome is GuessRejected) {
-      if (outcome.reason == GuessRejectReason.notInDictionary) {
-        _showSnack(l10n.notInWordList);
-      }
+    if (!_controller.isValidWord(_currentInput)) {
+      _showSnack(l10n.notInWordList);
       return;
     }
+    final outcome = await _controller.submitGuess(_currentInput);
     if (outcome is GuessAccepted) {
       setState(() => _currentInput = '');
       if (outcome.round.isFinished) {
         ref.read(adsServiceProvider).onRoundCompleted();
-        _showResultDialog(outcome.round);
+        if (mounted) _showResultDialog(outcome.round);
       }
     }
   }
 
   void _showSnack(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 1)));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message), duration: const Duration(seconds: 1)));
   }
 
   void _showResultDialog(Round round) {
     final l10n = AppLocalizations.of(context);
     final won = round.result == RoundResult.won;
+    final isDaily = round.mode == GameMode.daily;
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
         title: Text(won ? l10n.youWon : l10n.youLost),
         content: Text(l10n.solutionWas(round.solutionWord)),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
-              ref.read(roundControllerProvider(_params).notifier).newRound(_params);
+              Navigator.of(dialogContext).pop();
+              if (isDaily) {
+                Navigator.of(context).pop(); // the daily puzzle can only be played once
+              } else {
+                _controller.newRound(_params);
+              }
             },
-            child: Text(l10n.newGame),
+            child: Text(isDaily ? 'OK' : l10n.newGame),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _buyHint(Round round) async {
+  Future<void> _buyHint() async {
     final l10n = AppLocalizations.of(context);
-    final result = await ref.read(roundControllerProvider(_params).notifier).buyHint();
+    final result = await _controller.buyHint();
     if (result == null) {
       _showSnack(l10n.notEnoughCoins);
       return;
     }
-    _showSnack('${result.letter} @ ${result.position + 1}');
+    _showSnack('${result.position + 1}: ${result.letter}');
   }
 
   Future<void> _buyStrikeout() async {
     final l10n = AppLocalizations.of(context);
-    final letter = await ref.read(roundControllerProvider(_params).notifier).buyLetterStrikeout();
-    if (letter == null) {
-      _showSnack(l10n.notEnoughCoins);
-    }
+    final letter = await _controller.buyLetterStrikeout();
+    if (letter == null) _showSnack(l10n.notEnoughCoins);
   }
 
   Future<void> _skipRound() async {
     final used = await ref.read(profileControllerProvider.notifier).useSkip();
     if (!used) return;
-    await ref.read(roundControllerProvider(_params).notifier).newRound(_params);
+    await _controller.newRound(_params);
     setState(() => _currentInput = '');
   }
 
@@ -147,10 +153,20 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final roundAsync = ref.watch(roundControllerProvider(_params));
+    final streak = ref.watch(profileControllerProvider.select(
+      (p) => p.valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0,
+    ));
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_titleFor(widget.mode, l10n)),
+        centerTitle: true,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(l10n.score.toUpperCase(), style: Theme.of(context).textTheme.labelSmall),
+            Text('$streak', style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900)),
+          ],
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -164,103 +180,154 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
           ),
         ],
       ),
-      body: roundAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
-        data: (round) {
-          final controller = ref.read(roundControllerProvider(_params).notifier);
-          final keyboardStates = controller.keyboardStates();
-          final skipsAvailable = ref.watch(
-            profileControllerProvider.select((p) => p.valueOrNull?.skipsAvailable ?? 0),
-          );
-          return Column(
-            children: [
-              Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TileGrid(round: round, currentInput: _currentInput),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _BoosterButton(
-                              icon: Icons.search,
-                              cost: EconomyConfig.hintCost,
-                              tooltip: l10n.hint,
-                              onTap: round.isFinished ? null : () => _buyHint(round),
-                            ),
-                            const SizedBox(width: 16),
-                            _BoosterButton(
-                              icon: Icons.gps_fixed,
-                              cost: EconomyConfig.letterStrikeoutCost,
-                              tooltip: l10n.strikeOutLetter,
-                              onTap: round.isFinished ? null : _buyStrikeout,
-                            ),
-                            const SizedBox(width: 16),
-                            Tooltip(
-                              message: l10n.skip,
-                              child: OutlinedButton.icon(
-                                onPressed: skipsAvailable > 0 ? _skipRound : null,
-                                icon: const Icon(Icons.fast_forward, size: 18),
-                                label: Text('$skipsAvailable'),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              VirtualKeyboard(
-                language: round.language,
-                letterStates: keyboardStates.cast(),
-                disabledLetters: round.disabledLetters,
-                onLetter: (l) => _onLetter(l, round),
-                onEnter: () => _onEnter(round),
-                onBackspace: _onBackspace,
-              ),
-              if (_bannerAd != null)
-                SizedBox(
-                  height: _bannerAd!.size.height.toDouble(),
-                  width: _bannerAd!.size.width.toDouble(),
-                  child: AdWidget(ad: _bannerAd!),
-                ),
-            ],
-          );
-        },
+      body: SafeArea(
+        child: roundAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('$e')),
+          data: (round) => _buildBoard(context, round, l10n),
+        ),
       ),
     );
   }
 
-  String _titleFor(GameMode mode, AppLocalizations l10n) => switch (mode) {
-        GameMode.classic => l10n.menuClassic,
-        GameMode.daily => l10n.menuDaily,
-        GameMode.wordFever => l10n.menuWordFever,
-        GameMode.secretWord => l10n.menuSecretWord,
-        GameMode.together => l10n.menuTogether,
-      };
+  Widget _buildBoard(BuildContext context, Round round, AppLocalizations l10n) {
+    final keyboardStates = _controller.keyboardStates();
+    final skipsAvailable = ref.watch(
+      profileControllerProvider.select((p) => p.valueOrNull?.skipsAvailable ?? 0),
+    );
+
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: TileGrid(round: round, currentInput: _currentInput),
+            ),
+          ),
+        ),
+        VirtualKeyboard(
+          language: round.language,
+          letterStates: keyboardStates.cast(),
+          disabledLetters: round.disabledLetters,
+          onLetter: (l) => _onLetter(l, round),
+          onBackspace: _onBackspace,
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+          child: Row(
+            children: [
+              _BoosterButton(
+                icon: Icons.search,
+                cost: EconomyConfig.hintCost,
+                color: Colors.orange,
+                tooltip: l10n.hint,
+                onTap: round.isFinished ? null : _buyHint,
+              ),
+              const SizedBox(width: 8),
+              _BoosterButton(
+                icon: Icons.gps_fixed,
+                cost: EconomyConfig.letterStrikeoutCost,
+                color: Colors.purple,
+                tooltip: l10n.strikeOutLetter,
+                onTap: round.isFinished ? null : _buyStrikeout,
+              ),
+              const SizedBox(width: 8),
+              Expanded(child: _buildSubmitButton(round, l10n)),
+              const SizedBox(width: 8),
+              Tooltip(
+                message: l10n.skip,
+                child: Badge(
+                  label: Text('$skipsAvailable'),
+                  child: FilledButton.tonal(
+                    onPressed: skipsAvailable > 0 && widget.mode != GameMode.daily ? _skipRound : null,
+                    child: const Icon(Icons.skip_next),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_bannerAd != null)
+          SizedBox(
+            height: _bannerAd!.size.height.toDouble(),
+            width: _bannerAd!.size.width.toDouble(),
+            child: AdWidget(ad: _bannerAd!),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton(Round round, AppLocalizations l10n) {
+    final complete = _currentInput.length == round.solutionWord.length;
+    final valid = complete && _controller.isValidWord(_currentInput);
+
+    final Color color;
+    final String label;
+    if (!complete) {
+      color = Colors.grey;
+      label = l10n.submit;
+    } else if (valid) {
+      color = Colors.blue;
+      label = l10n.submit;
+    } else {
+      color = Colors.red;
+      label = l10n.notAWord;
+    }
+
+    return FilledButton(
+      style: FilledButton.styleFrom(
+        backgroundColor: color,
+        minimumSize: const Size.fromHeight(52),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
+      ),
+      onPressed: round.isFinished ? null : () => _onSubmit(round),
+      child: Text(
+        label.toUpperCase(),
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+      ),
+    );
+  }
 }
 
 class _BoosterButton extends StatelessWidget {
   final IconData icon;
   final int cost;
+  final Color color;
   final String tooltip;
   final VoidCallback? onTap;
 
-  const _BoosterButton({required this.icon, required this.cost, required this.tooltip, this.onTap});
+  const _BoosterButton({
+    required this.icon,
+    required this.cost,
+    required this.color,
+    required this.tooltip,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
       message: tooltip,
-      child: OutlinedButton.icon(
-        onPressed: onTap,
-        icon: Icon(icon, size: 18),
-        label: Text('$cost'),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: Container(
+          width: 52,
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: onTap == null ? Colors.grey : color,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: Colors.white, size: 22),
+              Text('$cost', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+            ],
+          ),
+        ),
       ),
     );
   }
