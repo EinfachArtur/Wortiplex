@@ -7,6 +7,7 @@ import '../../../domain/economy/coin_transaction.dart';
 import '../../state/ads_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/coin_hud.dart';
+import 'subscription_screen.dart';
 
 class ShopScreen extends ConsumerStatefulWidget {
   const ShopScreen({super.key});
@@ -96,6 +97,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             ],
           ),
           const SizedBox(height: 20),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.workspace_premium, color: Colors.deepPurple),
+              title: Text(l10n.subscriptionTitle),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SubscriptionScreen()),
+              ),
+            ),
+          ),
           Card(
             child: ListTile(
               leading: const Icon(Icons.block),

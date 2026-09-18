@@ -8,6 +8,7 @@ import '../../widgets/coin_hud.dart';
 import '../game_board/game_board_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shop/shop_screen.dart';
+import '../stats/stats_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -84,6 +85,12 @@ class HomeScreen extends ConsumerWidget {
               icon: const Icon(Icons.shopping_cart),
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const ShopScreen()),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.bar_chart),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const StatsScreen()),
               ),
             ),
             IconButton(
