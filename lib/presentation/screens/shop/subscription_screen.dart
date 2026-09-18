@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/config/economy_config.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../core/theme/game_style.dart';
 import '../../../domain/models/subscription_status.dart';
 import '../../state/ads_providers.dart';
 import '../../state/profile_providers.dart';
+import '../../widgets/game_scaffold.dart';
 
 class SubscriptionScreen extends ConsumerWidget {
   const SubscriptionScreen({super.key});
@@ -13,45 +16,87 @@ class SubscriptionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final profileAsync = ref.watch(profileControllerProvider);
-    final subscription = profileAsync.valueOrNull?.subscription ?? const SubscriptionStatus();
+    final locale = Localizations.localeOf(context).toString();
+    final subscription = ref.watch(profileControllerProvider).valueOrNull?.subscription ?? const SubscriptionStatus();
+    final iap = ref.read(iapServiceProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.subscriptionTitle)),
+    return GameScaffold(
+      title: l10n.subscriptionTitle,
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF6C4DF0), Color(0xFF3B2A8C)]),
+              border: Border.all(color: GameColors.amber, width: 2),
+              boxShadow: [BoxShadow(color: GameColors.violet.withValues(alpha: 0.4), blurRadius: 24)],
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.workspace_premium_rounded, color: GameColors.amber, size: 64),
+                const SizedBox(height: 6),
+                GameText(l10n.subscriptionTitle, size: 30),
+                const SizedBox(height: 16),
+                _Benefit(l10n.subBenefitNoAds),
+                _Benefit(l10n.subBenefitBonus),
+                _Benefit(l10n.subBenefitDiscount),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
           if (subscription.isActive)
-            Card(
-              color: Colors.green.shade50,
-              child: ListTile(
-                leading: const Icon(Icons.verified, color: Colors.green),
-                title: Text('${l10n.subscriptionTitle} ${subscription.tier == SubscriptionTier.yearly ? "(Yearly)" : "(Monthly)"}'),
-                subtitle: subscription.expiresAt != null
-                    ? Text('Renews ${subscription.expiresAt!.toLocal().toString().split(' ').first}')
-                    : null,
+            GlassCard(
+              child: Row(
+                children: [
+                  const Icon(Icons.verified_rounded, color: GameColors.mint, size: 32),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GameText(
+                          '${subscription.tier == SubscriptionTier.yearly ? l10n.planYearly : l10n.planMonthly} · ${l10n.subscriptionActive}',
+                          size: 16,
+                          textAlign: TextAlign.left,
+                          shadow: null,
+                        ),
+                        if (subscription.expiresAt != null)
+                          GameText(
+                            l10n.subscriptionRenews(DateFormat.yMMMd(locale).format(subscription.expiresAt!.toLocal())),
+                            size: 13,
+                            color: GameColors.textDim,
+                            textAlign: TextAlign.left,
+                            shadow: null,
+                            weight: 500,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             )
           else ...[
-            const _BenefitsList(),
-            const SizedBox(height: 20),
-            _PlanCard(
-              title: 'Monthly',
-              price: '4,99 €',
-              onTap: () => ref.read(iapServiceProvider).buyNonConsumable(EconomyConfig.subscriptionMonthlyId),
-            ),
-            const SizedBox(height: 10),
-            _PlanCard(
-              title: 'Yearly',
+            _Plan(
+              title: l10n.planYearly,
               price: '39,99 €',
-              badge: 'Best value',
-              onTap: () => ref.read(iapServiceProvider).buyNonConsumable(EconomyConfig.subscriptionYearlyId),
+              badge: l10n.bestValue,
+              onTap: () => iap.buyNonConsumable(EconomyConfig.subscriptionYearlyId),
+            ),
+            const SizedBox(height: 12),
+            _Plan(
+              title: l10n.planMonthly,
+              price: '4,99 €',
+              onTap: () => iap.buyNonConsumable(EconomyConfig.subscriptionMonthlyId),
             ),
           ],
-          const SizedBox(height: 20),
-          TextButton(
-            onPressed: () => ref.read(iapServiceProvider).restorePurchases(),
-            child: Text(l10n.restorePurchases),
+          const SizedBox(height: 14),
+          Center(
+            child: TextButton(
+              onPressed: iap.restorePurchases,
+              child: GameText(l10n.restorePurchases, size: 15, color: GameColors.textDim, shadow: null, weight: 600),
+            ),
           ),
         ],
       ),
@@ -59,53 +104,74 @@ class SubscriptionScreen extends ConsumerWidget {
   }
 }
 
-class _BenefitsList extends StatelessWidget {
-  const _BenefitsList();
+class _Benefit extends StatelessWidget {
+  final String text;
+  const _Benefit(this.text);
 
   @override
   Widget build(BuildContext context) {
-    const benefits = [
-      'No ads, ever',
-      'Daily coin bonus, no video required',
-      'Discount on hints & letter strikeouts',
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final b in benefits)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                const Icon(Icons.check_circle, color: Colors.green, size: 20),
-                const SizedBox(width: 8),
-                Expanded(child: Text(b)),
-              ],
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: const BoxDecoration(color: GameColors.mint, shape: BoxShape.circle),
+            child: const Icon(Icons.check_rounded, size: 16, color: GameColors.night0),
           ),
-      ],
+          const SizedBox(width: 12),
+          Expanded(child: GameText(text, size: 15, textAlign: TextAlign.left, shadow: null, weight: 600)),
+        ],
+      ),
     );
   }
 }
 
-class _PlanCard extends StatelessWidget {
+class _Plan extends StatelessWidget {
   final String title;
   final String price;
   final String? badge;
   final VoidCallback onTap;
 
-  const _PlanCard({required this.title, required this.price, required this.onTap, this.badge});
+  const _Plan({required this.title, required this.price, required this.onTap, this.badge});
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(price),
-        trailing: badge != null
-            ? Chip(label: Text(badge!), backgroundColor: Colors.deepOrange.shade100)
-            : const Icon(Icons.chevron_right),
-        onTap: onTap,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: GameColors.glass,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: badge != null ? GameColors.amber : GameColors.glassBorder, width: badge != null ? 2 : 1),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GameText(title, size: 18, textAlign: TextAlign.left, shadow: null),
+                  if (badge != null) ...[
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: GameColors.amber, borderRadius: BorderRadius.circular(8)),
+                      child: GameText(badge!.toUpperCase(), size: 10, color: GameColors.night0, shadow: null),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              decoration: BoxDecoration(color: GameColors.mint, borderRadius: BorderRadius.circular(18)),
+              child: GameText(price, size: 17, color: GameColors.night0, shadow: null),
+            ),
+          ],
+        ),
       ),
     );
   }

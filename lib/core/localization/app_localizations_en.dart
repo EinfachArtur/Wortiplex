@@ -201,4 +201,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prizeClaimed => 'Prize claimed!';
+
+  @override
+  String get subBenefitNoAds => 'No ads, ever';
+
+  @override
+  String get subBenefitBonus => 'Daily coin bonus, no video needed';
+
+  @override
+  String get subBenefitDiscount => 'Cheaper hints and strike-outs';
+
+  @override
+  String get planMonthly => 'Monthly';
+
+  @override
+  String get planYearly => 'Yearly';
+
+  @override
+  String get subscriptionActive => 'Active';
+
+  @override
+  String subscriptionRenews(Object date) {
+    return 'Renews $date';
+  }
+
+  @override
+  String get guessDistribution => 'Guess distribution';
+
+  @override
+  String get resultWon => 'GREAT!';
+
+  @override
+  String get resultLost => 'So close!';
+
+  @override
+  String get resultWonSub => 'You cracked the word!';
+
+  @override
+  String get resultLostSub => 'Better luck next round.';
+
+  @override
+  String get solutionLabel => 'Solution';
+
+  @override
+  String get attemptsLabel => 'Attempts';
+
+  @override
+  String get streakLabel => 'Streak';
+
+  @override
+  String get shareResult => 'Share result';
+
+  @override
+  String get copiedToClipboard => 'Result copied!';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String coinsEarned(Object coins) {
+    return '$coins coins';
+  }
 }

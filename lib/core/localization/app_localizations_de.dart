@@ -201,4 +201,65 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get prizeClaimed => 'Preis abgeholt!';
+
+  @override
+  String get subBenefitNoAds => 'Nie wieder Werbung';
+
+  @override
+  String get subBenefitBonus => 'Täglicher Münzbonus, ohne Video';
+
+  @override
+  String get subBenefitDiscount => 'Günstigere Tipps und Streichungen';
+
+  @override
+  String get planMonthly => 'Monatlich';
+
+  @override
+  String get planYearly => 'Jährlich';
+
+  @override
+  String get subscriptionActive => 'Aktiv';
+
+  @override
+  String subscriptionRenews(Object date) {
+    return 'Verlängert sich am $date';
+  }
+
+  @override
+  String get guessDistribution => 'Verteilung der Versuche';
+
+  @override
+  String get resultWon => 'GENIAL!';
+
+  @override
+  String get resultLost => 'Knapp daneben!';
+
+  @override
+  String get resultWonSub => 'Du hast das Wort geknackt!';
+
+  @override
+  String get resultLostSub => 'Nächste Runde klappt\'s.';
+
+  @override
+  String get solutionLabel => 'Lösungswort';
+
+  @override
+  String get attemptsLabel => 'Versuche';
+
+  @override
+  String get streakLabel => 'Serie';
+
+  @override
+  String get shareResult => 'Ergebnis teilen';
+
+  @override
+  String get copiedToClipboard => 'Ergebnis kopiert!';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String coinsEarned(Object coins) {
+    return '$coins Münzen';
+  }
 }

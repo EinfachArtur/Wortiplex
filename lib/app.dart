@@ -37,8 +37,9 @@ class _WortiplexAppState extends ConsumerState<WortiplexApp> {
     return MaterialApp(
       title: 'Wortiplex',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
+      theme: AppTheme.game(),
+      darkTheme: AppTheme.game(),
+      themeMode: ThemeMode.dark,
       locale: locale != null ? Locale(locale) : null,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

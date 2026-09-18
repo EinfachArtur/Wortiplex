@@ -1,10 +1,11 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_theme.dart';
+import '../../core/localization/app_localizations.dart';
+import '../../core/theme/game_style.dart';
+import 'coin_icon.dart';
 
-/// A playful reward popup overlay for daily logins and spin wheel wins.
-class RewardCelebrationDialog extends StatefulWidget {
+/// Small celebration card shown when the player receives coins (daily gift).
+class RewardCelebrationDialog extends StatelessWidget {
   final int coins;
   final String title;
   final String message;
@@ -15,7 +16,7 @@ class RewardCelebrationDialog extends StatefulWidget {
     required this.coins,
     required this.title,
     required this.message,
-    this.icon = Icons.casino,
+    this.icon = Icons.card_giftcard_rounded,
   });
 
   static Future<void> show(
@@ -23,268 +24,82 @@ class RewardCelebrationDialog extends StatefulWidget {
     required int coins,
     required String title,
     required String message,
-    IconData icon = Icons.casino,
+    IconData icon = Icons.card_giftcard_rounded,
   }) {
     return showGeneralDialog(
       context: context,
       barrierDismissible: true,
       barrierLabel: 'RewardCelebration',
-      barrierColor: Colors.black.withValues(alpha: 0.65),
+      barrierColor: const Color(0xFF0B0724).withValues(alpha: 0.78),
       transitionDuration: const Duration(milliseconds: 350),
-      pageBuilder: (_, __, ___) => RewardCelebrationDialog(
-        coins: coins,
-        title: title,
-        message: message,
-        icon: icon,
-      ),
+      pageBuilder: (_, _, _) => RewardCelebrationDialog(coins: coins, title: title, message: message, icon: icon),
       transitionBuilder: (ctx, anim, _, child) {
         final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
-        return ScaleTransition(
-          scale: curved,
-          child: FadeTransition(opacity: anim, child: child),
-        );
+        return ScaleTransition(scale: curved, child: FadeTransition(opacity: anim, child: child));
       },
     );
   }
 
   @override
-  State<RewardCelebrationDialog> createState() => _RewardCelebrationDialogState();
-}
-
-class _RewardCelebrationDialogState extends State<RewardCelebrationDialog>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _rotController;
-
-  @override
-  void initState() {
-    super.initState();
-    _rotController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _rotController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
+    final l10n = AppLocalizations.of(context);
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 28),
-        child: Material(
-          color: Colors.transparent,
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 340),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark
-                    ? [const Color(0xFF26231C), const Color(0xFF191814)]
-                    : [Colors.white, const Color(0xFFFFFBF0)],
-              ),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: AppColors.coinGold.withValues(alpha: 0.7),
-                width: 2.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.coinGold.withValues(alpha: 0.3),
-                  blurRadius: 28,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          width: 300,
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF3B2A8C), Color(0xFF221860)]),
+            borderRadius: BorderRadius.circular(34),
+            border: Border.all(color: GameColors.amber, width: 2.5),
+            boxShadow: [BoxShadow(color: GameColors.amber.withValues(alpha: 0.3), blurRadius: 40)],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                alignment: Alignment.center,
                 children: [
-                  // Rotating sunburst glow behind coin
-                  SizedBox(
-                    width: 100,
-                    height: 100,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        AnimatedBuilder(
-                          animation: _rotController,
-                          builder: (_, __) => Transform.rotate(
-                            angle: _rotController.value * math.pi * 2,
-                            child: CustomPaint(
-                              size: const Size(100, 100),
-                              painter: _SunburstPainter(),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          width: 68,
-                          height: 68,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(
-                              colors: [Color(0xFFFFD54F), AppColors.coinGold],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0x66FFB300),
-                                blurRadius: 14,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.monetization_on_rounded,
-                            size: 42,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.coinGold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  Text(
-                    widget.message,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: isDark ? Colors.white70 : Colors.black87,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Big coin reward badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    width: 170,
+                    height: 170,
                     decoration: BoxDecoration(
-                      color: AppColors.coinGold.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: AppColors.coinGold.withValues(alpha: 0.4),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.stars_rounded, color: AppColors.coinGold, size: 24),
-                        const SizedBox(width: 8),
-                        Text(
-                          '+${widget.coins} MÜNZEN',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                            color: AppColors.coinGold,
-                          ),
-                        ),
-                      ],
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(colors: [GameColors.amber.withValues(alpha: 0.5), GameColors.amber.withValues(alpha: 0)]),
                     ),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Claim button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFD54F), AppColors.coinGold],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.coinGold.withValues(alpha: 0.4),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          shadowColor: Colors.transparent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text(
-                          'EINSAMMELN! 🎉',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black87,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
+                  const CoinIcon(size: 96),
+                  Positioned(
+                    right: 20,
+                    bottom: 20,
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(color: GameColors.coral, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
+                      child: Icon(icon, color: Colors.white, size: 24),
                     ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 4),
+              GameText(title, size: 24),
+              const SizedBox(height: 6),
+              GameText(message, size: 14, color: GameColors.textDim, shadow: null, weight: 500),
+              const SizedBox(height: 14),
+              GameText('+$coins', size: 46, color: GameColors.amber),
+              GameText(l10n.coins, size: 16, color: GameColors.textDim, shadow: null, weight: 600),
+              const SizedBox(height: 22),
+              ChunkyButton(
+                width: 200,
+                height: 56,
+                onPressed: () => Navigator.of(context).pop(),
+                child: GameText(l10n.ok, size: 22, color: GameColors.night0, shadow: null),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-}
-
-class _SunburstPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    const count = 12;
-    final paint = Paint()
-      ..color = const Color(0x33FFD54F)
-      ..style = PaintingStyle.fill;
-
-    for (int i = 0; i < count; i++) {
-      final startAngle = i * (2 * math.pi / count);
-      const sweepAngle = math.pi / count;
-      final path = Path()
-        ..moveTo(center.dx, center.dy)
-        ..arcTo(
-          Rect.fromCircle(center: center, radius: radius),
-          startAngle,
-          sweepAngle,
-          false,
-        )
-        ..close();
-      canvas.drawPath(path, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

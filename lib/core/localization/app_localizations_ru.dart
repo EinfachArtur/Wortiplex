@@ -203,4 +203,65 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get prizeClaimed => 'Приз получен!';
+
+  @override
+  String get subBenefitNoAds => 'Никакой рекламы';
+
+  @override
+  String get subBenefitBonus => 'Ежедневный бонус монет без видео';
+
+  @override
+  String get subBenefitDiscount => 'Скидки на подсказки';
+
+  @override
+  String get planMonthly => 'Ежемесячно';
+
+  @override
+  String get planYearly => 'Ежегодно';
+
+  @override
+  String get subscriptionActive => 'Активна';
+
+  @override
+  String subscriptionRenews(Object date) {
+    return 'Продлится $date';
+  }
+
+  @override
+  String get guessDistribution => 'Распределение попыток';
+
+  @override
+  String get resultWon => 'ОТЛИЧНО!';
+
+  @override
+  String get resultLost => 'Почти!';
+
+  @override
+  String get resultWonSub => 'Вы разгадали слово!';
+
+  @override
+  String get resultLostSub => 'В следующий раз получится.';
+
+  @override
+  String get solutionLabel => 'Загаданное слово';
+
+  @override
+  String get attemptsLabel => 'Попытки';
+
+  @override
+  String get streakLabel => 'Серия';
+
+  @override
+  String get shareResult => 'Поделиться';
+
+  @override
+  String get copiedToClipboard => 'Результат скопирован!';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String coinsEarned(Object coins) {
+    return '$coins монет';
+  }
 }

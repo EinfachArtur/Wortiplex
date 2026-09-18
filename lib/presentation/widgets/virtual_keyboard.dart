@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../core/theme/game_style.dart';
 import '../../domain/models/language.dart';
 import '../../domain/models/letter_state.dart';
 
@@ -39,7 +40,7 @@ class VirtualKeyboard extends StatelessWidget {
   });
 
   Color _keyColor(String letter) {
-    if (disabledLetters.contains(letter)) return AppColors.absent.withValues(alpha: 0.4);
+    if (disabledLetters.contains(letter)) return const Color(0x14FFFFFF);
     return switch (letterStates[letter]) {
       LetterState.correct => AppColors.correct,
       LetterState.present => AppColors.present,
@@ -49,8 +50,12 @@ class VirtualKeyboard extends StatelessWidget {
   }
 
   Color _textColor(String letter) {
-    if (disabledLetters.contains(letter) || letterStates[letter] != null) return Colors.white;
-    return Colors.black87;
+    if (disabledLetters.contains(letter)) return Colors.white24;
+    return switch (letterStates[letter]) {
+      LetterState.present => GameColors.night0,
+      LetterState.absent => Colors.white54,
+      _ => Colors.white,
+    };
   }
 
   @override
@@ -89,15 +94,22 @@ class VirtualKeyboard extends StatelessWidget {
           for (final letter in letters)
             Expanded(
               flex: 4,
-              child: _LetterKey(
-                letter: letter,
+              child: _Key(
                 color: _keyColor(letter),
-                textColor: _textColor(letter),
                 enabled: !disabledLetters.contains(letter),
                 onTap: () => onLetter(letter),
+                child: Text(letter, style: gameText(19, color: _textColor(letter), weight: 700)),
               ),
             ),
-          if (isLast) Expanded(flex: 6, child: _BackspaceKey(onTap: onBackspace)),
+          if (isLast)
+            Expanded(
+              flex: 6,
+              child: _Key(
+                color: AppColors.keyDefault,
+                onTap: onBackspace,
+                child: const Icon(Icons.backspace_rounded, color: Colors.white, size: 22),
+              ),
+            ),
           if (right > 0) Spacer(flex: right),
         ],
       ),
@@ -105,64 +117,25 @@ class VirtualKeyboard extends StatelessWidget {
   }
 }
 
-class _LetterKey extends StatelessWidget {
-  final String letter;
+class _Key extends StatelessWidget {
+  final Widget child;
   final Color color;
-  final Color textColor;
   final bool enabled;
   final VoidCallback onTap;
 
-  const _LetterKey({
-    required this.letter,
-    required this.color,
-    required this.textColor,
-    required this.enabled,
-    required this.onTap,
-  });
+  const _Key({required this.child, required this.color, required this.onTap, this.enabled = true});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 2.5),
       child: Material(
         color: color,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            height: 48,
-            alignment: Alignment.center,
-            child: Text(
-              letter,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: textColor),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BackspaceKey extends StatelessWidget {
-  final VoidCallback onTap;
-  const _BackspaceKey({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Material(
-        color: AppColors.keyDefault,
-        borderRadius: BorderRadius.circular(6),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(6),
-          child: Container(
-            height: 48,
-            alignment: Alignment.center,
-            child: const Icon(Icons.backspace_outlined, color: Colors.black87),
-          ),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(height: 50, alignment: Alignment.center, child: child),
         ),
       ),
     );

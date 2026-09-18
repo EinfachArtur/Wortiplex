@@ -453,6 +453,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Prize claimed!'**
   String get prizeClaimed;
+
+  /// No description provided for @subBenefitNoAds.
+  ///
+  /// In en, this message translates to:
+  /// **'No ads, ever'**
+  String get subBenefitNoAds;
+
+  /// No description provided for @subBenefitBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily coin bonus, no video needed'**
+  String get subBenefitBonus;
+
+  /// No description provided for @subBenefitDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Cheaper hints and strike-outs'**
+  String get subBenefitDiscount;
+
+  /// No description provided for @planMonthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get planMonthly;
+
+  /// No description provided for @planYearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get planYearly;
+
+  /// No description provided for @subscriptionActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get subscriptionActive;
+
+  /// No description provided for @subscriptionRenews.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews {date}'**
+  String subscriptionRenews(Object date);
+
+  /// No description provided for @guessDistribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Guess distribution'**
+  String get guessDistribution;
+
+  /// No description provided for @resultWon.
+  ///
+  /// In en, this message translates to:
+  /// **'GREAT!'**
+  String get resultWon;
+
+  /// No description provided for @resultLost.
+  ///
+  /// In en, this message translates to:
+  /// **'So close!'**
+  String get resultLost;
+
+  /// No description provided for @resultWonSub.
+  ///
+  /// In en, this message translates to:
+  /// **'You cracked the word!'**
+  String get resultWonSub;
+
+  /// No description provided for @resultLostSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Better luck next round.'**
+  String get resultLostSub;
+
+  /// No description provided for @solutionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Solution'**
+  String get solutionLabel;
+
+  /// No description provided for @attemptsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Attempts'**
+  String get attemptsLabel;
+
+  /// No description provided for @streakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get streakLabel;
+
+  /// No description provided for @shareResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Share result'**
+  String get shareResult;
+
+  /// No description provided for @copiedToClipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Result copied!'**
+  String get copiedToClipboard;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @coinsEarned.
+  ///
+  /// In en, this message translates to:
+  /// **'{coins} coins'**
+  String coinsEarned(Object coins);
 }
 
 class _AppLocalizationsDelegate
