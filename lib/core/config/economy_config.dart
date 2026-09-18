@@ -19,6 +19,11 @@ class EconomyConfig {
   static const int dailyLoginMaxStreakDays = 7;
 
   static const int spinCost = 150;
+
+  /// Price of one extra attempt after losing a round, and how many a single
+  /// round may contain.
+  static const int extraAttemptCost = 400;
+  static const int maxExtraAttemptsPerRound = 1;
   static const MonthlyPrizes monthlyPrizes = MonthlyPrizes([
     MonthlyPrizeTier(3, 50),
     MonthlyPrizeTier(10, 150),

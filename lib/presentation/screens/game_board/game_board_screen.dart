@@ -12,6 +12,7 @@ import '../../state/game_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../../core/theme/game_style.dart';
 import '../../widgets/coin_icon.dart';
+import '../../widgets/continue_offer_dialog.dart';
 import '../../widgets/game_scaffold.dart';
 import '../../widgets/game_result_dialog.dart';
 import '../../widgets/tile_grid.dart';
@@ -90,13 +91,26 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
       return;
     }
     final outcome = await _controller.submitGuess(_currentInput);
-    if (outcome is GuessAccepted) {
-      setState(() => _currentInput = '');
-      if (outcome.round.isFinished) {
-        ref.read(adsServiceProvider).onRoundCompleted();
-        if (mounted) _showResultDialog(outcome.round);
+    if (outcome is! GuessAccepted) return;
+    setState(() => _currentInput = '');
+    if (!outcome.round.isFinished) return;
+
+    if (outcome.round.result == RoundResult.lost && _controller.canOfferExtraAttempt) {
+      if (!mounted) return;
+      final streak = ref.read(profileControllerProvider).valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0;
+      final wantsExtra = await ContinueOfferDialog.show(context, streak: streak);
+      if (wantsExtra) {
+        // If paying fails (e.g. the balance changed) the loss simply stands.
+        if (await _controller.buyExtraAttempt()) return;
       }
     }
+    await _finishRound(outcome.round);
+  }
+
+  Future<void> _finishRound(Round lostOrWon) async {
+    if (lostOrWon.result == RoundResult.lost) await _controller.finalizeLoss();
+    ref.read(adsServiceProvider).onRoundCompleted();
+    if (mounted) _showResultDialog(lostOrWon);
   }
 
   void _showSnack(String message) {
@@ -106,12 +120,14 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   }
 
   void _showResultDialog(Round round) {
+    final won = round.result == RoundResult.won;
     final streak = ref.read(profileControllerProvider).valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0;
     final isDaily = round.mode == GameMode.daily;
     GameResultDialog.show(
       context,
       round: round,
       streak: streak,
+      coinsWon: won ? EconomyConfig.roundCompletionReward : null,
       onNextRound: () {
         if (isDaily) {
           Navigator.of(context).pop(); // the daily puzzle can only be played once

@@ -80,5 +80,13 @@
   "shareResult": "Поделиться",
   "copiedToClipboard": "Результат скопирован!",
   "ok": "OK",
-  "coinsEarned": "{coins} монет"
+  "coinsEarned": "{coins} монет",
+  "continueTitleStreak": "Потерять серию?",
+  "continueBodyStreak": "Вы действительно хотите потерять серию из {streak}?",
+  "continueTitleNoStreak": "Ещё одна попытка?",
+  "continueBodyNoStreak": "Спасите раунд дополнительной попыткой.",
+  "continueBuy": "Доп. попытка",
+  "continueDeclineStreak": "Потерять серию",
+  "continueDeclineNoStreak": "Сдаться",
+  "continueGetCoins": "Получить монеты"
 }

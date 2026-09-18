@@ -83,9 +83,11 @@ class _GuessDistribution extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final maxCount = stats.guessDistribution.values.fold(0, (a, b) => a > b ? a : b);
+    // Wins with a bought extra attempt land in row 7, so show as many rows as needed.
+    final maxAttempt = stats.guessDistribution.keys.fold(6, (a, b) => a > b ? a : b);
     return Column(
       children: [
-        for (var attempt = 1; attempt <= 6; attempt++)
+        for (var attempt = 1; attempt <= maxAttempt; attempt++)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(

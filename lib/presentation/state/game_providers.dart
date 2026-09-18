@@ -88,6 +88,9 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
 
   bool isValidWord(String word) => _validator.isValid(word);
 
+  /// Evaluates a guess. A win is recorded immediately. A loss is *not*
+  /// recorded yet: the player may still buy an extra attempt (see
+  /// [canOfferExtraAttempt]); call [finalizeLoss] once they decline.
   Future<GuessOutcome> submitGuess(String word) async {
     final round = state.valueOrNull;
     if (round == null) return const GuessRejected(GuessRejectReason.roundAlreadyFinished);
@@ -95,24 +98,50 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
     final outcome = _session().submitGuess(round, word);
     if (outcome is GuessAccepted) {
       state = AsyncData(outcome.round);
-      if (outcome.round.isFinished) {
-        final won = outcome.round.result == RoundResult.won;
-        await ref.read(profileControllerProvider.notifier).recordRoundResult(
-              mode: outcome.round.mode.name,
-              language: outcome.round.language,
-              won: won,
-              guessesUsed: won ? outcome.round.attemptsUsed : null,
-            );
-        if (outcome.round.mode == GameMode.daily) {
-          await ref.read(profileControllerProvider.notifier).recordDailyResult(
-                outcome.round.language,
-                arg.date ?? DateTime.now(),
-                won: won,
-              );
-        }
-      }
+      if (outcome.round.result == RoundResult.won) await _recordResult(outcome.round);
     }
     return outcome;
+  }
+
+  Future<void> _recordResult(Round round) async {
+    final won = round.result == RoundResult.won;
+    final profile = ref.read(profileControllerProvider.notifier);
+    await profile.recordRoundResult(
+      mode: round.mode.name,
+      language: round.language,
+      won: won,
+      guessesUsed: won ? round.attemptsUsed : null,
+    );
+    if (round.mode == GameMode.daily) {
+      await profile.recordDailyResult(round.language, arg.date ?? DateTime.now(), won: won);
+    }
+  }
+
+  bool get canOfferExtraAttempt {
+    final round = state.valueOrNull;
+    return round != null &&
+        round.result == RoundResult.lost &&
+        round.extraAttempts < EconomyConfig.maxExtraAttemptsPerRound;
+  }
+
+  /// Pays for one more attempt and re-opens the lost round. Returns false
+  /// (and changes nothing) if the player can't afford it.
+  Future<bool> buyExtraAttempt() async {
+    final round = state.valueOrNull;
+    if (round == null || !canOfferExtraAttempt) return false;
+    final paid = await ref
+        .read(profileControllerProvider.notifier)
+        .spendCoins(EconomyConfig.extraAttemptCost, CoinTransactionReason.extraAttemptPurchase);
+    if (!paid) return false;
+    state = AsyncData(round.withExtraAttempt());
+    return true;
+  }
+
+  /// The player gave up: count the lost round (streak reset, stats, reward).
+  Future<void> finalizeLoss() async {
+    final round = state.valueOrNull;
+    if (round == null || round.result != RoundResult.lost) return;
+    await _recordResult(round);
   }
 
   Map<String, dynamic> keyboardStates() {

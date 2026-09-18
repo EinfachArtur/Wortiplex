@@ -567,6 +567,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{coins} coins'**
   String coinsEarned(Object coins);
+
+  /// No description provided for @continueTitleStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Lose your streak?'**
+  String get continueTitleStreak;
+
+  /// No description provided for @continueBodyStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you really want to lose your streak of {streak}?'**
+  String continueBodyStreak(int streak);
+
+  /// No description provided for @continueTitleNoStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'One more try?'**
+  String get continueTitleNoStreak;
+
+  /// No description provided for @continueBodyNoStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Save this round with an extra attempt.'**
+  String get continueBodyNoStreak;
+
+  /// No description provided for @continueBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra attempt'**
+  String get continueBuy;
+
+  /// No description provided for @continueDeclineStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Lose streak'**
+  String get continueDeclineStreak;
+
+  /// No description provided for @continueDeclineNoStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Give up'**
+  String get continueDeclineNoStreak;
+
+  /// No description provided for @continueGetCoins.
+  ///
+  /// In en, this message translates to:
+  /// **'Get coins'**
+  String get continueGetCoins;
 }
 
 class _AppLocalizationsDelegate

@@ -84,5 +84,14 @@
   "copiedToClipboard": "Result copied!",
   "ok": "OK",
   "coinsEarned": "{coins} coins",
-  "@coinsEarned": { "placeholders": { "coins": {} } }
+  "@coinsEarned": { "placeholders": { "coins": {} } },
+  "continueTitleStreak": "Lose your streak?",
+  "continueBodyStreak": "Do you really want to lose your streak of {streak}?",
+  "@continueBodyStreak": { "placeholders": { "streak": { "type": "int" } } },
+  "continueTitleNoStreak": "One more try?",
+  "continueBodyNoStreak": "Save this round with an extra attempt.",
+  "continueBuy": "Extra attempt",
+  "continueDeclineStreak": "Lose streak",
+  "continueDeclineNoStreak": "Give up",
+  "continueGetCoins": "Get coins"
 }

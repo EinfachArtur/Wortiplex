@@ -80,5 +80,13 @@
   "shareResult": "Ergebnis teilen",
   "copiedToClipboard": "Ergebnis kopiert!",
   "ok": "OK",
-  "coinsEarned": "{coins} Münzen"
+  "coinsEarned": "{coins} Münzen",
+  "continueTitleStreak": "Serie verlieren?",
+  "continueBodyStreak": "Willst du deine Serie von {streak} wirklich verlieren?",
+  "continueTitleNoStreak": "Noch ein Versuch?",
+  "continueBodyNoStreak": "Rette die Runde mit einem Extra-Versuch.",
+  "continueBuy": "Extra-Versuch",
+  "continueDeclineStreak": "Serie verlieren",
+  "continueDeclineNoStreak": "Aufgeben",
+  "continueGetCoins": "Münzen holen"
 }

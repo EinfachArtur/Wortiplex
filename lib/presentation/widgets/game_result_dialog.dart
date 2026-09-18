@@ -172,7 +172,8 @@ class _GameResultDialogState extends State<GameResultDialog> with TickerProvider
                     children: [
                       _Stat(icon: Icons.track_changes_rounded, color: GameColors.sky, value: '${widget.round.guesses.length}/${widget.round.maxAttempts}', label: l10n.attemptsLabel),
                       _Stat(icon: Icons.local_fire_department_rounded, color: GameColors.amber, value: '${widget.streak}', label: l10n.streakLabel),
-                      _Stat(coin: true, value: '+$coins', label: l10n.coins),
+                      if (_won && (widget.coinsWon == null || widget.coinsWon! > 0))
+                        _Stat(coin: true, value: '+$coins', label: l10n.coins),
                     ],
                   ),
                   const SizedBox(height: 20),

@@ -264,4 +264,30 @@ class AppLocalizationsRu extends AppLocalizations {
   String coinsEarned(Object coins) {
     return '$coins монет';
   }
+
+  @override
+  String get continueTitleStreak => 'Потерять серию?';
+
+  @override
+  String continueBodyStreak(int streak) {
+    return 'Вы действительно хотите потерять серию из $streak?';
+  }
+
+  @override
+  String get continueTitleNoStreak => 'Ещё одна попытка?';
+
+  @override
+  String get continueBodyNoStreak => 'Спасите раунд дополнительной попыткой.';
+
+  @override
+  String get continueBuy => 'Доп. попытка';
+
+  @override
+  String get continueDeclineStreak => 'Потерять серию';
+
+  @override
+  String get continueDeclineNoStreak => 'Сдаться';
+
+  @override
+  String get continueGetCoins => 'Получить монеты';
 }

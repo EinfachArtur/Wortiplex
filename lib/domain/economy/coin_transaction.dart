@@ -10,6 +10,7 @@ enum CoinTransactionReason {
   spinWheelReward,
   spinPurchase,
   monthlyPrize,
+  extraAttemptPurchase,
 }
 
 class CoinTransaction {

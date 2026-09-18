@@ -262,4 +262,30 @@ class AppLocalizationsDe extends AppLocalizations {
   String coinsEarned(Object coins) {
     return '$coins Münzen';
   }
+
+  @override
+  String get continueTitleStreak => 'Serie verlieren?';
+
+  @override
+  String continueBodyStreak(int streak) {
+    return 'Willst du deine Serie von $streak wirklich verlieren?';
+  }
+
+  @override
+  String get continueTitleNoStreak => 'Noch ein Versuch?';
+
+  @override
+  String get continueBodyNoStreak => 'Rette die Runde mit einem Extra-Versuch.';
+
+  @override
+  String get continueBuy => 'Extra-Versuch';
+
+  @override
+  String get continueDeclineStreak => 'Serie verlieren';
+
+  @override
+  String get continueDeclineNoStreak => 'Aufgeben';
+
+  @override
+  String get continueGetCoins => 'Münzen holen';
 }

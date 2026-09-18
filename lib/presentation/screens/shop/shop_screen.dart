@@ -52,6 +52,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
         children: [
           _RowTile(
+            icon: Icons.block_rounded,
+            color: GameColors.sky,
+            title: l10n.removeAds,
+            trailing: const Icon(Icons.chevron_right_rounded, color: GameColors.textDim, size: 28),
+            onTap: _buyRemoveAds,
+          ),
+          _RowTile(
             icon: Icons.play_arrow_rounded,
             color: GameColors.coral,
             title: l10n.watchAdFor20Coins,
@@ -93,13 +100,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             highlight: true,
             trailing: const Icon(Icons.chevron_right_rounded, color: GameColors.textDim, size: 28),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SubscriptionScreen())),
-          ),
-          _RowTile(
-            icon: Icons.block_rounded,
-            color: GameColors.sky,
-            title: l10n.removeAds,
-            trailing: const Icon(Icons.chevron_right_rounded, color: GameColors.textDim, size: 28),
-            onTap: _buyRemoveAds,
           ),
           _RowTile(
             icon: Icons.restore_rounded,

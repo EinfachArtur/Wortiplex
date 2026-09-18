@@ -93,13 +93,19 @@ class ProfileController extends AsyncNotifier<UserProfile> {
     final updatedStats = currentStats.recordResult(won: won, guessesUsed: guessesUsed);
     final statsByKey = {...profile.statsByKey, key: updatedStats};
 
-    final ledger = CoinLedger(balance: profile.coins).earn(
-      amount: EconomyConfig.roundCompletionReward,
-      reason: CoinTransactionReason.roundReward,
-      transactionId: _nextTxId(),
-    );
+    final int newBalance;
+    if (won) {
+      final ledger = CoinLedger(balance: profile.coins).earn(
+        amount: EconomyConfig.roundCompletionReward,
+        reason: CoinTransactionReason.roundReward,
+        transactionId: _nextTxId(),
+      );
+      newBalance = ledger.balance;
+    } else {
+      newBalance = profile.coins;
+    }
 
-    await _persist(profile.copyWith(statsByKey: statsByKey, coins: ledger.balance));
+    await _persist(profile.copyWith(statsByKey: statsByKey, coins: newBalance));
   }
 
   Future<void> recordDailyResult(Language language, DateTime date, {required bool won}) async {

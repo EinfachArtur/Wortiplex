@@ -21,6 +21,9 @@ class Round {
   final DateTime? completedAt;
   final Set<String> disabledLetters;
 
+  /// How many bought extra attempts this round already contains.
+  final int extraAttempts;
+
   const Round({
     required this.id,
     required this.mode,
@@ -32,6 +35,7 @@ class Round {
     this.result = RoundResult.inProgress,
     this.completedAt,
     this.disabledLetters = const {},
+    this.extraAttempts = 0,
   });
 
   bool get isFinished => result != RoundResult.inProgress;
@@ -55,6 +59,26 @@ class Round {
       result: result ?? this.result,
       completedAt: completedAt ?? this.completedAt,
       disabledLetters: disabledLetters ?? this.disabledLetters,
+      extraAttempts: extraAttempts,
+    );
+  }
+
+  /// Re-opens a lost round with one more attempt. Only lost rounds can be
+  /// continued; anything else is returned unchanged.
+  Round withExtraAttempt() {
+    if (result != RoundResult.lost) return this;
+    return Round(
+      id: id,
+      mode: mode,
+      language: language,
+      solutionWord: solutionWord,
+      startedAt: startedAt,
+      maxAttempts: maxAttempts + 1,
+      guesses: guesses,
+      result: RoundResult.inProgress,
+      completedAt: null,
+      disabledLetters: disabledLetters,
+      extraAttempts: extraAttempts + 1,
     );
   }
 }
