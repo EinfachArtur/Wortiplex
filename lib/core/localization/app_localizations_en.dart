@@ -1,0 +1,118 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for English (`en`).
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appTitle => 'Wortiplex';
+
+  @override
+  String get menuClassic => 'Classic';
+
+  @override
+  String get menuDaily => 'Daily Puzzle';
+
+  @override
+  String get menuWordFever => 'Word Fever';
+
+  @override
+  String get menuSecretWord => 'Secret Word';
+
+  @override
+  String get menuTogether => 'Wortiplex Together';
+
+  @override
+  String get comingSoon => 'Coming soon';
+
+  @override
+  String get coins => 'Coins';
+
+  @override
+  String get shop => 'Shop';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get statistics => 'Statistics';
+
+  @override
+  String get howToPlay => 'How to play';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get hint => 'Hint';
+
+  @override
+  String get strikeOutLetter => 'Strike out letter';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get newGame => 'New game';
+
+  @override
+  String get youWon => 'You won!';
+
+  @override
+  String get youLost => 'Out of tries';
+
+  @override
+  String solutionWas(Object word) {
+    return 'The word was $word';
+  }
+
+  @override
+  String get notEnoughLetters => 'Not enough letters';
+
+  @override
+  String get notInWordList => 'Not in word list';
+
+  @override
+  String get notEnoughCoins => 'Not enough coins';
+
+  @override
+  String get watchAdFor20Coins => 'Watch an ad for 20 coins';
+
+  @override
+  String get removeAds => 'Remove ads';
+
+  @override
+  String get restorePurchases => 'Restore purchases';
+
+  @override
+  String get subscriptionTitle => 'Wortiplex+';
+
+  @override
+  String get gamesPlayed => 'Played';
+
+  @override
+  String get winRate => 'Win %';
+
+  @override
+  String get currentStreak => 'Current streak';
+
+  @override
+  String get maxStreak => 'Max streak';
+
+  @override
+  String get play => 'Play';
+
+  @override
+  String get mostPopular => 'Most popular';
+
+  @override
+  String get bestValue => 'Best value';
+
+  @override
+  String get dailyAlreadyPlayed =>
+      'You already solved today\'s puzzle. Come back tomorrow!';
+}
