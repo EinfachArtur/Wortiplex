@@ -15,6 +15,11 @@ class EconomyConfig {
   /// A full-screen ad clip follows every finished round (ad-free players excepted).
   static const int interstitialAdEveryNRounds = 1;
 
+  /// After every Nth ad clip a "go ad-free" offer is shown; the price label is
+  /// only a fallback until the store returns the localized price.
+  static const int removeAdsPromptEveryNAds = 1;
+  static const String removeAdsFallbackPrice = '9,99 €';
+
   static const int dailyLoginBaseCoins = 10;
   static const int dailyLoginStreakBonus = 2;
   static const int dailyLoginMaxStreakDays = 7;

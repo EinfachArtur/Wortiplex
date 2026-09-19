@@ -291,4 +291,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mainMenu => 'Main Menu';
+
+  @override
+  String get removeAdsPromptTitle => 'Fed up with ads?';
+
+  @override
+  String get removeAdsPromptBody =>
+      'Play without interruptions between rounds.';
+
+  @override
+  String get removeAdsPromptOnce => 'One payment, yours forever';
+
+  @override
+  String removeAdsPromptBuy(String price) {
+    return 'Go ad-free for $price';
+  }
+
+  @override
+  String get removeAdsPromptLater => 'Maybe later';
 }

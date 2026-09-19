@@ -89,5 +89,10 @@
   "continueDeclineStreak": "Serie verlieren",
   "continueDeclineNoStreak": "Aufgeben",
   "continueGetCoins": "Münzen holen",
-  "mainMenu": "Hauptmenü"
+  "mainMenu": "Hauptmenü",
+  "removeAdsPromptTitle": "Keine Lust auf Werbung?",
+  "removeAdsPromptBody": "Spiele ohne Unterbrechungen zwischen den Runden.",
+  "removeAdsPromptOnce": "Einmal zahlen, für immer behalten",
+  "removeAdsPromptBuy": "Ohne Werbung für {price}",
+  "removeAdsPromptLater": "Vielleicht später"
 }

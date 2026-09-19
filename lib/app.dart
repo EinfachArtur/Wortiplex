@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/localization/app_localizations.dart';
+import 'core/navigation/navigator_key.dart';
 import 'core/theme/app_theme.dart';
 import 'domain/models/language.dart';
 import 'presentation/screens/home/home_screen.dart';
@@ -36,6 +37,7 @@ class _WortiplexAppState extends ConsumerState<WortiplexApp> {
     final locale = profileAsync.valueOrNull?.language.code;
 
     return MaterialApp(
+      navigatorKey: rootNavigatorKey,
       title: 'WortiPlex',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.game(),

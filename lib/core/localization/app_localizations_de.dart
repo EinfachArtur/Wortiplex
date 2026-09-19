@@ -291,4 +291,22 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get mainMenu => 'Hauptmenü';
+
+  @override
+  String get removeAdsPromptTitle => 'Keine Lust auf Werbung?';
+
+  @override
+  String get removeAdsPromptBody =>
+      'Spiele ohne Unterbrechungen zwischen den Runden.';
+
+  @override
+  String get removeAdsPromptOnce => 'Einmal zahlen, für immer behalten';
+
+  @override
+  String removeAdsPromptBuy(String price) {
+    return 'Ohne Werbung für $price';
+  }
+
+  @override
+  String get removeAdsPromptLater => 'Vielleicht später';
 }

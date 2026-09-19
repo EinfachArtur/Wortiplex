@@ -15,6 +15,7 @@ import '../../../core/theme/game_style.dart';
 import '../../widgets/coin_icon.dart';
 import '../../widgets/continue_offer_dialog.dart';
 import '../../widgets/game_scaffold.dart';
+import '../../widgets/remove_ads_prompt_dialog.dart';
 import '../../widgets/game_result_dialog.dart';
 import '../../widgets/tile_grid.dart';
 import '../../widgets/virtual_keyboard.dart';
@@ -227,6 +228,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     // Capture what the ad needs now: the screen may already be gone when the dialog closes.
     final ads = ref.read(adsServiceProvider);
     final adFree = ref.read(profileControllerProvider).valueOrNull?.subscription.isAdFree ?? false;
+    final container = ProviderScope.containerOf(context);
     GameResultDialog.show(
       context,
       round: round,
@@ -251,8 +253,15 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
         Navigator.of(context).pop();
       },
     ).then((_) {
-      // The round is over and its result has been seen: play the ad clip.
-      if (!adFree) ads.onRoundCompleted();
+      // The round is over and its result has been seen: play the ad clip and,
+      // once it is closed, offer the ad-free upgrade.
+      if (adFree) return;
+      ads.onRoundCompleted(onAdClosed: () {
+        final stillShowsAds = !(container.read(profileControllerProvider).valueOrNull?.subscription.isAdFree ?? false);
+        if (stillShowsAds && container.read(removeAdsPromptCadenceProvider).onRoundCompleted()) {
+          RemoveAdsPromptDialog.show();
+        }
+      });
     });
   }
 

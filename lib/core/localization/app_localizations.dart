@@ -621,6 +621,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Main Menu'**
   String get mainMenu;
+
+  /// No description provided for @removeAdsPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Fed up with ads?'**
+  String get removeAdsPromptTitle;
+
+  /// No description provided for @removeAdsPromptBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Play without interruptions between rounds.'**
+  String get removeAdsPromptBody;
+
+  /// No description provided for @removeAdsPromptOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'One payment, yours forever'**
+  String get removeAdsPromptOnce;
+
+  /// No description provided for @removeAdsPromptBuy.
+  ///
+  /// In en, this message translates to:
+  /// **'Go ad-free for {price}'**
+  String removeAdsPromptBuy(String price);
+
+  /// No description provided for @removeAdsPromptLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Maybe later'**
+  String get removeAdsPromptLater;
 }
 
 class _AppLocalizationsDelegate

@@ -293,4 +293,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get mainMenu => 'Главное меню';
+
+  @override
+  String get removeAdsPromptTitle => 'Надоела реклама?';
+
+  @override
+  String get removeAdsPromptBody => 'Играйте без пауз между раундами.';
+
+  @override
+  String get removeAdsPromptOnce => 'Один платёж, навсегда';
+
+  @override
+  String removeAdsPromptBuy(String price) {
+    return 'Без рекламы за $price';
+  }
+
+  @override
+  String get removeAdsPromptLater => 'Может, позже';
 }

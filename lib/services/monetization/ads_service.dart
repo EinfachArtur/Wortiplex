@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
+import 'package:flutter/foundation.dart' show TargetPlatform, VoidCallback, defaultTargetPlatform;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../domain/economy/ad_cadence.dart';
@@ -28,10 +28,14 @@ abstract class AdsService {
   Future<void> initialize();
   BannerAd createBannerAd({required void Function() onLoaded, required void Function() onFailed});
   Future<void> loadInterstitial();
-  Future<bool> showInterstitialIfReady();
+  /// Shows a loaded interstitial. [onClosed] is called once the player has
+  /// closed it, and only if it was actually shown.
+  Future<bool> showInterstitialIfReady({VoidCallback? onClosed});
   Future<void> loadRewarded();
   Future<bool> showRewardedIfReady({required void Function(int amount) onReward});
-  void onRoundCompleted(); // called every finished round to drive interstitial cadence
+  /// Called for every finished round; shows an interstitial when one is due.
+  /// [onAdClosed] fires after a shown clip has been closed.
+  void onRoundCompleted({VoidCallback? onAdClosed});
 }
 
 class AdMobAdsService implements AdsService {
@@ -88,7 +92,7 @@ class AdMobAdsService implements AdsService {
   }
 
   @override
-  Future<bool> showInterstitialIfReady() async {
+  Future<bool> showInterstitialIfReady({VoidCallback? onClosed}) async {
     final ad = _interstitial;
     if (ad == null) return false;
     _interstitial = null;
@@ -96,6 +100,7 @@ class AdMobAdsService implements AdsService {
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
         loadInterstitial();
+        onClosed?.call();
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
@@ -142,11 +147,11 @@ class AdMobAdsService implements AdsService {
   }
 
   @override
-  void onRoundCompleted() {
+  void onRoundCompleted({VoidCallback? onAdClosed}) {
     if (!_cadence.onRoundCompleted()) return;
     // If no clip has loaded (e.g. offline) the player simply continues; try to
     // have one ready for the next round.
-    showInterstitialIfReady().then((shown) {
+    showInterstitialIfReady(onClosed: onAdClosed).then((shown) {
       if (!shown) loadInterstitial();
     });
   }
@@ -167,7 +172,7 @@ class NoOpAdsService implements AdsService {
   Future<void> loadInterstitial() async {}
 
   @override
-  Future<bool> showInterstitialIfReady() async => false;
+  Future<bool> showInterstitialIfReady({VoidCallback? onClosed}) async => false;
 
   @override
   Future<void> loadRewarded() async {}
@@ -176,5 +181,5 @@ class NoOpAdsService implements AdsService {
   Future<bool> showRewardedIfReady({required void Function(int amount) onReward}) async => false;
 
   @override
-  void onRoundCompleted() {}
+  void onRoundCompleted({VoidCallback? onAdClosed}) {}
 }

@@ -94,5 +94,11 @@
   "continueDeclineStreak": "Lose streak",
   "continueDeclineNoStreak": "Give up",
   "continueGetCoins": "Get coins",
-  "mainMenu": "Main Menu"
+  "mainMenu": "Main Menu",
+  "removeAdsPromptTitle": "Fed up with ads?",
+  "removeAdsPromptBody": "Play without interruptions between rounds.",
+  "removeAdsPromptOnce": "One payment, yours forever",
+  "removeAdsPromptBuy": "Go ad-free for {price}",
+  "@removeAdsPromptBuy": { "placeholders": { "price": { "type": "String" } } },
+  "removeAdsPromptLater": "Maybe later"
 }

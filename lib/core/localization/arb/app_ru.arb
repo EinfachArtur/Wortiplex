@@ -89,5 +89,10 @@
   "continueDeclineStreak": "Потерять серию",
   "continueDeclineNoStreak": "Сдаться",
   "continueGetCoins": "Получить монеты",
-  "mainMenu": "Главное меню"
+  "mainMenu": "Главное меню",
+  "removeAdsPromptTitle": "Надоела реклама?",
+  "removeAdsPromptBody": "Играйте без пауз между раундами.",
+  "removeAdsPromptOnce": "Один платёж, навсегда",
+  "removeAdsPromptBuy": "Без рекламы за {price}",
+  "removeAdsPromptLater": "Может, позже"
 }

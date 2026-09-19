@@ -58,12 +58,12 @@ void main() {
     await tester.pumpWidget(_host(_round(guesses: [_correctGuess()], result: RoundResult.won)));
     await tester.pump(); // fires the zero-delay flip of the first tile
 
-    // Flip (480ms) + small pause (80ms) starts the hop of column 0 ...
+    // Flip (500ms) + small pause (80ms) starts the hop of column 0 ...
     await tester.pump(const Duration(milliseconds: 600));
-    // ... and a quarter of the 520ms hop later the tile is well above its resting place.
+    // ... and mid-hop the first tile is well above its resting place.
     await tester.pump(const Duration(milliseconds: 130));
     expect(_tile(tester, 0, 0).dy, lessThan(rest.dy - 5), reason: 'first tile should be in the air');
-    // The last column has not started hopping yet: it is still delayed by 4 * 260ms.
+    // The last column has not started hopping yet: it is delayed by 4 * 250ms.
     expect((_tile(tester, 0, 4).dy - rest.dy).abs(), lessThan(1));
 
     await tester.pump(const Duration(seconds: 3));
@@ -88,6 +88,6 @@ void main() {
   });
 
   test('reveal duration covers the staggered flip of the whole row', () {
-    expect(TileGrid.revealDuration(5), const Duration(milliseconds: 260 * 4 + 480));
+    expect(TileGrid.revealDuration(5), TileGrid.flipStagger * 4 + TileGrid.flipDuration);
   });
 }
