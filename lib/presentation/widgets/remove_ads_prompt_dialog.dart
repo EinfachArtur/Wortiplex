@@ -84,7 +84,7 @@ class _RemoveAdsPromptDialogState extends ConsumerState<RemoveAdsPromptDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const _NoAdsBadge(),
+              const _NoAdsImage(),
               const SizedBox(height: 16),
               GameText(l10n.removeAdsPromptTitle, size: 26),
               const SizedBox(height: 8),
@@ -114,35 +114,22 @@ class _RemoveAdsPromptDialogState extends ConsumerState<RemoveAdsPromptDialog> {
   }
 }
 
-/// A crossed-out "AD" tag.
-class _NoAdsBadge extends StatelessWidget {
-  const _NoAdsBadge();
+/// The "NO ADS" artwork with a soft mint glow behind it.
+class _NoAdsImage extends StatelessWidget {
+  const _NoAdsImage();
+
+  static const assetPath = 'assets/images/no_ads.png';
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 92,
-      height: 92,
+      width: 104,
+      height: 104,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF6DF0D6), GameColors.mint]),
-        boxShadow: [BoxShadow(color: GameColors.mint.withValues(alpha: 0.5), blurRadius: 24)],
+        boxShadow: [BoxShadow(color: GameColors.mint.withValues(alpha: 0.5), blurRadius: 26)],
       ),
-      alignment: Alignment.center,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          const GameText('AD', size: 34, color: GameColors.night0, shadow: null),
-          Transform.rotate(
-            angle: -0.6,
-            child: Container(
-              width: 76,
-              height: 7,
-              decoration: BoxDecoration(color: GameColors.coral, borderRadius: BorderRadius.circular(4), border: Border.all(color: Colors.white, width: 1.5)),
-            ),
-          ),
-        ],
-      ),
+      child: Image.asset(assetPath, fit: BoxFit.contain),
     );
   }
 }

@@ -80,6 +80,16 @@ void main() {
     expect(find.text('Ohne Werbung für 8,49 €'), findsOneWidget);
   });
 
+  testWidgets('uses the no_ads.png artwork', (tester) async {
+    await tester.pumpWidget(_app(_FakeIap(storeFails: true)));
+    await _open(tester);
+
+    final image = find.byWidgetPredicate(
+      (w) => w is Image && w.image is AssetImage && (w.image as AssetImage).assetName == 'assets/images/no_ads.png',
+    );
+    expect(image, findsOneWidget);
+  });
+
   testWidgets('falls back to the configured price when the store is unavailable', (tester) async {
     await tester.pumpWidget(_app(_FakeIap(storeFails: true)));
     await _open(tester);
