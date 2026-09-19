@@ -12,7 +12,8 @@ class EconomyConfig {
   static const int rewardedAdCoins = 20;
   static const int dailySkipAllowance = 3;
   static const Duration skipRefillInterval = Duration(hours: 8);
-  static const int interstitialAdEveryNRounds = 4;
+  /// A full-screen ad clip follows every finished round (ad-free players excepted).
+  static const int interstitialAdEveryNRounds = 1;
 
   static const int dailyLoginBaseCoins = 10;
   static const int dailyLoginStreakBonus = 2;

@@ -61,13 +61,24 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   void _maybeLoadBanner() {
     final profile = ref.read(profileControllerProvider).valueOrNull;
     if (profile != null && profile.subscription.isAdFree) return;
+    if (_bannerAd != null) return;
     final ads = ref.read(adsServiceProvider);
-    setState(() {
-      _bannerAd = ads.createBannerAd(
-        onLoaded: () => setState(() {}),
-        onFailed: () => setState(() => _bannerAd = null),
+    try {
+      final ad = ads.createBannerAd(
+        onLoaded: () {
+          if (mounted) setState(() {});
+        },
+        onFailed: () {
+          if (mounted) {
+            setState(() => _bannerAd = null);
+            Future.delayed(const Duration(seconds: 3), () {
+              if (mounted) _maybeLoadBanner();
+            });
+          }
+        },
       );
-    });
+      setState(() => _bannerAd = ad);
+    } catch (_) {}
   }
 
   @override
@@ -152,9 +163,9 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     }
   }
 
-  /// Rejects the current input: the row wobbles, the phone buzzes and a hint is shown.
+  /// Rejects the current input: the active row shakes, the device buzzes, and an error hint is shown.
   void _reject(String message) {
-    HapticFeedback.mediumImpact();
+    HapticFeedback.heavyImpact();
     setState(() => _shakeCount++);
     _showSnack(message);
   }
@@ -200,7 +211,6 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
 
   Future<void> _finishRound(Round lostOrWon) async {
     if (lostOrWon.result == RoundResult.lost) await _controller.finalizeLoss();
-    ref.read(adsServiceProvider).onRoundCompleted();
     if (mounted) _showResultDialog(lostOrWon);
   }
 
@@ -214,6 +224,9 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     final won = round.result == RoundResult.won;
     final streak = ref.read(profileControllerProvider).valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0;
     final isDaily = round.mode == GameMode.daily;
+    // Capture what the ad needs now: the screen may already be gone when the dialog closes.
+    final ads = ref.read(adsServiceProvider);
+    final adFree = ref.read(profileControllerProvider).valueOrNull?.subscription.isAdFree ?? false;
     GameResultDialog.show(
       context,
       round: round,
@@ -237,7 +250,10 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
         }
         Navigator.of(context).pop();
       },
-    );
+    ).then((_) {
+      // The round is over and its result has been seen: play the ad clip.
+      if (!adFree) ads.onRoundCompleted();
+    });
   }
 
   Future<void> _buyHint() async {
@@ -346,7 +362,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
             onBackspace: _onBackspace,
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
             child: Row(
               children: [
                 _ToolButton(
@@ -379,11 +395,17 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
               ],
             ),
           ),
-          if (_bannerAd != null)
-            SizedBox(
-              height: _bannerAd!.size.height.toDouble(),
-              width: _bannerAd!.size.width.toDouble(),
-              child: AdWidget(ad: _bannerAd!),
+          if (profile == null || !profile.subscription.isAdFree)
+            Container(
+              height: 52,
+              alignment: Alignment.center,
+              child: _bannerAd != null
+                  ? SizedBox(
+                      height: _bannerAd!.size.height.toDouble(),
+                      width: _bannerAd!.size.width.toDouble(),
+                      child: AdWidget(ad: _bannerAd!),
+                    )
+                  : const SizedBox(height: 50),
             ),
         ],
       ),

@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+import '../../domain/economy/ad_cadence.dart';
 
 /// AdMob test unit IDs (safe to ship during development). Replace with real
 /// ad unit IDs from the AdMob console before release, ideally injected via
@@ -11,16 +14,14 @@ class AdUnitIds {
   static String get rewarded => defaultTargetPlatformIsIOS ? _iosRewarded : _androidRewarded;
 
   static const _androidBanner = 'ca-app-pub-3940256099942544/6300978111';
-  static const _androidInterstitial = 'ca-app-pub-3940256099942544/1033173712';
+  // Google's test *video* interstitials, so development shows real ad clips.
+  static const _androidInterstitial = 'ca-app-pub-3940256099942544/8691691433';
   static const _androidRewarded = 'ca-app-pub-3940256099942544/5224354917';
   static const _iosBanner = 'ca-app-pub-3940256099942544/2934735716';
-  static const _iosInterstitial = 'ca-app-pub-3940256099942544/4411468910';
+  static const _iosInterstitial = 'ca-app-pub-3940256099942544/5135589807';
   static const _iosRewarded = 'ca-app-pub-3940256099942544/1712485313';
 
-  static bool get defaultTargetPlatformIsIOS {
-    // Kept simple/dependency-free; swap for dart:io Platform.isIOS at call sites if needed.
-    return false;
-  }
+  static bool get defaultTargetPlatformIsIOS => defaultTargetPlatform == TargetPlatform.iOS;
 }
 
 abstract class AdsService {
@@ -36,10 +37,10 @@ abstract class AdsService {
 class AdMobAdsService implements AdsService {
   InterstitialAd? _interstitial;
   RewardedAd? _rewarded;
-  int _roundsSinceLastInterstitial = 0;
-  final int interstitialEveryNRounds;
+  bool _loadingInterstitial = false;
+  final AdCadence _cadence;
 
-  AdMobAdsService({this.interstitialEveryNRounds = 4});
+  AdMobAdsService({int interstitialEveryNRounds = 1}) : _cadence = AdCadence(everyNRounds: interstitialEveryNRounds);
 
   @override
   Future<void> initialize() async {
@@ -68,12 +69,20 @@ class AdMobAdsService implements AdsService {
 
   @override
   Future<void> loadInterstitial() async {
+    if (_interstitial != null || _loadingInterstitial) return;
+    _loadingInterstitial = true;
     await InterstitialAd.load(
       adUnitId: AdUnitIds.interstitial,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) => _interstitial = ad,
-        onAdFailedToLoad: (_) => _interstitial = null,
+        onAdLoaded: (ad) {
+          _interstitial = ad;
+          _loadingInterstitial = false;
+        },
+        onAdFailedToLoad: (_) {
+          _interstitial = null;
+          _loadingInterstitial = false;
+        },
       ),
     );
   }
@@ -134,11 +143,12 @@ class AdMobAdsService implements AdsService {
 
   @override
   void onRoundCompleted() {
-    _roundsSinceLastInterstitial++;
-    if (_roundsSinceLastInterstitial >= interstitialEveryNRounds) {
-      _roundsSinceLastInterstitial = 0;
-      showInterstitialIfReady();
-    }
+    if (!_cadence.onRoundCompleted()) return;
+    // If no clip has loaded (e.g. offline) the player simply continues; try to
+    // have one ready for the next round.
+    showInterstitialIfReady().then((shown) {
+      if (!shown) loadInterstitial();
+    });
   }
 }
 

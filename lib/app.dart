@@ -24,6 +24,7 @@ class _WortiplexAppState extends ConsumerState<WortiplexApp> {
     // the purchase listener (activated below) still applies any purchases
     // that complete after this resolves.
     ref.read(iapServiceProvider).initialize();
+    ref.read(adsServiceProvider); // creating it starts preloading the ad clips
   }
 
   @override
