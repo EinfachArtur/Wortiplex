@@ -139,5 +139,5 @@ class UserProfile {
     );
   }
 
-  factory UserProfile.fresh(String id) => UserProfile(id: id);
+  factory UserProfile.fresh(String id) => UserProfile(id: id, coins: 300);
 }

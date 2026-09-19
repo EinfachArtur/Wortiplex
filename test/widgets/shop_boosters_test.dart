@@ -26,14 +26,10 @@ Future<ProviderContainer> _pumpShop(WidgetTester tester, {int coins = 10000}) as
   addTearDown(tester.view.reset);
 
   final container = ProviderContainer(
-    overrides: [profileRepositoryProvider.overrideWithValue(_MemoryRepo(UserProfile.fresh('test')))],
+    overrides: [profileRepositoryProvider.overrideWithValue(_MemoryRepo(UserProfile.fresh('test').copyWith(coins: coins)))],
   );
   addTearDown(container.dispose);
   await container.read(profileControllerProvider.future);
-  // The controller tops up new profiles; pin the balance for the test.
-  final notifier = container.read(profileControllerProvider.notifier);
-  final current = container.read(profileControllerProvider).value!.coins;
-  if (current > coins) await notifier.spendCoins(current - coins, CoinTransactionReason.spinPurchase);
 
   await tester.pumpWidget(UncontrolledProviderScope(
     container: container,

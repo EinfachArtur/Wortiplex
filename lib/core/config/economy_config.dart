@@ -6,6 +6,7 @@ import '../../domain/economy/monthly_prizes.dart';
 class EconomyConfig {
   const EconomyConfig._();
 
+  static const int initialCoins = 300;
   static const int roundCompletionReward = 5;
   static const int hintCost = 150;
   static const int letterStrikeoutCost = 125;
