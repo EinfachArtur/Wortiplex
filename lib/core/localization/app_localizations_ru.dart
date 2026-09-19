@@ -310,4 +310,54 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get removeAdsPromptLater => 'Может, позже';
+
+  @override
+  String get boosterHintTitle => 'Бустер подсказок';
+
+  @override
+  String get boosterStrikeoutTitle => 'Бустер вычёркивания';
+
+  @override
+  String get boosterSkipTitle => 'Бустер пропуска';
+
+  @override
+  String boosterGet(int count) {
+    return 'Взять $count';
+  }
+
+  @override
+  String boosterOwned(int count) {
+    return 'У вас $count';
+  }
+
+  @override
+  String get boosterBought => 'Куплено!';
+
+  @override
+  String wordFeverDesc(int seconds) {
+    return '$seconds сек. на время';
+  }
+
+  @override
+  String wordFeverBest(int score) {
+    return 'Рекорд: $score';
+  }
+
+  @override
+  String get feverScore => 'Очки';
+
+  @override
+  String get feverTimeUp => 'Время вышло!';
+
+  @override
+  String get feverWordsSolved => 'Разгадано слов';
+
+  @override
+  String get feverBestLabel => 'Рекорд';
+
+  @override
+  String get feverNewBest => 'Новый рекорд!';
+
+  @override
+  String get feverPlayAgain => 'Ещё раз';
 }

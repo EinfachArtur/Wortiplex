@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/economy_config.dart';
+import '../../core/config/word_fever_config.dart';
 import '../../data/repositories/profile_repository.dart';
 import '../../domain/economy/coin_ledger.dart';
 import '../../domain/economy/coin_transaction.dart';
@@ -32,6 +33,12 @@ final profileRepositoryProvider = Provider<ProfileRepository>((ref) {
 
 final profileControllerProvider =
     AsyncNotifierProvider<ProfileController, UserProfile>(ProfileController.new);
+
+class WordFeverPayout {
+  final int coins;
+  final bool isNewBest;
+  const WordFeverPayout({required this.coins, required this.isNewBest});
+}
 
 class ProfileController extends AsyncNotifier<UserProfile> {
   int _txCounter = 0;
@@ -112,6 +119,25 @@ class ProfileController extends AsyncNotifier<UserProfile> {
     }
 
     await _persist(profile.copyWith(statsByKey: statsByKey, coins: newBalance));
+  }
+
+  /// Stores the outcome of a finished Word Fever run: pays coins for the
+  /// solved words and keeps the best score.
+  Future<WordFeverPayout> recordWordFeverRun({required int score, required int solved}) async {
+    final profile = state.valueOrNull;
+    if (profile == null) return const WordFeverPayout(coins: 0, isNewBest: false);
+    final coins = solved * WordFeverConfig.coinsPerWord;
+    final isNewBest = score > profile.wordFeverBest;
+    final newBalance = coins > 0
+        ? CoinLedger(balance: profile.coins)
+            .earn(amount: coins, reason: CoinTransactionReason.roundReward, transactionId: _nextTxId())
+            .balance
+        : profile.coins;
+    await _persist(profile.copyWith(
+      coins: newBalance,
+      wordFeverBest: isNewBest ? score : profile.wordFeverBest,
+    ));
+    return WordFeverPayout(coins: coins, isNewBest: isNewBest);
   }
 
   Future<void> recordDailyResult(Language language, DateTime date, {required bool won}) async {
@@ -278,6 +304,26 @@ class ProfileController extends AsyncNotifier<UserProfile> {
       case PrizeKind.spin:
         await _persist(profile.copyWith(spinTickets: profile.spinTickets + prize.amount));
     }
+  }
+
+  /// Buys [amount] boosters of [kind] with coins. Returns false (and changes
+  /// nothing) if the player can't afford them.
+  Future<bool> buyBooster(BoosterKind kind, int amount) async {
+    final cost = EconomyConfig.boosterPrices[kind]!.forAmount(amount);
+    final reason = switch (kind) {
+      BoosterKind.hint => CoinTransactionReason.hintPurchase,
+      BoosterKind.strikeout => CoinTransactionReason.letterStrikeoutPurchase,
+      BoosterKind.skip => CoinTransactionReason.skipPurchase,
+    };
+    if (!await spendCoins(cost, reason)) return false;
+    final profile = state.valueOrNull;
+    if (profile == null) return false;
+    await _persist(switch (kind) {
+      BoosterKind.hint => profile.copyWith(hintTokens: profile.hintTokens + amount),
+      BoosterKind.strikeout => profile.copyWith(strikeoutTokens: profile.strikeoutTokens + amount),
+      BoosterKind.skip => profile.copyWith(skipsAvailable: profile.skipsAvailable + amount),
+    });
+    return true;
   }
 
   Future<bool> useHintToken() async {

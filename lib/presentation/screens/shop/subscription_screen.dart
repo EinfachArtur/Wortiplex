@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
 import '../../../core/config/economy_config.dart';
 import '../../../core/localization/app_localizations.dart';
@@ -10,15 +11,56 @@ import '../../state/ads_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/game_scaffold.dart';
 
-class SubscriptionScreen extends ConsumerWidget {
+class SubscriptionScreen extends ConsumerStatefulWidget {
   const SubscriptionScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SubscriptionScreen> createState() => _SubscriptionScreenState();
+}
+
+class _SubscriptionScreenState extends ConsumerState<SubscriptionScreen> {
+  bool _isRestoring = false;
+
+  Future<void> _restorePurchases() async {
+    setState(() => _isRestoring = true);
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final rc = ref.read(revenueCatServiceProvider);
+
+    final info = await rc.restorePurchases();
+    if (mounted) {
+      setState(() => _isRestoring = false);
+      final hasActive = info?.entitlements.active.isNotEmpty ?? false;
+      messenger
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(hasActive ? l10n.subscriptionActive : 'Keine aktiven Käufe gefunden.'),
+          ),
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
     final subscription = ref.watch(profileControllerProvider).valueOrNull?.subscription ?? const SubscriptionStatus();
-    final iap = ref.read(iapServiceProvider);
+    final rc = ref.read(revenueCatServiceProvider);
+    final offeringsAsync = ref.watch(offeringsProvider);
+
+    // Dynamische Pakete aus RevenueCat Offerings ermitteln
+    Package? monthlyPackage;
+    Package? yearlyPackage;
+    final offerings = offeringsAsync.valueOrNull;
+
+    if (offerings?.current != null) {
+      monthlyPackage = offerings!.current!.monthly;
+      yearlyPackage = offerings.current!.annual;
+    }
+
+    final yearlyPrice = yearlyPackage?.storeProduct.priceString ?? '39,99 €';
+    final monthlyPrice = monthlyPackage?.storeProduct.priceString ?? '4,99 €';
 
     return GameScaffold(
       title: l10n.subscriptionTitle,
@@ -29,7 +71,11 @@ class SubscriptionScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30),
-              gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF6C4DF0), Color(0xFF3B2A8C)]),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF6C4DF0), Color(0xFF3B2A8C)],
+              ),
               border: Border.all(color: GameColors.amber, width: 2),
               boxShadow: [BoxShadow(color: GameColors.violet.withValues(alpha: 0.4), blurRadius: 24)],
             ),
@@ -80,22 +126,40 @@ class SubscriptionScreen extends ConsumerWidget {
           else ...[
             _Plan(
               title: l10n.planYearly,
-              price: '39,99 €',
+              price: yearlyPrice,
               badge: l10n.bestValue,
-              onTap: () => iap.buyNonConsumable(EconomyConfig.subscriptionYearlyId),
+              onTap: () {
+                if (yearlyPackage != null) {
+                  rc.purchasePackage(yearlyPackage);
+                } else {
+                  rc.buyNonConsumable(EconomyConfig.subscriptionYearlyId);
+                }
+              },
             ),
             const SizedBox(height: 12),
             _Plan(
               title: l10n.planMonthly,
-              price: '4,99 €',
-              onTap: () => iap.buyNonConsumable(EconomyConfig.subscriptionMonthlyId),
+              price: monthlyPrice,
+              onTap: () {
+                if (monthlyPackage != null) {
+                  rc.purchasePackage(monthlyPackage);
+                } else {
+                  rc.buyNonConsumable(EconomyConfig.subscriptionMonthlyId);
+                }
+              },
             ),
           ],
           const SizedBox(height: 14),
           Center(
             child: TextButton(
-              onPressed: iap.restorePurchases,
-              child: GameText(l10n.restorePurchases, size: 15, color: GameColors.textDim, shadow: null, weight: 600),
+              onPressed: _isRestoring ? null : _restorePurchases,
+              child: _isRestoring
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: GameColors.textDim),
+                    )
+                  : GameText(l10n.restorePurchases, size: 15, color: GameColors.textDim, shadow: null, weight: 600),
             ),
           ),
         ],
@@ -145,7 +209,10 @@ class _Plan extends StatelessWidget {
         decoration: BoxDecoration(
           color: GameColors.glass,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: badge != null ? GameColors.amber : GameColors.glassBorder, width: badge != null ? 2 : 1),
+          border: Border.all(
+            color: badge != null ? GameColors.amber : GameColors.glassBorder,
+            width: badge != null ? 2 : 1,
+          ),
         ),
         child: Row(
           children: [

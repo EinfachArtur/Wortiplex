@@ -20,7 +20,11 @@
   "youWon": "You won!",
   "youLost": "Out of tries",
   "solutionWas": "The word was {word}",
-  "@solutionWas": { "placeholders": { "word": {} } },
+  "@solutionWas": {
+    "placeholders": {
+      "word": {}
+    }
+  },
   "notEnoughLetters": "Not enough letters",
   "notInWordList": "Not in word list",
   "notEnoughCoins": "Not enough coins",
@@ -38,13 +42,21 @@
   "dailyAlreadyPlayed": "You already solved today's puzzle. Come back tomorrow!",
   "dailyLoginTitle": "Daily gift",
   "dailyLoginClaim": "Claim {coins} coins",
-  "@dailyLoginClaim": { "placeholders": { "coins": {} } },
+  "@dailyLoginClaim": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
   "dailyLoginClaimed": "Come back tomorrow for more",
   "spinWheelTitle": "Spin the wheel",
   "spinWheelAction": "Spin now",
   "spinWheelUsed": "Come back tomorrow to spin again",
   "spinWheelWon": "You won {coins} coins!",
-  "@spinWheelWon": { "placeholders": { "coins": {} } },
+  "@spinWheelWon": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
   "score": "Score",
   "submit": "Submit",
   "notAWord": "Not a word",
@@ -59,9 +71,21 @@
   "tabTrophies": "Trophies",
   "monthlyPrizes": "Monthly goals",
   "winsCount": "{count, plural, one{{count} win} other{{count} wins}}",
-  "@winsCount": { "placeholders": { "count": { "type": "int" } } },
+  "@winsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "playDate": "PLAY {date}",
-  "@playDate": { "placeholders": { "date": { "type": "String" } } },
+  "@playDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "puzzleLocked": "This puzzle is not available yet",
   "prizeClaimed": "Prize claimed!",
   "subBenefitNoAds": "No ads, ever",
@@ -71,7 +95,11 @@
   "planYearly": "Yearly",
   "subscriptionActive": "Active",
   "subscriptionRenews": "Renews {date}",
-  "@subscriptionRenews": { "placeholders": { "date": {} } },
+  "@subscriptionRenews": {
+    "placeholders": {
+      "date": {}
+    }
+  },
   "guessDistribution": "Guess distribution",
   "resultWon": "GREAT!",
   "resultLost": "So close!",
@@ -84,10 +112,20 @@
   "copiedToClipboard": "Result copied!",
   "ok": "OK",
   "coinsEarned": "{coins} coins",
-  "@coinsEarned": { "placeholders": { "coins": {} } },
+  "@coinsEarned": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
   "continueTitleStreak": "Lose your streak?",
   "continueBodyStreak": "Do you really want to lose your streak of {streak}?",
-  "@continueBodyStreak": { "placeholders": { "streak": { "type": "int" } } },
+  "@continueBodyStreak": {
+    "placeholders": {
+      "streak": {
+        "type": "int"
+      }
+    }
+  },
   "continueTitleNoStreak": "One more try?",
   "continueBodyNoStreak": "Save this round with an extra attempt.",
   "continueBuy": "Extra attempt",
@@ -99,6 +137,54 @@
   "removeAdsPromptBody": "Play without interruptions between rounds.",
   "removeAdsPromptOnce": "One payment, yours forever",
   "removeAdsPromptBuy": "Go ad-free for {price}",
-  "@removeAdsPromptBuy": { "placeholders": { "price": { "type": "String" } } },
-  "removeAdsPromptLater": "Maybe later"
+  "@removeAdsPromptBuy": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "removeAdsPromptLater": "Maybe later",
+  "boosterHintTitle": "Hint Booster",
+  "boosterStrikeoutTitle": "Strike-out Booster",
+  "boosterSkipTitle": "Skip Booster",
+  "boosterGet": "Get {count}",
+  "@boosterGet": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterOwned": "You have {count}",
+  "@boosterOwned": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterBought": "Purchased!",
+  "wordFeverDesc": "Beat the clock: {seconds}s",
+  "@wordFeverDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "wordFeverBest": "Best: {score}",
+  "@wordFeverBest": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "feverScore": "Score",
+  "feverTimeUp": "Time's up!",
+  "feverWordsSolved": "Words solved",
+  "feverBestLabel": "Best",
+  "feverNewBest": "New record!",
+  "feverPlayAgain": "Play again"
 }

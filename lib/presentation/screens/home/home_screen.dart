@@ -1,28 +1,75 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/config/word_fever_config.dart';
 import '../../../core/localization/app_localizations.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/game_style.dart';
 import '../../../domain/models/game_mode.dart';
+import '../../state/ads_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/daily_rewards_card.dart';
+import '../../widgets/game_pills.dart';
 import '../../widgets/game_scaffold.dart';
+import '../../widgets/wordmark_tiles.dart';
 import '../daily/daily_puzzle_screen.dart';
 import '../game_board/game_board_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shop/shop_screen.dart';
 import '../stats/stats_screen.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
-  void _open(BuildContext context, Widget screen) =>
-      Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+  @override
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  BannerAd? _bannerAd;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeLoadBanner();
+    });
+  }
+
+  void _maybeLoadBanner() {
+    final profile = ref.read(profileControllerProvider).valueOrNull;
+    if (profile != null && profile.subscription.isAdFree) return;
+    if (_bannerAd != null) return;
+    final ads = ref.read(adsServiceProvider);
+    try {
+      final ad = ads.createBannerAd(
+        onLoaded: () {
+          if (mounted) setState(() {});
+        },
+        onFailed: () {
+          if (mounted) {
+            setState(() => _bannerAd = null);
+            Future.delayed(const Duration(seconds: 3), () {
+              if (mounted) _maybeLoadBanner();
+            });
+          }
+        },
+      );
+      setState(() => _bannerAd = ad);
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  void _open(BuildContext context, Widget screen) => Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen));
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
     final profile = ref.watch(profileControllerProvider).valueOrNull;
@@ -30,137 +77,241 @@ class HomeScreen extends ConsumerWidget {
     final streak = profile?.statsFor('classic', profile.language).currentStreak ?? 0;
     final dailyDone = profile != null && profile.dailyHistory.hasPlayed(profile.language, DateTime.now());
 
+    final isAdFree = profile?.subscription.isAdFree ?? false;
+
     return GameScaffold(
       showBack: false,
-      titleWidget: const _Logo(),
-      bottom: _BottomBar(
-        items: [
-          _NavItem(Icons.shopping_bag_rounded, l10n.shop, () => _open(context, const ShopScreen())),
-          _NavItem(Icons.bar_chart_rounded, l10n.statistics, () => _open(context, const StatsScreen())),
-          _NavItem(Icons.settings_rounded, l10n.settings, () => _open(context, const SettingsScreen())),
-        ],
-      ),
+      titleWidget: Row(children: [if (!isAdFree) const NoAdsButton(), const Spacer()]),
       body: profile == null
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              children: [
-                const DailyRewardsCard(),
-                const SizedBox(height: 18),
-                _ModeCard(
-                  icon: Icons.grid_view_rounded,
-                  color: GameColors.mint,
-                  title: l10n.menuClassic,
-                  subtitle: '${l10n.currentStreak}: $streak',
-                  trailing: streak > 0 ? _Chip(icon: Icons.local_fire_department_rounded, label: '$streak', color: GameColors.amber) : null,
-                  onTap: () => _open(context, const GameBoardScreen(mode: GameMode.classic)),
-                ),
-                _ModeCard(
-                  icon: Icons.calendar_month_rounded,
-                  color: GameColors.amber,
-                  title: l10n.menuDaily,
-                  subtitle: DateFormat.MMMd(locale).format(DateTime.now()),
-                  trailing: dailyDone ? const _Chip(icon: Icons.check_rounded, label: '', color: GameColors.mint) : null,
-                  onTap: () => _open(context, const DailyPuzzleScreen()),
-                ),
-                _ModeCard(
-                  icon: Icons.bolt_rounded,
-                  color: GameColors.coral,
-                  title: l10n.menuWordFever,
-                  subtitle: l10n.comingSoon,
-                ),
-                _ModeCard(
-                  icon: Icons.lock_rounded,
-                  color: GameColors.violet,
-                  title: l10n.menuSecretWord,
-                  subtitle: l10n.comingSoon,
-                ),
-                _ModeCard(
-                  icon: Icons.groups_rounded,
-                  color: GameColors.sky,
-                  title: l10n.menuTogether,
-                  subtitle: l10n.comingSoon,
-                ),
-              ],
+          : Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: _HomeContent(
+                      children: (s) => [
+                        _Section(
+                          height: 48 * s,
+                          child: const WordmarkTiles(),
+                        ),
+                        _Section(
+                          height: 156 * s,
+                          child: const DailyRewardsCard(fill: true),
+                        ),
+                        _Section(
+                          height: 84 * s,
+                          child: _ModeCard(
+                            scale: s,
+                            imageAsset: 'assets/images/logo_2.png',
+                            color: GameColors.mint,
+                            title: l10n.menuClassic,
+                            subtitle: '${l10n.currentStreak}: $streak',
+                            trailing: streak > 0
+                                ? _Chip(icon: Icons.local_fire_department_rounded, label: '$streak', color: GameColors.amber)
+                                : null,
+                            onTap: () => _open(context, const GameBoardScreen(mode: GameMode.classic)),
+                          ),
+                        ),
+                        _Section(
+                          height: 84 * s,
+                          child: _ModeCard(
+                            scale: s,
+                            imageAsset: 'assets/images/kalender.png',
+                            color: GameColors.amber,
+                            title: l10n.menuDaily,
+                            subtitle: DateFormat.MMMd(locale).format(DateTime.now()),
+                            trailing: dailyDone ? const _Chip(icon: Icons.check_rounded, label: '', color: GameColors.mint) : null,
+                            onTap: () => _open(context, const DailyPuzzleScreen()),
+                          ),
+                        ),
+                        _Section(
+                          height: 84 * s,
+                          child: _ModeCard(
+                            scale: s,
+                            imageAsset: 'assets/images/Blitz.png',
+                            color: GameColors.coral,
+                            title: l10n.menuWordFever,
+                            subtitle: l10n.wordFeverDesc(WordFeverConfig.startSeconds),
+                            trailing: profile.wordFeverBest > 0
+                                ? _Chip(icon: Icons.emoji_events_rounded, label: '${profile.wordFeverBest}', color: GameColors.amber)
+                                : null,
+                            onTap: () => _open(context, const GameBoardScreen(mode: GameMode.wordFever)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _BottomBar(
+                    items: [
+                      _NavItem(Icons.shopping_bag_rounded, l10n.shop, () => _open(context, const ShopScreen())),
+                      _NavItem(Icons.bar_chart_rounded, l10n.statistics, () => _open(context, const StatsScreen())),
+                      _NavItem(Icons.settings_rounded, l10n.settings, () => _open(context, const SettingsScreen())),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  if (!isAdFree)
+                    Container(
+                      height: 52,
+                      alignment: Alignment.center,
+                      child: _bannerAd != null
+                          ? SizedBox(
+                              height: _bannerAd!.size.height.toDouble(),
+                              width: _bannerAd!.size.width.toDouble(),
+                              child: AdWidget(ad: _bannerAd!),
+                            )
+                          : const SizedBox(height: 50),
+                    ),
+                ],
+              ),
             ),
     );
   }
 }
 
-/// Wordmark: the logo image plus the name.
-class _Logo extends StatelessWidget {
-  const _Logo();
+/// One block of the home screen with a fixed height. The first two blocks
+/// (name and daily rewards) are separated from the game modes by more space
+/// than the modes are from each other.
+class _Section {
+  final double height;
+  final Widget child;
+  const _Section({required this.height, required this.child});
+}
+
+/// Lays the sections out at their natural size, scales them up a little on
+/// tall screens, and spreads whatever space is still left between the groups,
+/// so the screen never ends up with one huge empty area. Very short screens
+/// scroll instead.
+class _HomeContent extends StatelessWidget {
+  /// Builds the sections for a size factor (1.0 = base size).
+  final List<_Section> Function(double scale) children;
+  const _HomeContent({required this.children});
+
+  static const _minScale = 0.9;
+  static const _maxScale = 1.3;
+  static const _modeGap = 12.0;
+  static const _groupGap = 18.0;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.asset(
-            'assets/images/logo.png',
-            width: 32,
-            height: 32,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-          ),
-        ),
-        const SizedBox(width: 10),
-        const GameText('WortiPlex', size: 26),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Height at scale 1.0: sections + gaps between them (2 group gaps, 2 mode gaps).
+        final base = children(1.0).fold<double>(0, (sum, s) => sum + s.height) + 2 * _groupGap + 2 * _modeGap;
+        final scale = (constraints.maxHeight / base).clamp(_minScale, _maxScale);
+        final sections = children(scale);
+
+        final used = sections.fold<double>(0, (sum, s) => sum + s.height) + 2 * _groupGap * scale + 2 * _modeGap;
+        final spare = constraints.maxHeight - used;
+        final scrolls = spare < 0;
+        // Leftover space goes above the name, between the groups and below the modes.
+        final extra = scrolls ? 0.0 : spare / 4;
+        final groupGap = _groupGap * scale + extra;
+
+        final column = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: extra),
+            sections[0].child.sized(sections[0].height),
+            SizedBox(height: groupGap),
+            sections[1].child.sized(sections[1].height),
+            SizedBox(height: groupGap),
+            sections[2].child.sized(sections[2].height),
+            const SizedBox(height: _modeGap),
+            sections[3].child.sized(sections[3].height),
+            const SizedBox(height: _modeGap),
+            sections[4].child.sized(sections[4].height),
+            SizedBox(height: extra),
+          ],
+        );
+        return scrolls ? SingleChildScrollView(child: column) : column;
+      },
     );
   }
 }
 
+extension on Widget {
+  Widget sized(double height) => SizedBox(height: height, child: this);
+}
+
 class _ModeCard extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? imageAsset;
   final Color color;
   final String title;
   final String subtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
+  final double scale;
 
-  const _ModeCard({required this.icon, required this.color, required this.title, required this.subtitle, this.trailing, this.onTap});
+  const _ModeCard({
+    this.icon,
+    this.imageAsset,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    this.trailing,
+    this.onTap,
+    this.scale = 1.0,
+  });
 
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Opacity(
-          opacity: enabled ? 1 : 0.55,
-          child: GlassCard(
-            padding: const EdgeInsets.all(14),
-            radius: 26,
-            child: Row(
-              children: [
+    final iconSize = 56.0 * scale;
+    return GestureDetector(
+      onTap: onTap,
+      child: Opacity(
+        opacity: enabled ? 1 : 0.55,
+        child: GlassCard(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10 * scale),
+          radius: 24,
+          child: Row(
+            children: [
+              if (imageAsset != null)
+                SizedBox(
+                  width: iconSize,
+                  height: iconSize,
+                  child: Image.asset(imageAsset!, fit: BoxFit.contain),
+                )
+              else
                 Container(
-                  width: 56,
-                  height: 56,
+                  width: iconSize,
+                  height: iconSize,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
-                    gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color.lerp(color, Colors.white, 0.25)!, color]),
-                    boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 12, offset: const Offset(0, 4))],
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color.lerp(color, Colors.white, 0.25)!, color],
+                    ),
+                    boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 3))],
                   ),
-                  child: Icon(icon, color: GameColors.night0, size: 30),
+                  child: Icon(icon, color: GameColors.night0, size: 28),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      GameText(title, size: 19, textAlign: TextAlign.left, shadow: null),
-                      const SizedBox(height: 3),
-                      GameText(subtitle, size: 13, color: GameColors.textDim, textAlign: TextAlign.left, shadow: null, weight: 500),
-                    ],
-                  ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    GameText(title, size: 20 * scale, textAlign: TextAlign.left, shadow: null),
+                    const SizedBox(height: 3),
+                    GameText(
+                      subtitle,
+                      size: 13 * scale,
+                      color: GameColors.textDim,
+                      textAlign: TextAlign.left,
+                      shadow: null,
+                      weight: 500,
+                    ),
+                  ],
                 ),
-                if (trailing != null) ...[trailing!, const SizedBox(width: 6)],
-                if (enabled) const Icon(Icons.chevron_right_rounded, color: GameColors.textDim, size: 28),
-              ],
-            ),
+              ),
+              if (trailing != null) ...[const SizedBox(width: 10), trailing!, const SizedBox(width: 6)],
+              if (enabled) const Icon(Icons.chevron_right_rounded, color: GameColors.textDim, size: 26),
+            ],
           ),
         ),
       ),
@@ -205,11 +356,11 @@ class _BottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 4, 20, 14),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         color: GameColors.pill,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: GameColors.glassBorder),
       ),
       child: Row(
@@ -222,7 +373,7 @@ class _BottomBar extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(item.icon, color: Colors.white, size: 26),
+                    Icon(item.icon, color: Colors.white, size: 24),
                     const SizedBox(height: 2),
                     GameText(item.label, size: 11, color: GameColors.textDim, shadow: null, weight: 600),
                   ],

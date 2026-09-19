@@ -21,6 +21,9 @@ class UserProfile {
   final DailyHistory dailyHistory;
   final Set<String> claimedMonthlyPrizes;
 
+  /// Best Word Fever score so far.
+  final int wordFeverBest;
+
   const UserProfile({
     required this.id,
     this.coins = 0,
@@ -38,6 +41,7 @@ class UserProfile {
     this.spinTickets = 0,
     this.dailyHistory = const DailyHistory(),
     this.claimedMonthlyPrizes = const {},
+    this.wordFeverBest = 0,
   });
 
   static String statsKey(String mode, Language language) => '${mode}_${language.code}';
@@ -62,6 +66,7 @@ class UserProfile {
     int? spinTickets,
     DailyHistory? dailyHistory,
     Set<String>? claimedMonthlyPrizes,
+    int? wordFeverBest,
   }) {
     return UserProfile(
       id: id,
@@ -80,6 +85,7 @@ class UserProfile {
       spinTickets: spinTickets ?? this.spinTickets,
       dailyHistory: dailyHistory ?? this.dailyHistory,
       claimedMonthlyPrizes: claimedMonthlyPrizes ?? this.claimedMonthlyPrizes,
+      wordFeverBest: wordFeverBest ?? this.wordFeverBest,
     );
   }
 
@@ -101,6 +107,7 @@ class UserProfile {
         'spinTickets': spinTickets,
         'dailyHistory': dailyHistory.toMap(),
         'claimedMonthlyPrizes': claimedMonthlyPrizes.toList(),
+        'wordFeverBest': wordFeverBest,
       };
 
   factory UserProfile.fromMap(Map<dynamic, dynamic> map) {
@@ -128,6 +135,7 @@ class UserProfile {
       spinTickets: (map['spinTickets'] as num?)?.toInt() ?? 0,
       dailyHistory: DailyHistory.fromMap(map['dailyHistory'] as Map?),
       claimedMonthlyPrizes: ((map['claimedMonthlyPrizes'] as List?) ?? const []).cast<String>().toSet(),
+      wordFeverBest: (map['wordFeverBest'] as num?)?.toInt() ?? 0,
     );
   }
 

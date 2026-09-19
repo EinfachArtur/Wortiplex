@@ -9,6 +9,7 @@ class EconomyConfig {
   static const int roundCompletionReward = 5;
   static const int hintCost = 150;
   static const int letterStrikeoutCost = 125;
+  static const int skipCost = 200;
   static const int rewardedAdCoins = 20;
   static const int dailySkipAllowance = 3;
   static const Duration skipRefillInterval = Duration(hours: 8);
@@ -46,6 +47,14 @@ class EconomyConfig {
     CoinPackage(productId: 'coins_26000', coins: 26000, priceLabel: '59,99 €', badge: PackageBadge.bestValue),
   ];
 
+  /// Shop booster offers: one item at its base price, or a discounted bundle.
+  static const int boosterBundleSize = 3;
+  static const Map<BoosterKind, BoosterPrice> boosterPrices = {
+    BoosterKind.hint: BoosterPrice(single: hintCost, bundle: 425),
+    BoosterKind.strikeout: BoosterPrice(single: letterStrikeoutCost, bundle: 350),
+    BoosterKind.skip: BoosterPrice(single: skipCost, bundle: 550),
+  };
+
   static const String removeAdsProductId = 'remove_ads_lifetime';
   static const String subscriptionMonthlyId = 'wortiplex_plus_monthly';
   static const String subscriptionYearlyId = 'wortiplex_plus_yearly';
@@ -53,6 +62,16 @@ class EconomyConfig {
   static const String starterPackProductId = 'starter_pack';
   static const int starterPackCoins = 600;
   static const Duration starterPackAvailability = Duration(hours: 36);
+}
+
+enum BoosterKind { hint, strikeout, skip }
+
+class BoosterPrice {
+  final int single;
+  final int bundle;
+  const BoosterPrice({required this.single, required this.bundle});
+
+  int forAmount(int amount) => amount == EconomyConfig.boosterBundleSize ? bundle : single * amount;
 }
 
 enum PackageBadge { none, mostPopular, bestValue }

@@ -49,20 +49,21 @@ class _RemoveAdsPromptDialogState extends ConsumerState<RemoveAdsPromptDialog> {
 
   Future<void> _loadStorePrice() async {
     try {
-      final products = await ref
-          .read(iapServiceProvider)
-          .queryProducts({EconomyConfig.removeAdsProductId}).timeout(const Duration(seconds: 3));
-      if (products.isNotEmpty && mounted) setState(() => _price = products.first.price);
+      final rc = ref.read(revenueCatServiceProvider);
+      final products = await rc.queryProducts({EconomyConfig.removeAdsProductId}).timeout(const Duration(seconds: 3));
+      if (products.isNotEmpty && mounted) {
+        setState(() => _price = products.first.priceString);
+      }
     } catch (_) {
       // No store (emulator, offline): keep the fallback price.
     }
   }
 
   Future<void> _buy() async {
-    final iap = ref.read(iapServiceProvider);
+    final rc = ref.read(revenueCatServiceProvider);
     Navigator.of(context).pop();
     // The purchase listener applies the result; nothing else to do here.
-    await iap.buyNonConsumable(EconomyConfig.removeAdsProductId);
+    await rc.buyNonConsumable(EconomyConfig.removeAdsProductId);
   }
 
   @override

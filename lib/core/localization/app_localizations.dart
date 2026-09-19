@@ -651,6 +651,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Maybe later'**
   String get removeAdsPromptLater;
+
+  /// No description provided for @boosterHintTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hint Booster'**
+  String get boosterHintTitle;
+
+  /// No description provided for @boosterStrikeoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Strike-out Booster'**
+  String get boosterStrikeoutTitle;
+
+  /// No description provided for @boosterSkipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip Booster'**
+  String get boosterSkipTitle;
+
+  /// No description provided for @boosterGet.
+  ///
+  /// In en, this message translates to:
+  /// **'Get {count}'**
+  String boosterGet(int count);
+
+  /// No description provided for @boosterOwned.
+  ///
+  /// In en, this message translates to:
+  /// **'You have {count}'**
+  String boosterOwned(int count);
+
+  /// No description provided for @boosterBought.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchased!'**
+  String get boosterBought;
+
+  /// No description provided for @wordFeverDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Beat the clock: {seconds}s'**
+  String wordFeverDesc(int seconds);
+
+  /// No description provided for @wordFeverBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best: {score}'**
+  String wordFeverBest(int score);
+
+  /// No description provided for @feverScore.
+  ///
+  /// In en, this message translates to:
+  /// **'Score'**
+  String get feverScore;
+
+  /// No description provided for @feverTimeUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Time\'s up!'**
+  String get feverTimeUp;
+
+  /// No description provided for @feverWordsSolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Words solved'**
+  String get feverWordsSolved;
+
+  /// No description provided for @feverBestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Best'**
+  String get feverBestLabel;
+
+  /// No description provided for @feverNewBest.
+  ///
+  /// In en, this message translates to:
+  /// **'New record!'**
+  String get feverNewBest;
+
+  /// No description provided for @feverPlayAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Play again'**
+  String get feverPlayAgain;
 }
 
 class _AppLocalizationsDelegate

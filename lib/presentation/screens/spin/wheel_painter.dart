@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -28,8 +29,22 @@ class WheelPainter extends CustomPainter {
   final List<SpinPrize> wedges;
   final double rotation;
   final double pulse; // 0..1, drives the blinking ring studs
+  final ui.Image? coinImage;
+  final ui.Image? hintImage;
+  final ui.Image? strikeoutImage;
+  final ui.Image? skipImage;
+  final ui.Image? spinImage;
 
-  WheelPainter({required this.wedges, required this.rotation, required this.pulse});
+  WheelPainter({
+    required this.wedges,
+    required this.rotation,
+    required this.pulse,
+    this.coinImage,
+    this.hintImage,
+    this.strikeoutImage,
+    this.skipImage,
+    this.spinImage,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -116,7 +131,34 @@ class WheelPainter extends CustomPainter {
     final r = inner * 0.15;
     final badge = center + Offset(0, -r * 0.35);
 
-    if (prize.kind == PrizeKind.coins) {
+    ui.Image? imageForKind;
+    switch (prize.kind) {
+      case PrizeKind.coins:
+        imageForKind = coinImage;
+      case PrizeKind.hint:
+        imageForKind = hintImage;
+      case PrizeKind.strikeout:
+        imageForKind = strikeoutImage;
+      case PrizeKind.skip:
+        imageForKind = skipImage;
+      case PrizeKind.spin:
+        imageForKind = spinImage;
+    }
+
+    if (imageForKind != null) {
+      if (prize.kind != PrizeKind.coins) {
+        canvas.drawCircle(badge + const Offset(0, 2.5), r, Paint()..color = const Color(0x40000000));
+        canvas.drawCircle(badge, r, Paint()..color = Colors.white);
+      }
+      final imgRadius = r * (prize.kind == PrizeKind.coins ? 1.12 : 0.85);
+      final imgRect = Rect.fromCircle(center: badge, radius: imgRadius);
+      paintImage(
+        canvas: canvas,
+        rect: imgRect,
+        image: imageForKind,
+        fit: BoxFit.contain,
+      );
+    } else if (prize.kind == PrizeKind.coins) {
       canvas.drawCircle(badge + const Offset(0, 2.5), r, Paint()..color = const Color(0x40000000));
       canvas.drawCircle(badge, r, Paint()
         ..shader = const LinearGradient(colors: [GameColors.amberLight, GameColors.amber, Color(0xFFE8920A)])
@@ -151,7 +193,14 @@ class WheelPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant WheelPainter old) => old.rotation != rotation || old.pulse != pulse;
+  bool shouldRepaint(covariant WheelPainter old) =>
+      old.rotation != rotation ||
+      old.pulse != pulse ||
+      old.coinImage != coinImage ||
+      old.hintImage != hintImage ||
+      old.strikeoutImage != strikeoutImage ||
+      old.skipImage != skipImage ||
+      old.spinImage != spinImage;
 }
 
 /// The wheel's pointer: a golden drop pointing down into the wheel.

@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../core/config/economy_config.dart';
+import '../../../core/config/word_fever_config.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../domain/game/game_session.dart';
+import '../../../domain/game/word_fever_run.dart';
 import '../../../domain/models/game_mode.dart';
 import '../../../domain/models/round.dart';
 import '../../state/ads_providers.dart';
@@ -14,11 +18,13 @@ import '../../state/profile_providers.dart';
 import '../../../core/theme/game_style.dart';
 import '../../widgets/coin_icon.dart';
 import '../../widgets/continue_offer_dialog.dart';
+import '../../widgets/game_pills.dart';
 import '../../widgets/game_scaffold.dart';
-import '../../widgets/remove_ads_prompt_dialog.dart';
 import '../../widgets/game_result_dialog.dart';
+import '../../widgets/remove_ads_prompt_dialog.dart';
 import '../../widgets/tile_grid.dart';
 import '../../widgets/virtual_keyboard.dart';
+import '../../widgets/word_fever_result_dialog.dart';
 
 class GameBoardScreen extends ConsumerStatefulWidget {
   final GameMode mode;
@@ -31,7 +37,7 @@ class GameBoardScreen extends ConsumerStatefulWidget {
   ConsumerState<GameBoardScreen> createState() => _GameBoardScreenState();
 }
 
-class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
+class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsBindingObserver {
   List<String> _currentLetters = [];
   int _cursorIndex = 0;
   String get _currentInput => _currentLetters.join('');
@@ -39,11 +45,26 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   int _shakeCount = 0;
   BannerAd? _bannerAd;
 
+  // Word Fever: a countdown run made of consecutive words.
+  WordFeverRun _run = WordFeverRun.start();
+  Timer? _clock;
+  bool _appActive = true;
+  bool _clockPaused = false; // while a finished word plays its reveal animation
+  bool _runOver = false;
+  int _bonusFlash = 0; // seconds just gained, shown briefly next to the clock
+
+  bool get _isFever => widget.mode == GameMode.wordFever;
+
   @override
   void initState() {
     super.initState();
+    if (_isFever) WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _maybeLoadBanner();
+      if (_isFever) {
+        _startRun();
+        return;
+      }
       ref.read(profileControllerProvider.notifier).refreshSkips();
       final currentRound = ref.read(roundControllerProvider(_params)).valueOrNull;
       if (currentRound != null && currentRound.isFinished && widget.mode != GameMode.daily) {
@@ -83,7 +104,93 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appActive = state == AppLifecycleState.resumed;
+  }
+
+  Future<void> _startRun() async {
+    _clock?.cancel();
+    await ref.read(roundControllerProvider(_params).future); // word list loaded
+    if (!mounted) return;
+    await _controller.newRound(_params);
+    if (!mounted) return;
+    final len = ref.read(roundControllerProvider(_params)).valueOrNull?.solutionWord.length ?? 5;
+    setState(() {
+      _run = WordFeverRun.start();
+      _runOver = false;
+      _clockPaused = false;
+      _bonusFlash = 0;
+      _currentLetters = List.filled(len, '');
+      _cursorIndex = 0;
+    });
+    _clock = Timer.periodic(const Duration(seconds: 1), (_) => _onClockTick());
+  }
+
+  void _onClockTick() {
+    if (!mounted || !_appActive || _clockPaused || _runOver) return;
+    setState(() => _run = _run.tick());
+    if (_run.isOver) unawaited(_endRun());
+  }
+
+  Future<void> _endRun() async {
+    if (_runOver) return;
+    _runOver = true;
+    _clock?.cancel();
+    final payout = await ref
+        .read(profileControllerProvider.notifier)
+        .recordWordFeverRun(score: _run.score, solved: _run.solved);
+    ref.read(adsServiceProvider).onRoundCompleted();
+    if (!mounted) return;
+    final best = ref.read(profileControllerProvider).valueOrNull?.wordFeverBest ?? _run.score;
+    await WordFeverResultDialog.show(
+      context,
+      run: _run,
+      payout: payout,
+      best: best,
+      onPlayAgain: _startRun,
+      onHome: () => Navigator.of(context).pop(),
+    );
+  }
+
+  /// A word ended (solved or out of attempts): score it, let the reveal play
+  /// with the clock paused, then deal the next word.
+  Future<void> _onFeverWordFinished(Round round) async {
+    final l10n = AppLocalizations.of(context);
+    final won = round.result == RoundResult.won;
+    _clockPaused = true;
+    setState(() {
+      if (won) {
+        _run = _run.withSolved(attemptsLeft: round.attemptsLeft);
+        _bonusFlash = WordFeverConfig.solveBonusSeconds;
+      } else {
+        _run = _run.withFailed();
+      }
+    });
+    if (won) {
+      Future.delayed(const Duration(milliseconds: 1400), () {
+        if (mounted) setState(() => _bonusFlash = 0);
+      });
+    } else {
+      _showSnack(l10n.solutionWas(round.solutionWord));
+    }
+    await Future.delayed(
+      TileGrid.revealDuration(round.solutionWord.length) + (won ? TileGrid.winWaveDuration : const Duration(milliseconds: 1400)),
+    );
+    if (!mounted || _runOver) return;
+    await _controller.newRound(_params);
+    final len = ref.read(roundControllerProvider(_params)).valueOrNull?.solutionWord.length ?? 5;
+    if (!mounted) return;
+    setState(() {
+      _currentLetters = List.filled(len, '');
+      _cursorIndex = 0;
+      _clockPaused = false;
+    });
+  }
+
+  @override
   void dispose() {
+    _clock?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _focusNode.dispose();
     _bannerAd?.dispose();
     super.dispose();
@@ -173,7 +280,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
 
   Future<void> _onSubmit(Round round) async {
     final l10n = AppLocalizations.of(context);
-    if (round.isFinished) return;
+    if (round.isFinished || _runOver || _clockPaused) return;
     final len = round.solutionWord.length;
     _ensureLetterList(len);
     if (_currentLetters.any((l) => l.isEmpty)) {
@@ -192,6 +299,10 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
       _cursorIndex = 0;
     });
     if (!outcome.round.isFinished) return;
+    if (_isFever) {
+      await _onFeverWordFinished(outcome.round);
+      return;
+    }
 
     // Let the reveal flip (and the win wave) play out before any dialog covers it.
     final won = outcome.round.result == RoundResult.won;
@@ -212,6 +323,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
 
   Future<void> _finishRound(Round lostOrWon) async {
     if (lostOrWon.result == RoundResult.lost) await _controller.finalizeLoss();
+    ref.read(adsServiceProvider).onRoundCompleted();
     if (mounted) _showResultDialog(lostOrWon);
   }
 
@@ -225,10 +337,6 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     final won = round.result == RoundResult.won;
     final streak = ref.read(profileControllerProvider).valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0;
     final isDaily = round.mode == GameMode.daily;
-    // Capture what the ad needs now: the screen may already be gone when the dialog closes.
-    final ads = ref.read(adsServiceProvider);
-    final adFree = ref.read(profileControllerProvider).valueOrNull?.subscription.isAdFree ?? false;
-    final container = ProviderScope.containerOf(context);
     GameResultDialog.show(
       context,
       round: round,
@@ -252,17 +360,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
         }
         Navigator.of(context).pop();
       },
-    ).then((_) {
-      // The round is over and its result has been seen: play the ad clip and,
-      // once it is closed, offer the ad-free upgrade.
-      if (adFree) return;
-      ads.onRoundCompleted(onAdClosed: () {
-        final stillShowsAds = !(container.read(profileControllerProvider).valueOrNull?.subscription.isAdFree ?? false);
-        if (stillShowsAds && container.read(removeAdsPromptCadenceProvider).onRoundCompleted()) {
-          RemoveAdsPromptDialog.show();
-        }
-      });
-    });
+    );
   }
 
   Future<void> _buyHint() async {
@@ -284,6 +382,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   Future<void> _skipRound() async {
     final used = await ref.read(profileControllerProvider.notifier).useSkip();
     if (!used) return;
+    if (_isFever) setState(() => _run = _run.withFailed());
     await _controller.newRound(_params);
     final len = ref.read(roundControllerProvider(_params)).valueOrNull?.solutionWord.length ?? 5;
     setState(() {
@@ -298,9 +397,32 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     final streak = ref.watch(profileControllerProvider.select(
       (p) => p.valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0,
     ));
+    final isAdFree = ref.watch(profileControllerProvider.select(
+      (p) => p.valueOrNull?.subscription.isAdFree ?? false,
+    ));
+    final l10n = AppLocalizations.of(context);
 
     return GameScaffold(
-      titleWidget: Align(alignment: Alignment.centerLeft, child: _ScoreChip(streak: streak, daily: widget.mode == GameMode.daily)),
+      titleWidget: Row(
+        children: [
+          if (!isAdFree)
+            NoAdsButton(
+              onTap: () => RemoveAdsPromptDialog.show(),
+            )
+          else
+            const SizedBox(width: 42),
+          const Spacer(),
+          if (_isFever)
+            _ScoreChip(icon: Icons.bolt_rounded, label: l10n.feverScore, value: _run.score)
+          else
+            _ScoreChip(
+              icon: widget.mode == GameMode.daily ? Icons.calendar_month_rounded : Icons.local_fire_department_rounded,
+              label: l10n.score,
+              value: streak,
+            ),
+          const Spacer(),
+        ],
+      ),
       body: roundAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),
@@ -331,24 +453,27 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              'assets/images/logo.png',
-                              width: 36,
-                              height: 36,
+                      if (_isFever)
+                        _FeverClock(secondsLeft: _run.secondsLeft, bonus: _bonusFlash, combo: _run.combo)
+                      else
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                width: 36,
+                                height: 36,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 10),
-                          const GameText(
-                            'WortiPlex',
-                            size: 28,
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 10),
+                            const GameText(
+                              'WortiPlex',
+                              size: 28,
+                            ),
+                          ],
+                        ),
                       const SizedBox(height: 22),
                       TileGrid(
                         round: round,
@@ -375,7 +500,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
             child: Row(
               children: [
                 _ToolButton(
-                  icon: Icons.lightbulb_rounded,
+                  imageAsset: 'assets/images/glühbirne_1.png',
                   color: GameColors.amber,
                   tooltip: l10n.hint,
                   cost: EconomyConfig.hintCost,
@@ -384,7 +509,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
                 ),
                 const SizedBox(width: 8),
                 _ToolButton(
-                  icon: Icons.block_rounded,
+                  imageAsset: 'assets/images/fadenkreuz_1.png',
                   color: const Color(0xFFFF6B8E),
                   tooltip: l10n.strikeOutLetter,
                   cost: EconomyConfig.letterStrikeoutCost,
@@ -395,7 +520,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
                 Expanded(child: _buildSubmitButton(round, l10n)),
                 const SizedBox(width: 10),
                 _ToolButton(
-                  icon: Icons.fast_forward_rounded,
+                  imageAsset: 'assets/images/Skip_1.png',
                   color: GameColors.mint,
                   tooltip: l10n.skip,
                   badge: '$skipsAvailable',
@@ -456,14 +581,70 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   }
 }
 
-class _ScoreChip extends StatelessWidget {
-  final int streak;
-  final bool daily;
-  const _ScoreChip({required this.streak, required this.daily});
+/// Countdown bar of a Word Fever run; turns red when time is nearly up.
+class _FeverClock extends StatelessWidget {
+  final int secondsLeft;
+  final int bonus;
+  final int combo;
+  const _FeverClock({required this.secondsLeft, required this.bonus, required this.combo});
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final low = secondsLeft <= WordFeverConfig.lowTimeSeconds;
+    final color = low ? GameColors.coral : (secondsLeft <= 30 ? GameColors.amber : GameColors.mint);
+    final progress = (secondsLeft / WordFeverConfig.startSeconds).clamp(0.0, 1.0);
+    final minutes = secondsLeft ~/ 60;
+    final seconds = (secondsLeft % 60).toString().padLeft(2, '0');
+    return Container(
+      key: const ValueKey('fever_clock'),
+      width: 300,
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 8),
+      decoration: BoxDecoration(
+        color: GameColors.glass,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: color.withValues(alpha: 0.8), width: 1.6),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.timer_rounded, color: color, size: 24),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 58,
+            child: GameText('$minutes:$seconds', size: 22, color: color, shadow: null, textAlign: TextAlign.left),
+          ),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 10,
+                color: color,
+                backgroundColor: GameColors.pill,
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 54,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 250),
+              opacity: bonus > 0 ? 1 : 0,
+              child: GameText('+${bonus}s', size: 16, color: GameColors.mint, shadow: null, textAlign: TextAlign.right),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScoreChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int value;
+  const _ScoreChip({required this.icon, required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 6, 16, 6),
       decoration: BoxDecoration(
@@ -474,14 +655,14 @@ class _ScoreChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(daily ? Icons.calendar_month_rounded : Icons.local_fire_department_rounded, color: GameColors.amber, size: 24),
+          Icon(icon, color: GameColors.amber, size: 24),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              GameText(l10n.score.toUpperCase(), size: 10, color: GameColors.textDim, shadow: null, weight: 600),
-              GameText('$streak', size: 20, shadow: null),
+              GameText(label.toUpperCase(), size: 10, color: GameColors.textDim, shadow: null, weight: 600),
+              GameText('$value', size: 20, shadow: null),
             ],
           ),
         ],
@@ -492,7 +673,8 @@ class _ScoreChip extends StatelessWidget {
 
 /// Square glass button for a booster (with cost or stock) or the skip action.
 class _ToolButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? imageAsset;
   final Color color;
   final String tooltip;
   final int? cost;
@@ -501,7 +683,8 @@ class _ToolButton extends StatelessWidget {
   final VoidCallback? onTap;
 
   const _ToolButton({
-    required this.icon,
+    this.icon,
+    this.imageAsset,
     required this.color,
     required this.tooltip,
     required this.onTap,
@@ -534,7 +717,19 @@ class _ToolButton extends StatelessWidget {
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: color.withValues(alpha: enabled ? 0.85 : 0.25), width: 2),
                   ),
-                  child: Icon(icon, color: enabled ? color : color.withValues(alpha: 0.35), size: 28),
+                  child: Center(
+                    child: imageAsset != null
+                        ? Opacity(
+                            opacity: enabled ? 1.0 : 0.4,
+                            child: Image.asset(
+                              imageAsset!,
+                              width: 32,
+                              height: 32,
+                              fit: BoxFit.contain,
+                            ),
+                          )
+                        : Icon(icon, color: enabled ? color : color.withValues(alpha: 0.35), size: 28),
+                  ),
                 ),
               ),
               if (cost != null)

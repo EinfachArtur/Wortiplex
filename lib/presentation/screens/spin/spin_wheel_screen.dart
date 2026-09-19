@@ -1,13 +1,16 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../core/config/economy_config.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/game_style.dart';
 import '../../../domain/economy/spin_wheel.dart';
+import '../../state/ads_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/coin_icon.dart';
 import '../../widgets/game_pills.dart';
@@ -35,15 +38,79 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
   int _lastTick = 0;
   bool _busy = false;
   SpinResult? _won;
+  ui.Image? _coinImage;
+  ui.Image? _hintImage;
+  ui.Image? _strikeoutImage;
+  ui.Image? _skipImage;
+  ui.Image? _spinImage;
+  BannerAd? _bannerAd;
 
   @override
   void initState() {
     super.initState();
     _spin.addListener(_onTick);
+    _loadImages();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeLoadBanner();
+    });
+  }
+
+  void _maybeLoadBanner() {
+    final profile = ref.read(profileControllerProvider).valueOrNull;
+    if (profile != null && profile.subscription.isAdFree) return;
+    if (_bannerAd != null) return;
+    final ads = ref.read(adsServiceProvider);
+    try {
+      final ad = ads.createBannerAd(
+        onLoaded: () {
+          if (mounted) setState(() {});
+        },
+        onFailed: () {
+          if (mounted) {
+            setState(() => _bannerAd = null);
+            Future.delayed(const Duration(seconds: 3), () {
+              if (mounted) _maybeLoadBanner();
+            });
+          }
+        },
+      );
+      setState(() => _bannerAd = ad);
+    } catch (_) {}
+  }
+
+  Future<ui.Image?> _loadImage(String assetPath) async {
+    try {
+      final data = await rootBundle.load(assetPath);
+      final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+      final frame = await codec.getNextFrame();
+      return frame.image;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _loadImages() async {
+    final results = await Future.wait([
+      _loadImage('assets/images/coin.png'),
+      _loadImage('assets/images/glühbirne_1.png'),
+      _loadImage('assets/images/fadenkreuz_1.png'),
+      _loadImage('assets/images/Skip_1.png'),
+      _loadImage('assets/images/Glücksrad.png'),
+    ]);
+    if (mounted) {
+      setState(() {
+        _coinImage = results[0];
+        _hintImage = results[1];
+        _strikeoutImage = results[2];
+        _skipImage = results[3];
+        _spinImage = results[4];
+      });
+    }
   }
 
   @override
   void dispose() {
+    _bannerAd?.dispose();
     _spin.dispose();
     _lights.dispose();
     super.dispose();
@@ -113,12 +180,12 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 16, 0),
+                    padding: const EdgeInsets.fromLTRB(0, 6, 16, 0),
                     child: Row(
                       children: [
                         const GameBackButton(),
                         const Spacer(),
-                        CountPill(count: freeSpins, icon: Icons.confirmation_number_rounded),
+                        CountPill(count: freeSpins, imageAsset: 'assets/images/Glücksrad.png'),
                         const SizedBox(width: 10),
                         CoinPill(
                           onAdd: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ShopScreen())),
@@ -126,15 +193,27 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  GameText(l10n.spinWheelTitle, size: 30),
-                  const Spacer(),
+                  const Spacer(flex: 2),
+                  GameText(l10n.spinWheelTitle, size: 28),
+                  const Spacer(flex: 2),
                   _buildWheel(),
-                  const Spacer(),
+                  const Spacer(flex: 2),
                   _buildSpinButton(l10n, freeSpins),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 12),
                   _buildStock(profile?.hintTokens ?? 0, profile?.strikeoutTokens ?? 0, profile?.skipsAvailable ?? 0),
-                  const SizedBox(height: 20),
+                  const Spacer(flex: 3),
+                  if (profile == null || !profile.subscription.isAdFree)
+                    Container(
+                      height: 52,
+                      alignment: Alignment.center,
+                      child: _bannerAd != null
+                          ? SizedBox(
+                              height: _bannerAd!.size.height.toDouble(),
+                              width: _bannerAd!.size.width.toDouble(),
+                              child: AdWidget(ad: _bannerAd!),
+                            )
+                          : const SizedBox(height: 50),
+                    ),
                 ],
               ),
             ),
@@ -147,7 +226,7 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
 
   Widget _buildWheel() {
     return LayoutBuilder(builder: (context, constraints) {
-      final size = math.min(constraints.maxWidth - 28, 400.0);
+      final size = math.min(constraints.maxWidth - 48, 320.0);
       return SizedBox(
         width: size,
         height: size + 34,
@@ -160,7 +239,16 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
                 animation: _lights,
                 builder: (_, _) => CustomPaint(
                   size: Size.square(size),
-                  painter: WheelPainter(wedges: _wheel.wedges, rotation: _rotation, pulse: _lights.value),
+                  painter: WheelPainter(
+                    wedges: _wheel.wedges,
+                    rotation: _rotation,
+                    pulse: _lights.value,
+                    coinImage: _coinImage,
+                    hintImage: _hintImage,
+                    strikeoutImage: _strikeoutImage,
+                    skipImage: _skipImage,
+                    spinImage: _spinImage,
+                  ),
                 ),
               ),
             ),
@@ -177,27 +265,29 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
       clipBehavior: Clip.none,
       children: [
         ChunkyButton(
-          width: 300,
-          height: 72,
+          width: 290,
+          height: 68,
           onPressed: _busy ? null : _startSpin,
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.casino_rounded, color: GameColors.night0, size: 30),
-              const SizedBox(width: 10),
-              GameText(l10n.spinButton, size: 28, color: GameColors.night0, shadow: null),
+              GameText(l10n.spinButton.toUpperCase(), size: 24, color: GameColors.night0, shadow: null),
               const SizedBox(width: 14),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: GameColors.night0.withValues(alpha: 0.85), borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: GameColors.night0.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: hasFree
-                    ? GameText(l10n.free, size: 16, color: GameColors.mint, shadow: null)
+                    ? GameText(l10n.free.toUpperCase(), size: 15, color: GameColors.mint, shadow: null, weight: 800)
                     : Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const CoinIcon(size: 20),
                           const SizedBox(width: 6),
-                          GameText('${EconomyConfig.spinCost}', size: 16, shadow: null),
+                          GameText('${EconomyConfig.spinCost}', size: 16, shadow: null, weight: 800),
                         ],
                       ),
               ),
@@ -207,7 +297,7 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
         if (hasFree)
           Positioned(
             right: -6,
-            top: -10,
+            top: -8,
             child: Container(
               width: 32,
               height: 32,
@@ -216,8 +306,11 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
                 color: GameColors.coral,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 2),
+                boxShadow: [
+                  BoxShadow(color: GameColors.coral.withValues(alpha: 0.5), blurRadius: 8),
+                ],
               ),
-              child: GameText('$freeSpins', size: 17, shadow: null),
+              child: GameText('$freeSpins', size: 16, shadow: null, weight: 800),
             ),
           ),
       ],
@@ -225,15 +318,15 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
   }
 
   Widget _buildStock(int hints, int strikeouts, int skips) {
-    Widget chip(IconData icon, Color color, int n) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+    Widget chip(String asset, Color color, int n) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: GameColors.glass,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: GameColors.glassBorder),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Icon(icon, color: color, size: 22),
+            Image.asset(asset, width: 22, height: 22, fit: BoxFit.contain),
             const SizedBox(width: 8),
             GameText('$n', size: 18, shadow: null),
           ]),
@@ -241,11 +334,11 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        chip(prizeIcon(PrizeKind.hint), prizeColor(PrizeKind.hint), hints),
+        chip('assets/images/glühbirne_1.png', prizeColor(PrizeKind.hint), hints),
         const SizedBox(width: 10),
-        chip(prizeIcon(PrizeKind.strikeout), prizeColor(PrizeKind.strikeout), strikeouts),
+        chip('assets/images/fadenkreuz_1.png', prizeColor(PrizeKind.strikeout), strikeouts),
         const SizedBox(width: 10),
-        chip(prizeIcon(PrizeKind.skip), prizeColor(PrizeKind.skip), skips),
+        chip('assets/images/Skip_1.png', prizeColor(PrizeKind.skip), skips),
       ],
     );
   }
@@ -299,6 +392,54 @@ class _SpinWheelScreenState extends ConsumerState<SpinWheelScreen> with TickerPr
                   ),
                   if (prize.kind == PrizeKind.coins)
                     const CoinIcon(size: 110)
+                  else if (prize.kind == PrizeKind.hint)
+                    Container(
+                      width: 110,
+                      height: 110,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 24)],
+                      ),
+                      child: Image.asset('assets/images/glühbirne_1.png', fit: BoxFit.contain),
+                    )
+                  else if (prize.kind == PrizeKind.strikeout)
+                    Container(
+                      width: 110,
+                      height: 110,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 24)],
+                      ),
+                      child: Image.asset('assets/images/fadenkreuz_1.png', fit: BoxFit.contain),
+                    )
+                  else if (prize.kind == PrizeKind.skip)
+                    Container(
+                      width: 110,
+                      height: 110,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 24)],
+                      ),
+                      child: Image.asset('assets/images/Skip_1.png', fit: BoxFit.contain),
+                    )
+                  else if (prize.kind == PrizeKind.spin)
+                    Container(
+                      width: 110,
+                      height: 110,
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.6), blurRadius: 24)],
+                      ),
+                      child: Image.asset('assets/images/Glücksrad.png', fit: BoxFit.contain),
+                    )
                   else
                     Container(
                       width: 110,

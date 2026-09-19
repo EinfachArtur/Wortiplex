@@ -20,7 +20,11 @@
   "youWon": "Вы выиграли!",
   "youLost": "Попытки закончились",
   "solutionWas": "Загаданное слово: {word}",
-  "@solutionWas": { "placeholders": { "word": {} } },
+  "@solutionWas": {
+    "placeholders": {
+      "word": {}
+    }
+  },
   "notEnoughLetters": "Недостаточно букв",
   "notInWordList": "Нет в списке слов",
   "notEnoughCoins": "Недостаточно монет",
@@ -38,13 +42,21 @@
   "dailyAlreadyPlayed": "Вы уже решили сегодняшнюю задачу. Возвращайтесь завтра!",
   "dailyLoginTitle": "Подарок дня",
   "dailyLoginClaim": "Забрать {coins} монет",
-  "@dailyLoginClaim": { "placeholders": { "coins": {} } },
+  "@dailyLoginClaim": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
   "dailyLoginClaimed": "Возвращайтесь завтра за новым подарком",
   "spinWheelTitle": "Колесо удачи",
   "spinWheelAction": "Крутить",
   "spinWheelUsed": "Возвращайтесь завтра, чтобы крутить снова",
   "spinWheelWon": "Вы выиграли {coins} монет!",
-  "@spinWheelWon": { "placeholders": { "coins": {} } },
+  "@spinWheelWon": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
   "score": "Серия",
   "submit": "Ввод",
   "notAWord": "Нет такого слова",
@@ -94,5 +106,47 @@
   "removeAdsPromptBody": "Играйте без пауз между раундами.",
   "removeAdsPromptOnce": "Один платёж, навсегда",
   "removeAdsPromptBuy": "Без рекламы за {price}",
-  "removeAdsPromptLater": "Может, позже"
+  "removeAdsPromptLater": "Может, позже",
+  "boosterHintTitle": "Бустер подсказок",
+  "boosterStrikeoutTitle": "Бустер вычёркивания",
+  "boosterSkipTitle": "Бустер пропуска",
+  "boosterGet": "Взять {count}",
+  "@boosterGet": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterOwned": "У вас {count}",
+  "@boosterOwned": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterBought": "Куплено!",
+  "wordFeverDesc": "{seconds} сек. на время",
+  "@wordFeverDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "wordFeverBest": "Рекорд: {score}",
+  "@wordFeverBest": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "feverScore": "Очки",
+  "feverTimeUp": "Время вышло!",
+  "feverWordsSolved": "Разгадано слов",
+  "feverBestLabel": "Рекорд",
+  "feverNewBest": "Новый рекорд!",
+  "feverPlayAgain": "Ещё раз"
 }

@@ -9,14 +9,16 @@ class RewardCelebrationDialog extends StatelessWidget {
   final int coins;
   final String title;
   final String message;
-  final IconData icon;
+  final IconData? icon;
+  final String? imageAsset;
 
   const RewardCelebrationDialog({
     super.key,
     required this.coins,
     required this.title,
     required this.message,
-    this.icon = Icons.card_giftcard_rounded,
+    this.icon,
+    this.imageAsset,
   });
 
   static Future<void> show(
@@ -24,7 +26,8 @@ class RewardCelebrationDialog extends StatelessWidget {
     required int coins,
     required String title,
     required String message,
-    IconData icon = Icons.card_giftcard_rounded,
+    IconData? icon,
+    String? imageAsset,
   }) {
     return showGeneralDialog(
       context: context,
@@ -32,7 +35,13 @@ class RewardCelebrationDialog extends StatelessWidget {
       barrierLabel: 'RewardCelebration',
       barrierColor: const Color(0xFF0B0724).withValues(alpha: 0.78),
       transitionDuration: const Duration(milliseconds: 350),
-      pageBuilder: (_, _, _) => RewardCelebrationDialog(coins: coins, title: title, message: message, icon: icon),
+      pageBuilder: (_, _, _) => RewardCelebrationDialog(
+        coins: coins,
+        title: title,
+        message: message,
+        icon: icon ?? (imageAsset == null ? Icons.card_giftcard_rounded : null),
+        imageAsset: imageAsset,
+      ),
       transitionBuilder: (ctx, anim, _, child) {
         final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
         return ScaleTransition(scale: curved, child: FadeTransition(opacity: anim, child: child));
@@ -73,12 +82,22 @@ class RewardCelebrationDialog extends StatelessWidget {
                   Positioned(
                     right: 20,
                     bottom: 20,
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(color: GameColors.coral, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
-                      child: Icon(icon, color: Colors.white, size: 24),
-                    ),
+                    child: imageAsset != null
+                        ? SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: Image.asset(imageAsset!, fit: BoxFit.contain),
+                          )
+                        : Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              color: GameColors.coral,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2.5),
+                            ),
+                            child: Icon(icon ?? Icons.card_giftcard_rounded, color: Colors.white, size: 24),
+                          ),
                   ),
                 ],
               ),

@@ -20,7 +20,11 @@
   "youWon": "Gewonnen!",
   "youLost": "Keine Versuche mehr",
   "solutionWas": "Das Wort war {word}",
-  "@solutionWas": { "placeholders": { "word": {} } },
+  "@solutionWas": {
+    "placeholders": {
+      "word": {}
+    }
+  },
   "notEnoughLetters": "Zu wenige Buchstaben",
   "notInWordList": "Nicht in der Wortliste",
   "notEnoughCoins": "Nicht genug Münzen",
@@ -38,13 +42,21 @@
   "dailyAlreadyPlayed": "Du hast das heutige Rätsel schon gelöst. Komm morgen wieder!",
   "dailyLoginTitle": "Tagesgeschenk",
   "dailyLoginClaim": "{coins} Münzen abholen",
-  "@dailyLoginClaim": { "placeholders": { "coins": {} } },
+  "@dailyLoginClaim": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
   "dailyLoginClaimed": "Komm morgen wieder für mehr",
   "spinWheelTitle": "Glücksrad",
   "spinWheelAction": "Jetzt drehen",
   "spinWheelUsed": "Komm morgen wieder zum Drehen",
   "spinWheelWon": "Du hast {coins} Münzen gewonnen!",
-  "@spinWheelWon": { "placeholders": { "coins": {} } },
+  "@spinWheelWon": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
   "score": "Serie",
   "submit": "Senden",
   "notAWord": "Kein Wort",
@@ -94,5 +106,47 @@
   "removeAdsPromptBody": "Spiele ohne Unterbrechungen zwischen den Runden.",
   "removeAdsPromptOnce": "Einmal zahlen, für immer behalten",
   "removeAdsPromptBuy": "Ohne Werbung für {price}",
-  "removeAdsPromptLater": "Vielleicht später"
+  "removeAdsPromptLater": "Vielleicht später",
+  "boosterHintTitle": "Tipp-Booster",
+  "boosterStrikeoutTitle": "Streich-Booster",
+  "boosterSkipTitle": "Skip-Booster",
+  "boosterGet": "Hol dir {count}",
+  "@boosterGet": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterOwned": "Du hast {count}",
+  "@boosterOwned": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterBought": "Gekauft!",
+  "wordFeverDesc": "{seconds} Sek. gegen die Uhr",
+  "@wordFeverDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "wordFeverBest": "Rekord: {score}",
+  "@wordFeverBest": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "feverScore": "Punkte",
+  "feverTimeUp": "Zeit abgelaufen!",
+  "feverWordsSolved": "Gelöste Wörter",
+  "feverBestLabel": "Rekord",
+  "feverNewBest": "Neuer Rekord!",
+  "feverPlayAgain": "Nochmal"
 }

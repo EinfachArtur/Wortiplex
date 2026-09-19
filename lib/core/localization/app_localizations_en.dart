@@ -309,4 +309,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get removeAdsPromptLater => 'Maybe later';
+
+  @override
+  String get boosterHintTitle => 'Hint Booster';
+
+  @override
+  String get boosterStrikeoutTitle => 'Strike-out Booster';
+
+  @override
+  String get boosterSkipTitle => 'Skip Booster';
+
+  @override
+  String boosterGet(int count) {
+    return 'Get $count';
+  }
+
+  @override
+  String boosterOwned(int count) {
+    return 'You have $count';
+  }
+
+  @override
+  String get boosterBought => 'Purchased!';
+
+  @override
+  String wordFeverDesc(int seconds) {
+    return 'Beat the clock: ${seconds}s';
+  }
+
+  @override
+  String wordFeverBest(int score) {
+    return 'Best: $score';
+  }
+
+  @override
+  String get feverScore => 'Score';
+
+  @override
+  String get feverTimeUp => 'Time\'s up!';
+
+  @override
+  String get feverWordsSolved => 'Words solved';
+
+  @override
+  String get feverBestLabel => 'Best';
+
+  @override
+  String get feverNewBest => 'New record!';
+
+  @override
+  String get feverPlayAgain => 'Play again';
 }

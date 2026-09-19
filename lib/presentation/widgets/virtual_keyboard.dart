@@ -127,7 +127,7 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
     final right = remaining - left;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 3.5),
       child: Row(
         children: [
           if (left > 0) Spacer(flex: left),
@@ -200,7 +200,7 @@ class _KeyState extends State<_Key> {
           child: AnimatedContainer(
             duration: Duration(milliseconds: _pressed ? 50 : 320),
             curve: Curves.easeOut,
-            height: 50,
+            height: 52,
             alignment: Alignment.center,
             decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
             child: widget.child,

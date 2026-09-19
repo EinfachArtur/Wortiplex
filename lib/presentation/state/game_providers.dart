@@ -104,6 +104,8 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
   }
 
   Future<void> _recordResult(Round round) async {
+    // Word Fever pays out once per run, not per word.
+    if (round.mode == GameMode.wordFever) return;
     final won = round.result == RoundResult.won;
     final profile = ref.read(profileControllerProvider.notifier);
     await profile.recordRoundResult(
