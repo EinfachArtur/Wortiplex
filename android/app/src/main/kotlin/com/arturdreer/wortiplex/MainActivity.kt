@@ -1,4 +1,4 @@
-package com.wortiplex.wortiplex
+package com.arturdreer.wortiplex
 
 import io.flutter.embedding.android.FlutterActivity
 
