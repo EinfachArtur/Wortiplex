@@ -185,7 +185,10 @@ class _ChunkyButtonState extends State<ChunkyButton> {
               right: 0,
               bottom: 0,
               height: widget.height,
-              child: DecoratedBox(decoration: BoxDecoration(color: base, borderRadius: radius)),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                decoration: BoxDecoration(color: base, borderRadius: radius),
+              ),
             ),
             AnimatedPositioned(
               duration: const Duration(milliseconds: 60),
@@ -193,7 +196,8 @@ class _ChunkyButtonState extends State<ChunkyButton> {
               right: 0,
               top: _pressed ? lip - 3 : 0,
               height: widget.height,
-              child: DecoratedBox(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
                 decoration: BoxDecoration(
                   borderRadius: radius,
                   gradient: LinearGradient(

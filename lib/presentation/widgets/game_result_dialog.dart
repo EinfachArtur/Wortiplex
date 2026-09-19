@@ -19,6 +19,7 @@ class GameResultDialog extends StatefulWidget {
   final int streak;
   final int? coinsWon;
   final VoidCallback onNextRound;
+  final VoidCallback? onHome;
 
   const GameResultDialog({
     super.key,
@@ -26,6 +27,7 @@ class GameResultDialog extends StatefulWidget {
     required this.streak,
     this.coinsWon,
     required this.onNextRound,
+    this.onHome,
   });
 
   static Future<void> show(
@@ -34,6 +36,7 @@ class GameResultDialog extends StatefulWidget {
     required int streak,
     int? coinsWon,
     required VoidCallback onNextRound,
+    VoidCallback? onHome,
   }) {
     return showGeneralDialog(
       context: context,
@@ -41,7 +44,13 @@ class GameResultDialog extends StatefulWidget {
       barrierLabel: 'GameResult',
       barrierColor: const Color(0xFF0B0724).withValues(alpha: 0.78),
       transitionDuration: const Duration(milliseconds: 400),
-      pageBuilder: (_, _, _) => GameResultDialog(round: round, streak: streak, coinsWon: coinsWon, onNextRound: onNextRound),
+      pageBuilder: (_, _, _) => GameResultDialog(
+        round: round,
+        streak: streak,
+        coinsWon: coinsWon,
+        onNextRound: onNextRound,
+        onHome: onHome,
+      ),
       transitionBuilder: (ctx, anim, _, child) {
         final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
         return ScaleTransition(scale: curved, child: FadeTransition(opacity: anim, child: child));
@@ -91,7 +100,7 @@ class _GameResultDialogState extends State<GameResultDialog> with TickerProvider
 
   void _copyResult(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final buffer = StringBuffer('Wortiplex ${widget.round.guesses.length}/${widget.round.maxAttempts}\n\n');
+    final buffer = StringBuffer('WortiPlex ${widget.round.guesses.length}/${widget.round.maxAttempts}\n\n');
     for (final guess in widget.round.guesses) {
       for (final letter in guess.evaluation) {
         buffer.write(switch (letter.state) {
@@ -177,14 +186,35 @@ class _GameResultDialogState extends State<GameResultDialog> with TickerProvider
                     ],
                   ),
                   const SizedBox(height: 20),
-                  ChunkyButton(
-                    height: 58,
-                    width: double.infinity,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      widget.onNextRound();
-                    },
-                    child: GameText(_isDaily ? l10n.ok : l10n.newGame, size: 22, color: GameColors.night0, shadow: null),
+                  Row(
+                    children: [
+                      ChunkyButton(
+                        height: 56,
+                        width: 58,
+                        color: const Color(0xFF4A3A94),
+                        baseColor: const Color(0xFF2E2068),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          if (widget.onHome != null) {
+                            widget.onHome!();
+                          } else {
+                            Navigator.of(context).pop();
+                          }
+                        },
+                        child: const Icon(Icons.home_rounded, color: Colors.white, size: 26),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ChunkyButton(
+                          height: 56,
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            widget.onNextRound();
+                          },
+                          child: GameText(_isDaily ? l10n.ok : l10n.newGame, size: 20, color: GameColors.night0, shadow: null),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   TextButton.icon(

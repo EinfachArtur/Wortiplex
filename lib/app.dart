@@ -35,7 +35,7 @@ class _WortiplexAppState extends ConsumerState<WortiplexApp> {
     final locale = profileAsync.valueOrNull?.language.code;
 
     return MaterialApp(
-      title: 'Wortiplex',
+      title: 'WortiPlex',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.game(),
       darkTheme: AppTheme.game(),

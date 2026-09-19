@@ -9,7 +9,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appTitle => 'Wortiplex';
+  String get appTitle => 'WortiPlex';
 
   @override
   String get menuClassic => 'Классика';
@@ -24,7 +24,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get menuSecretWord => 'Секретное слово';
 
   @override
-  String get menuTogether => 'Wortiplex Together';
+  String get menuTogether => 'WortiPlex Together';
 
   @override
   String get comingSoon => 'Скоро';
@@ -89,7 +89,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get restorePurchases => 'Восстановить покупки';
 
   @override
-  String get subscriptionTitle => 'Wortiplex+';
+  String get subscriptionTitle => 'WortiPlex+';
 
   @override
   String get gamesPlayed => 'Сыграно';
@@ -290,4 +290,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get continueGetCoins => 'Получить монеты';
+
+  @override
+  String get mainMenu => 'Главное меню';
 }

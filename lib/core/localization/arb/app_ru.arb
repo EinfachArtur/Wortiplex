@@ -1,11 +1,11 @@
 {
   "@@locale": "ru",
-  "appTitle": "Wortiplex",
+  "appTitle": "WortiPlex",
   "menuClassic": "Классика",
   "menuDaily": "Задача дня",
   "menuWordFever": "Word Fever",
   "menuSecretWord": "Секретное слово",
-  "menuTogether": "Wortiplex Together",
+  "menuTogether": "WortiPlex Together",
   "comingSoon": "Скоро",
   "coins": "Монеты",
   "shop": "Магазин",
@@ -27,7 +27,7 @@
   "watchAdFor20Coins": "Посмотреть рекламу за 20 монет",
   "removeAds": "Отключить рекламу",
   "restorePurchases": "Восстановить покупки",
-  "subscriptionTitle": "Wortiplex+",
+  "subscriptionTitle": "WortiPlex+",
   "gamesPlayed": "Сыграно",
   "winRate": "Побед, %",
   "currentStreak": "Текущая серия",
@@ -88,5 +88,6 @@
   "continueBuy": "Доп. попытка",
   "continueDeclineStreak": "Потерять серию",
   "continueDeclineNoStreak": "Сдаться",
-  "continueGetCoins": "Получить монеты"
+  "continueGetCoins": "Получить монеты",
+  "mainMenu": "Главное меню"
 }

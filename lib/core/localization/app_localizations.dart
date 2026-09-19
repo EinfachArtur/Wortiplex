@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Wortiplex'**
+  /// **'WortiPlex'**
   String get appTitle;
 
   /// No description provided for @menuClassic.
@@ -133,7 +133,7 @@ abstract class AppLocalizations {
   /// No description provided for @menuTogether.
   ///
   /// In en, this message translates to:
-  /// **'Wortiplex Together'**
+  /// **'WortiPlex Together'**
   String get menuTogether;
 
   /// No description provided for @comingSoon.
@@ -259,7 +259,7 @@ abstract class AppLocalizations {
   /// No description provided for @subscriptionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Wortiplex+'**
+  /// **'WortiPlex+'**
   String get subscriptionTitle;
 
   /// No description provided for @gamesPlayed.
@@ -615,6 +615,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Get coins'**
   String get continueGetCoins;
+
+  /// No description provided for @mainMenu.
+  ///
+  /// In en, this message translates to:
+  /// **'Main Menu'**
+  String get mainMenu;
 }
 
 class _AppLocalizationsDelegate

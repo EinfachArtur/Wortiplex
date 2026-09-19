@@ -1,11 +1,11 @@
 {
   "@@locale": "en",
-  "appTitle": "Wortiplex",
+  "appTitle": "WortiPlex",
   "menuClassic": "Classic",
   "menuDaily": "Daily Puzzle",
   "menuWordFever": "Word Fever",
   "menuSecretWord": "Secret Word",
-  "menuTogether": "Wortiplex Together",
+  "menuTogether": "WortiPlex Together",
   "comingSoon": "Coming soon",
   "coins": "Coins",
   "shop": "Shop",
@@ -27,7 +27,7 @@
   "watchAdFor20Coins": "Watch an ad for 20 coins",
   "removeAds": "Remove ads",
   "restorePurchases": "Restore purchases",
-  "subscriptionTitle": "Wortiplex+",
+  "subscriptionTitle": "WortiPlex+",
   "gamesPlayed": "Played",
   "winRate": "Win %",
   "currentStreak": "Current streak",
@@ -93,5 +93,6 @@
   "continueBuy": "Extra attempt",
   "continueDeclineStreak": "Lose streak",
   "continueDeclineNoStreak": "Give up",
-  "continueGetCoins": "Get coins"
+  "continueGetCoins": "Get coins",
+  "mainMenu": "Main Menu"
 }

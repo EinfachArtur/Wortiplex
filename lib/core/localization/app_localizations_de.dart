@@ -9,7 +9,7 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
-  String get appTitle => 'Wortiplex';
+  String get appTitle => 'WortiPlex';
 
   @override
   String get menuClassic => 'Classic';
@@ -24,7 +24,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get menuSecretWord => 'Geheimwort';
 
   @override
-  String get menuTogether => 'Wortiplex Together';
+  String get menuTogether => 'WortiPlex Together';
 
   @override
   String get comingSoon => 'Demnächst verfügbar';
@@ -89,7 +89,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get restorePurchases => 'Käufe wiederherstellen';
 
   @override
-  String get subscriptionTitle => 'Wortiplex+';
+  String get subscriptionTitle => 'WortiPlex+';
 
   @override
   String get gamesPlayed => 'Gespielt';
@@ -288,4 +288,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get continueGetCoins => 'Münzen holen';
+
+  @override
+  String get mainMenu => 'Hauptmenü';
 }

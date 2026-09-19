@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -30,7 +31,11 @@ class GameBoardScreen extends ConsumerStatefulWidget {
 }
 
 class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
-  String _currentInput = '';
+  List<String> _currentLetters = [];
+  int _cursorIndex = 0;
+  String get _currentInput => _currentLetters.join('');
+  final FocusNode _focusNode = FocusNode();
+  int _shakeCount = 0;
   BannerAd? _bannerAd;
 
   @override
@@ -39,7 +44,18 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _maybeLoadBanner();
       ref.read(profileControllerProvider.notifier).refreshSkips();
+      final currentRound = ref.read(roundControllerProvider(_params)).valueOrNull;
+      if (currentRound != null && currentRound.isFinished && widget.mode != GameMode.daily) {
+        _controller.newRound(_params);
+      }
     });
+  }
+
+  void _ensureLetterList(int length) {
+    if (_currentLetters.length != length) {
+      _currentLetters = List.filled(length, '');
+      _cursorIndex = 0;
+    }
   }
 
   void _maybeLoadBanner() {
@@ -56,6 +72,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
 
   @override
   void dispose() {
+    _focusNode.dispose();
     _bannerAd?.dispose();
     super.dispose();
   }
@@ -70,30 +87,104 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
 
   void _onLetter(String letter, Round round) {
     if (round.isFinished) return;
-    if (_currentInput.length >= round.solutionWord.length) return;
-    setState(() => _currentInput += letter);
+    final len = round.solutionWord.length;
+    _ensureLetterList(len);
+    setState(() {
+      _currentLetters[_cursorIndex] = letter;
+      if (_cursorIndex < len - 1) {
+        _cursorIndex++;
+      }
+    });
   }
 
   void _onBackspace() {
-    if (_currentInput.isEmpty) return;
-    setState(() => _currentInput = _currentInput.substring(0, _currentInput.length - 1));
+    if (_currentLetters.isEmpty) return;
+    setState(() {
+      if (_currentLetters[_cursorIndex].isNotEmpty) {
+        _currentLetters[_cursorIndex] = '';
+      } else if (_cursorIndex > 0) {
+        _cursorIndex--;
+        _currentLetters[_cursorIndex] = '';
+      }
+    });
+  }
+
+  void _onTileTap(int col) {
+    setState(() {
+      _cursorIndex = col;
+    });
+  }
+
+  void _handleKeyEvent(KeyEvent event, Round round) {
+    if (event is! KeyDownEvent) return;
+    if (round.isFinished) return;
+
+    if (event.logicalKey == LogicalKeyboardKey.backspace) {
+      _onBackspace();
+      return;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.enter || event.logicalKey == LogicalKeyboardKey.numpadEnter) {
+      _onSubmit(round);
+      return;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+      setState(() {
+        if (_cursorIndex > 0) _cursorIndex--;
+      });
+      return;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+      setState(() {
+        final len = round.solutionWord.length;
+        if (_cursorIndex < len - 1) _cursorIndex++;
+      });
+      return;
+    }
+
+    final char = event.character;
+    if (char != null && char.isNotEmpty) {
+      final upper = char.toUpperCase();
+      final normalized = upper == 'ß' ? 'S' : upper;
+      final alphabet = alphabetFor(round.language);
+      if (alphabet.contains(normalized)) {
+        _onLetter(normalized, round);
+      }
+    }
+  }
+
+  /// Rejects the current input: the row wobbles, the phone buzzes and a hint is shown.
+  void _reject(String message) {
+    HapticFeedback.mediumImpact();
+    setState(() => _shakeCount++);
+    _showSnack(message);
   }
 
   Future<void> _onSubmit(Round round) async {
     final l10n = AppLocalizations.of(context);
     if (round.isFinished) return;
-    if (_currentInput.length != round.solutionWord.length) {
-      _showSnack(l10n.notEnoughLetters);
+    final len = round.solutionWord.length;
+    _ensureLetterList(len);
+    if (_currentLetters.any((l) => l.isEmpty)) {
+      _reject(l10n.notEnoughLetters);
       return;
     }
-    if (!_controller.isValidWord(_currentInput)) {
-      _showSnack(l10n.notInWordList);
+    final word = _currentLetters.join('');
+    if (!_controller.isValidWord(word)) {
+      _reject(l10n.notInWordList);
       return;
     }
-    final outcome = await _controller.submitGuess(_currentInput);
+    final outcome = await _controller.submitGuess(word);
     if (outcome is! GuessAccepted) return;
-    setState(() => _currentInput = '');
+    setState(() {
+      _currentLetters = List.filled(len, '');
+      _cursorIndex = 0;
+    });
     if (!outcome.round.isFinished) return;
+
+    // Let the reveal flip (and the win wave) play out before any dialog covers it.
+    final won = outcome.round.result == RoundResult.won;
+    await Future.delayed(TileGrid.revealDuration(len) + (won ? TileGrid.winWaveDuration : const Duration(milliseconds: 500)));
+    if (!mounted) return;
 
     if (outcome.round.result == RoundResult.lost && _controller.canOfferExtraAttempt) {
       if (!mounted) return;
@@ -133,7 +224,18 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
           Navigator.of(context).pop(); // the daily puzzle can only be played once
         } else {
           _controller.newRound(_params);
+          final len = ref.read(roundControllerProvider(_params)).valueOrNull?.solutionWord.length ?? 5;
+          setState(() {
+            _currentLetters = List.filled(len, '');
+            _cursorIndex = 0;
+          });
         }
+      },
+      onHome: () {
+        if (!isDaily) {
+          _controller.newRound(_params);
+        }
+        Navigator.of(context).pop();
       },
     );
   }
@@ -158,7 +260,11 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
     final used = await ref.read(profileControllerProvider.notifier).useSkip();
     if (!used) return;
     await _controller.newRound(_params);
-    setState(() => _currentInput = '');
+    final len = ref.read(roundControllerProvider(_params)).valueOrNull?.solutionWord.length ?? 5;
+    setState(() {
+      _currentLetters = List.filled(len, '');
+      _cursorIndex = 0;
+    });
   }
 
   @override
@@ -179,77 +285,113 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> {
   }
 
   Widget _buildBoard(BuildContext context, Round round) {
+    _ensureLetterList(round.solutionWord.length);
     final l10n = AppLocalizations.of(context);
     final keyboardStates = _controller.keyboardStates();
     final profile = ref.watch(profileControllerProvider).valueOrNull;
     final skipsAvailable = profile?.skipsAvailable ?? 0;
 
-    return Column(
-      children: [
-        Expanded(
-          child: Center(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: TileGrid(round: round, currentInput: _currentInput),
+    return KeyboardListener(
+      focusNode: _focusNode,
+      autofocus: true,
+      onKeyEvent: (e) => _handleKeyEvent(e, round),
+      child: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              width: 36,
+                              height: 36,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const GameText(
+                            'WortiPlex',
+                            size: 28,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 22),
+                      TileGrid(
+                        round: round,
+                        currentLetters: _currentLetters,
+                        cursorIndex: _cursorIndex,
+                        onTileTap: _onTileTap,
+                        shakeCount: _shakeCount,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-        VirtualKeyboard(
-          language: round.language,
-          letterStates: keyboardStates.cast(),
-          disabledLetters: round.disabledLetters,
-          onLetter: (l) => _onLetter(l, round),
-          onBackspace: _onBackspace,
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
-          child: Row(
-            children: [
-              _ToolButton(
-                icon: Icons.lightbulb_rounded,
-                color: GameColors.amber,
-                tooltip: l10n.hint,
-                cost: EconomyConfig.hintCost,
-                tokens: profile?.hintTokens ?? 0,
-                onTap: round.isFinished ? null : _buyHint,
-              ),
-              const SizedBox(width: 8),
-              _ToolButton(
-                icon: Icons.block_rounded,
-                color: const Color(0xFFFF6B8E),
-                tooltip: l10n.strikeOutLetter,
-                cost: EconomyConfig.letterStrikeoutCost,
-                tokens: profile?.strikeoutTokens ?? 0,
-                onTap: round.isFinished ? null : _buyStrikeout,
-              ),
-              const SizedBox(width: 10),
-              Expanded(child: _buildSubmitButton(round, l10n)),
-              const SizedBox(width: 10),
-              _ToolButton(
-                icon: Icons.fast_forward_rounded,
-                color: GameColors.mint,
-                tooltip: l10n.skip,
-                badge: '$skipsAvailable',
-                onTap: skipsAvailable > 0 && widget.mode != GameMode.daily && !round.isFinished ? _skipRound : null,
-              ),
-            ],
+          VirtualKeyboard(
+            language: round.language,
+            letterStates: keyboardStates.cast(),
+            disabledLetters: round.disabledLetters,
+            onLetter: (l) => _onLetter(l, round),
+            onBackspace: _onBackspace,
           ),
-        ),
-        if (_bannerAd != null)
-          SizedBox(
-            height: _bannerAd!.size.height.toDouble(),
-            width: _bannerAd!.size.width.toDouble(),
-            child: AdWidget(ad: _bannerAd!),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+            child: Row(
+              children: [
+                _ToolButton(
+                  icon: Icons.lightbulb_rounded,
+                  color: GameColors.amber,
+                  tooltip: l10n.hint,
+                  cost: EconomyConfig.hintCost,
+                  tokens: profile?.hintTokens ?? 0,
+                  onTap: round.isFinished ? null : _buyHint,
+                ),
+                const SizedBox(width: 8),
+                _ToolButton(
+                  icon: Icons.block_rounded,
+                  color: const Color(0xFFFF6B8E),
+                  tooltip: l10n.strikeOutLetter,
+                  cost: EconomyConfig.letterStrikeoutCost,
+                  tokens: profile?.strikeoutTokens ?? 0,
+                  onTap: round.isFinished ? null : _buyStrikeout,
+                ),
+                const SizedBox(width: 10),
+                Expanded(child: _buildSubmitButton(round, l10n)),
+                const SizedBox(width: 10),
+                _ToolButton(
+                  icon: Icons.fast_forward_rounded,
+                  color: GameColors.mint,
+                  tooltip: l10n.skip,
+                  badge: '$skipsAvailable',
+                  onTap: skipsAvailable > 0 && widget.mode != GameMode.daily && !round.isFinished ? _skipRound : null,
+                ),
+              ],
+            ),
           ),
-      ],
+          if (_bannerAd != null)
+            SizedBox(
+              height: _bannerAd!.size.height.toDouble(),
+              width: _bannerAd!.size.width.toDouble(),
+              child: AdWidget(ad: _bannerAd!),
+            ),
+        ],
+      ),
     );
   }
 
   Widget _buildSubmitButton(Round round, AppLocalizations l10n) {
-    final complete = _currentInput.length == round.solutionWord.length;
+    final complete = _currentLetters.length == round.solutionWord.length && !_currentLetters.any((l) => l.isEmpty);
     final valid = complete && _controller.isValidWord(_currentInput);
 
     final Color color;

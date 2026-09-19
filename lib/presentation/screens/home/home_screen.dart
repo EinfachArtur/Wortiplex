@@ -87,30 +87,26 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-/// Wordmark: the three tile states (correct / present / absent) plus the name.
+/// Wordmark: the logo image plus the name.
 class _Logo extends StatelessWidget {
   const _Logo();
 
   @override
   Widget build(BuildContext context) {
-    Widget tile(Color c) => Container(
-          width: 13,
-          height: 13,
-          margin: const EdgeInsets.only(right: 3),
-          decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(4)),
-        );
     return Row(
       children: [
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(mainAxisSize: MainAxisSize.min, children: [tile(AppColors.correct), tile(AppColors.present)]),
-            const SizedBox(height: 3),
-            Row(mainAxisSize: MainAxisSize.min, children: [tile(AppColors.present), tile(AppColors.correct)]),
-          ],
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.asset(
+            'assets/images/logo.png',
+            width: 32,
+            height: 32,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+          ),
         ),
-        const SizedBox(width: 8),
-        const GameText('Wortiplex', size: 26),
+        const SizedBox(width: 10),
+        const GameText('WortiPlex', size: 26),
       ],
     );
   }
