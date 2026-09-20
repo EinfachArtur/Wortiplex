@@ -9,6 +9,7 @@ import '../../state/ads_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/coin_icon.dart';
 import '../../widgets/game_scaffold.dart';
+import '../../widgets/remove_ads_prompt_dialog.dart';
 
 class ShopScreen extends ConsumerStatefulWidget {
   const ShopScreen({super.key});
@@ -46,7 +47,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       ..showSnackBar(SnackBar(content: Text(ok ? l10n.boosterBought : l10n.notEnoughCoins)));
   }
 
-  Future<void> _buyRemoveAds() => ref.read(iapServiceProvider).buyNonConsumable(EconomyConfig.removeAdsProductId);
+  Future<void> _buyRemoveAds() => RemoveAdsPromptDialog.show();
 
   @override
   Widget build(BuildContext context) {
