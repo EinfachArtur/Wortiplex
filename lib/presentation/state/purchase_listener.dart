@@ -59,16 +59,29 @@ final purchaseListenerProvider = Provider<void>((ref) {
     final current = ref.read(profileControllerProvider).valueOrNull?.subscription;
     if (current == null) return;
 
-    final isPremiumActive = customerInfo.entitlements.active.containsKey(RevenueCatConfig.entitlementPremium) ||
-        customerInfo.entitlements.active.containsKey('wortiplex_plus') ||
-        customerInfo.entitlements.active.containsKey('pro');
+    final activeEntitlements = customerInfo.entitlements.active;
+    final isAnyEntitlementActive = activeEntitlements.isNotEmpty;
 
-    final isRemoveAdsActive = customerInfo.entitlements.active.containsKey(RevenueCatConfig.entitlementRemoveAds) ||
-        customerInfo.nonSubscriptionTransactions.any((t) => t.productIdentifier == EconomyConfig.removeAdsProductId);
+    final isPremiumActive = activeEntitlements.containsKey(RevenueCatConfig.entitlementPremium) ||
+        activeEntitlements.containsKey('wortiplex_plus') ||
+        activeEntitlements.containsKey('pro') ||
+        activeEntitlements.containsKey('premium') ||
+        activeEntitlements.containsKey('no_ads') ||
+        activeEntitlements.containsKey('remove_ads') ||
+        activeEntitlements.containsKey('ad_free');
+
+    final isRemoveAdsActive = activeEntitlements.containsKey(RevenueCatConfig.entitlementRemoveAds) ||
+        activeEntitlements.containsKey('remove_ads') ||
+        activeEntitlements.containsKey('no_ads') ||
+        activeEntitlements.containsKey('ad_free') ||
+        customerInfo.nonSubscriptionTransactions.any((t) =>
+            t.productIdentifier == EconomyConfig.removeAdsProductId ||
+            t.productIdentifier.contains('remove_ads') ||
+            t.productIdentifier.contains('no_ads'));
 
     if (isPremiumActive) {
-      final entitlement = customerInfo.entitlements.active[RevenueCatConfig.entitlementPremium] ??
-          customerInfo.entitlements.active.values.first;
+      final entitlement = activeEntitlements[RevenueCatConfig.entitlementPremium] ??
+          activeEntitlements.values.first;
       final isYearly = entitlement.productIdentifier.contains('yearly') ||
           entitlement.productIdentifier.contains('annual');
       final expiresDate = entitlement.expirationDate != null
@@ -80,11 +93,11 @@ final purchaseListenerProvider = Provider<void>((ref) {
         productId: entitlement.productIdentifier,
         autoRenewing: entitlement.willRenew,
         expiresAt: expiresDate,
-        adsRemovedLifetime: current.adsRemovedLifetime || isRemoveAdsActive,
+        adsRemovedLifetime: true,
       );
       await profileController.applySubscriptionUpdate(updated);
       debugPrint('[PurchaseListener] Premium Status über RevenueCat synchronisiert: $updated');
-    } else if (isRemoveAdsActive) {
+    } else if (isRemoveAdsActive || isAnyEntitlementActive) {
       final updated = current.copyWith(adsRemovedLifetime: true);
       await profileController.applySubscriptionUpdate(updated);
       debugPrint('[PurchaseListener] RemoveAds über RevenueCat synchronisiert');

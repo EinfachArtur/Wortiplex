@@ -20,9 +20,34 @@ class UserProfile {
   final int spinTickets;
   final DailyHistory dailyHistory;
   final Set<String> claimedMonthlyPrizes;
+  final List<DateTime> rewardedAdTimestamps;
 
   /// Best Word Fever score so far.
   final int wordFeverBest;
+
+  static const int maxRewardedAdsPerHour = 5;
+  static const Duration rewardedAdWindow = Duration(hours: 1);
+
+  List<DateTime> get recentRewardedAds {
+    final now = DateTime.now();
+    return rewardedAdTimestamps
+        .where((ts) => now.difference(ts) < rewardedAdWindow)
+        .toList();
+  }
+
+  int get remainingRewardedAds =>
+      (maxRewardedAdsPerHour - recentRewardedAds.length).clamp(0, maxRewardedAdsPerHour);
+
+  bool get canWatchRewardedAd => remainingRewardedAds > 0;
+
+  Duration? get rewardedAdCooldownRemaining {
+    final recent = recentRewardedAds;
+    if (recent.length < maxRewardedAdsPerHour) return null;
+    final oldest = recent.reduce((a, b) => a.isBefore(b) ? a : b);
+    final elapsed = DateTime.now().difference(oldest);
+    if (elapsed >= rewardedAdWindow) return null;
+    return rewardedAdWindow - elapsed;
+  }
 
   const UserProfile({
     required this.id,
@@ -41,6 +66,7 @@ class UserProfile {
     this.spinTickets = 0,
     this.dailyHistory = const DailyHistory(),
     this.claimedMonthlyPrizes = const {},
+    this.rewardedAdTimestamps = const [],
     this.wordFeverBest = 0,
   });
 
@@ -66,6 +92,7 @@ class UserProfile {
     int? spinTickets,
     DailyHistory? dailyHistory,
     Set<String>? claimedMonthlyPrizes,
+    List<DateTime>? rewardedAdTimestamps,
     int? wordFeverBest,
   }) {
     return UserProfile(
@@ -85,6 +112,7 @@ class UserProfile {
       spinTickets: spinTickets ?? this.spinTickets,
       dailyHistory: dailyHistory ?? this.dailyHistory,
       claimedMonthlyPrizes: claimedMonthlyPrizes ?? this.claimedMonthlyPrizes,
+      rewardedAdTimestamps: rewardedAdTimestamps ?? this.rewardedAdTimestamps,
       wordFeverBest: wordFeverBest ?? this.wordFeverBest,
     );
   }
@@ -107,6 +135,8 @@ class UserProfile {
         'spinTickets': spinTickets,
         'dailyHistory': dailyHistory.toMap(),
         'claimedMonthlyPrizes': claimedMonthlyPrizes.toList(),
+        'rewardedAdTimestamps':
+            rewardedAdTimestamps.map((t) => t.toIso8601String()).toList(),
         'wordFeverBest': wordFeverBest,
       };
 
@@ -135,6 +165,10 @@ class UserProfile {
       spinTickets: (map['spinTickets'] as num?)?.toInt() ?? 0,
       dailyHistory: DailyHistory.fromMap(map['dailyHistory'] as Map?),
       claimedMonthlyPrizes: ((map['claimedMonthlyPrizes'] as List?) ?? const []).cast<String>().toSet(),
+      rewardedAdTimestamps: ((map['rewardedAdTimestamps'] as List?) ?? const [])
+          .map((t) => DateTime.tryParse(t.toString()))
+          .whereType<DateTime>()
+          .toList(),
       wordFeverBest: (map['wordFeverBest'] as num?)?.toInt() ?? 0,
     );
   }

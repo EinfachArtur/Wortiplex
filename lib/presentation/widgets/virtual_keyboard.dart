@@ -111,7 +111,7 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
     final maxKeys = rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -121,18 +121,60 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
     );
   }
 
-  // Flex units: one letter key = 4, backspace = 6, remaining space is split
-  // into spacers so every row spans the same width and keys stay uniform.
+  // Flex units: letter keys expand nicely, backspace is comfortably wide,
+  // and the bottom row gives letters extra width so they are easier to hit.
   Widget _buildRow(List<String> rows, int i, int maxKeys) {
     final isLast = i == rows.length - 1;
     final letters = rows[i].split('');
-    final used = letters.length * 4 + (isLast ? 6 : 0);
+
+    if (isLast) {
+      // Bottom row (e.g. YXCVBNM + Backspace): expand letter keys wider than the top row
+      // so letters like M, N, B have significantly more touch area and less mistyping.
+      final totalFlex = maxKeys * 10;
+      const backspaceFlex = 16;
+      final availableForLetters = totalFlex - backspaceFlex;
+      final letterFlex = (availableForLetters / letters.length).floor();
+      final usedFlex = letters.length * letterFlex + backspaceFlex;
+      final remaining = (totalFlex - usedFlex).clamp(0, 100);
+      final leftSpacer = remaining ~/ 2;
+      final rightSpacer = remaining - leftSpacer;
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3.0),
+        child: Row(
+          children: [
+            if (leftSpacer > 0) Spacer(flex: leftSpacer),
+            for (final letter in letters)
+              Expanded(
+                flex: letterFlex,
+                child: _Key(
+                  color: _keyColor(letter),
+                  enabled: !widget.disabledLetters.contains(letter),
+                  onTap: () => widget.onLetter(letter),
+                  child: Text(letter, style: gameText(19, color: _textColor(letter), weight: 700)),
+                ),
+              ),
+            Expanded(
+              flex: backspaceFlex,
+              child: _Key(
+                color: AppColors.keyDefault,
+                onTap: widget.onBackspace,
+                child: const Icon(Icons.backspace_rounded, color: Colors.white, size: 22),
+              ),
+            ),
+            if (rightSpacer > 0) Spacer(flex: rightSpacer),
+          ],
+        ),
+      );
+    }
+
+    final used = letters.length * 4;
     final remaining = (maxKeys * 4 - used).clamp(0, 1000);
     final left = remaining ~/ 2;
     final right = remaining - left;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3.5),
+      padding: const EdgeInsets.symmetric(vertical: 3.0),
       child: Row(
         children: [
           if (left > 0) Spacer(flex: left),
@@ -143,16 +185,7 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
                 color: _keyColor(letter),
                 enabled: !widget.disabledLetters.contains(letter),
                 onTap: () => widget.onLetter(letter),
-                child: Text(letter, style: gameText(19, color: _textColor(letter), weight: 700)),
-              ),
-            ),
-          if (isLast)
-            Expanded(
-              flex: 6,
-              child: _Key(
-                color: AppColors.keyDefault,
-                onTap: widget.onBackspace,
-                child: const Icon(Icons.backspace_rounded, color: Colors.white, size: 22),
+                child: Text(letter, style: gameText(18, color: _textColor(letter), weight: 700)),
               ),
             ),
           if (right > 0) Spacer(flex: right),
@@ -186,7 +219,7 @@ class _KeyState extends State<_Key> {
   Widget build(BuildContext context) {
     final color = _pressed ? Color.lerp(widget.color, Colors.white, 0.3)! : widget.color;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2.5),
+      padding: const EdgeInsets.symmetric(horizontal: 1.8),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: (_) => _setPressed(true),
@@ -205,9 +238,9 @@ class _KeyState extends State<_Key> {
           child: AnimatedContainer(
             duration: Duration(milliseconds: _pressed ? 50 : 320),
             curve: Curves.easeOut,
-            height: 52,
+            height: 56,
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)),
             child: widget.child,
           ),
         ),

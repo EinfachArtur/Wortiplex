@@ -68,6 +68,24 @@ class ProfileController extends AsyncNotifier<UserProfile> {
     await _persist(profile.copyWith(language: language));
   }
 
+  Future<bool> recordRewardedAdWatched() async {
+    final profile = state.valueOrNull;
+    if (profile == null) return false;
+    if (!profile.canWatchRewardedAd) return false;
+
+    final updatedTimestamps = [...profile.recentRewardedAds, DateTime.now()];
+    final ledger = CoinLedger(balance: profile.coins).earn(
+      amount: EconomyConfig.rewardedAdCoins,
+      reason: CoinTransactionReason.adReward,
+      transactionId: _nextTxId(),
+    );
+    await _persist(profile.copyWith(
+      coins: ledger.balance,
+      rewardedAdTimestamps: updatedTimestamps,
+    ));
+    return true;
+  }
+
   Future<void> earnCoins(int amount, CoinTransactionReason reason) async {
     final profile = state.valueOrNull;
     if (profile == null) return;

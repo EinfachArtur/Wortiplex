@@ -139,7 +139,10 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
     final payout = await ref
         .read(profileControllerProvider.notifier)
         .recordWordFeverRun(score: _run.score, solved: _run.solved);
-    ref.read(adsServiceProvider).onRoundCompleted();
+    final isAdFree = ref.read(profileControllerProvider).valueOrNull?.subscription.isAdFree ?? false;
+    if (!isAdFree) {
+      ref.read(adsServiceProvider).onRoundCompleted();
+    }
     if (!mounted) return;
     final best = ref.read(profileControllerProvider).valueOrNull?.wordFeverBest ?? _run.score;
     await WordFeverResultDialog.show(
@@ -323,7 +326,10 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
 
   Future<void> _finishRound(Round lostOrWon) async {
     if (lostOrWon.result == RoundResult.lost) await _controller.finalizeLoss();
-    ref.read(adsServiceProvider).onRoundCompleted();
+    final isAdFree = ref.read(profileControllerProvider).valueOrNull?.subscription.isAdFree ?? false;
+    if (!isAdFree) {
+      ref.read(adsServiceProvider).onRoundCompleted();
+    }
     if (mounted) _showResultDialog(lostOrWon);
   }
 
