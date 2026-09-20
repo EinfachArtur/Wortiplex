@@ -20,6 +20,7 @@ class Round {
   final DateTime startedAt;
   final DateTime? completedAt;
   final Set<String> disabledLetters;
+  final Map<int, String> revealedHints;
 
   /// How many bought extra attempts this round already contains.
   final int extraAttempts;
@@ -35,6 +36,7 @@ class Round {
     this.result = RoundResult.inProgress,
     this.completedAt,
     this.disabledLetters = const {},
+    this.revealedHints = const {},
     this.extraAttempts = 0,
   });
 
@@ -47,6 +49,7 @@ class Round {
     RoundResult? result,
     DateTime? completedAt,
     Set<String>? disabledLetters,
+    Map<int, String>? revealedHints,
   }) {
     return Round(
       id: id,
@@ -59,6 +62,7 @@ class Round {
       result: result ?? this.result,
       completedAt: completedAt ?? this.completedAt,
       disabledLetters: disabledLetters ?? this.disabledLetters,
+      revealedHints: revealedHints ?? this.revealedHints,
       extraAttempts: extraAttempts,
     );
   }
@@ -78,6 +82,7 @@ class Round {
       result: RoundResult.inProgress,
       completedAt: null,
       disabledLetters: disabledLetters,
+      revealedHints: revealedHints,
       extraAttempts: extraAttempts + 1,
     );
   }

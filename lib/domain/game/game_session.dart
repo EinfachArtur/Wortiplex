@@ -62,7 +62,8 @@ class GameSession {
     return GuessAccepted(updated);
   }
 
-  /// Keyboard letter states derived from all guesses so far (best state wins).
+  /// Keyboard letter states derived from all guesses so far (best state wins),
+  /// plus hinted letters (correct) and disabled letters (absent).
   Map<String, LetterState> keyboardStates(Round round) {
     final states = <String, LetterState>{};
     for (final guess in round.guesses) {
@@ -72,6 +73,9 @@ class GameSession {
           states[lg.letter] = lg.state;
         }
       }
+    }
+    for (final hintLetter in round.revealedHints.values) {
+      states[hintLetter] = LetterState.correct;
     }
     for (final letter in round.disabledLetters) {
       states.putIfAbsent(letter, () => LetterState.absent);

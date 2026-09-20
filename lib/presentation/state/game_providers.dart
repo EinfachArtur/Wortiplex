@@ -10,6 +10,7 @@ import '../../domain/game/game_session.dart';
 import '../../domain/game/word_validator.dart';
 import '../../domain/models/game_mode.dart';
 import '../../domain/models/language.dart';
+import '../../domain/models/letter_state.dart';
 import '../../domain/models/round.dart';
 import '../../services/daily_puzzle_service.dart';
 import 'profile_providers.dart';
@@ -160,13 +161,28 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
 
   Future<HintResult?> buyHint() async {
     final round = state.valueOrNull;
-    if (round == null) return null;
+    if (round == null || round.isFinished) return null;
+
+    final solved = <int>{...round.revealedHints.keys};
+    for (final guess in round.guesses) {
+      for (var i = 0; i < guess.evaluation.length; i++) {
+        if (guess.evaluation[i].state == LetterState.correct) solved.add(i);
+      }
+    }
+    if (solved.length >= round.solutionWord.length) {
+      return null;
+    }
+
     final profile = ref.read(profileControllerProvider.notifier);
     final affordable = await profile.useHintToken() ||
         await profile.spendCoins(EconomyConfig.hintCost, CoinTransactionReason.hintPurchase);
     if (!affordable) return null;
     final rules = ref.read(boosterRulesProvider);
-    return rules.revealHint(round);
+    final result = rules.revealHint(round);
+    state = AsyncData(round.copyWith(
+      revealedHints: {...round.revealedHints, result.position: result.letter},
+    ));
+    return result;
   }
 
   Future<String?> buyLetterStrikeout() async {

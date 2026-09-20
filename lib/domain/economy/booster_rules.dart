@@ -15,9 +15,10 @@ class BoosterRules {
   const BoosterRules();
 
   /// Reveals a random letter position that the player has not already
-  /// solved (i.e. no previous guess marked it as "correct").
+  /// solved (i.e. no previous guess marked it as "correct") and has not
+  /// already been hinted in this round.
   HintResult revealHint(Round round, {Random? random}) {
-    final solved = <int>{};
+    final solved = <int>{...round.revealedHints.keys};
     for (final guess in round.guesses) {
       for (var i = 0; i < guess.evaluation.length; i++) {
         if (guess.evaluation[i].state == LetterState.correct) solved.add(i);

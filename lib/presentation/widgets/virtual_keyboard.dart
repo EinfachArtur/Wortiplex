@@ -34,6 +34,8 @@ class VirtualKeyboard extends StatefulWidget {
   final void Function(String letter) onLetter;
   final VoidCallback onBackspace;
 
+  final int guessCount;
+
   /// New letter colours are applied this long after they arrive, so the
   /// keyboard does not spoil the tile flip that is still running.
   final Duration revealDelay;
@@ -45,6 +47,7 @@ class VirtualKeyboard extends StatefulWidget {
     required this.disabledLetters,
     required this.onLetter,
     required this.onBackspace,
+    this.guessCount = 0,
     this.revealDelay = const Duration(milliseconds: 1600),
   });
 
@@ -66,10 +69,12 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
     final reset = next.length < _shown.length || widget.language != old.language;
     if (reset) {
       _shown = next; // a new round starts: clear the colours immediately
-    } else {
+    } else if (widget.guessCount > old.guessCount) {
       _timer = Timer(widget.revealDelay, () {
         if (mounted) setState(() => _shown = widget.letterStates);
       });
+    } else {
+      _shown = next;
     }
   }
 

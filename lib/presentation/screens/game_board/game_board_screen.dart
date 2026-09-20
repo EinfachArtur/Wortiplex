@@ -370,6 +370,12 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
       _showSnack(l10n.notEnoughCoins);
       return;
     }
+    final round = ref.read(roundControllerProvider(_params)).valueOrNull;
+    final len = round?.solutionWord.length ?? 5;
+    _ensureLetterList(len);
+    setState(() {
+      _currentLetters[result.position] = result.letter;
+    });
     _showSnack('${result.position + 1}: ${result.letter}');
   }
 
@@ -492,6 +498,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
             language: round.language,
             letterStates: keyboardStates.cast(),
             disabledLetters: round.disabledLetters,
+            guessCount: round.guesses.length,
             onLetter: (l) => _onLetter(l, round),
             onBackspace: _onBackspace,
           ),
