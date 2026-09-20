@@ -148,5 +148,8 @@
   "feverWordsSolved": "Gelöste Wörter",
   "feverBestLabel": "Rekord",
   "feverNewBest": "Neuer Rekord!",
-  "feverPlayAgain": "Nochmal"
+  "feverPlayAgain": "Nochmal",
+  "playerId": "Spieler-ID",
+  "playerIdCopied": "Spieler-ID in Zwischenablage kopiert",
+  "playerIdTapToCopy": "Tippen zum Kopieren"
 }

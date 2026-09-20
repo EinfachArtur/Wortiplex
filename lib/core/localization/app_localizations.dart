@@ -735,6 +735,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Play again'**
   String get feverPlayAgain;
+
+  /// No description provided for @playerId.
+  ///
+  /// In en, this message translates to:
+  /// **'Player ID'**
+  String get playerId;
+
+  /// No description provided for @playerIdCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Player ID copied to clipboard'**
+  String get playerIdCopied;
+
+  /// No description provided for @playerIdTapToCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to copy'**
+  String get playerIdTapToCopy;
 }
 
 class _AppLocalizationsDelegate

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/game_style.dart';
 import '../../../domain/models/language.dart';
+import '../../state/ads_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/game_scaffold.dart';
 
@@ -40,6 +42,10 @@ class SettingsScreen extends ConsumerWidget {
                       onTap: () => ref.read(profileControllerProvider.notifier).setLanguage(lang),
                     ),
                   ),
+                const SizedBox(height: 20),
+                GameText(l10n.playerId, size: 18, textAlign: TextAlign.left, shadow: null),
+                const SizedBox(height: 12),
+                const _PlayerIdTile(),
               ],
             ),
     );
@@ -78,6 +84,118 @@ class _LanguageTile extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(child: GameText(label, size: 18, textAlign: TextAlign.left, shadow: null)),
             if (selected) const Icon(Icons.check_circle_rounded, color: GameColors.mint, size: 28),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlayerIdTile extends ConsumerStatefulWidget {
+  const _PlayerIdTile();
+
+  @override
+  ConsumerState<_PlayerIdTile> createState() => _PlayerIdTileState();
+}
+
+class _PlayerIdTileState extends ConsumerState<_PlayerIdTile> {
+  String? _userId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserId();
+  }
+
+  Future<void> _loadUserId() async {
+    final rc = ref.read(revenueCatServiceProvider);
+    final id = await rc.getAppUserId();
+    if (mounted) {
+      setState(() => _userId = id);
+    }
+  }
+
+  Future<void> _copyId() async {
+    if (_userId == null || _userId!.isEmpty || _userId == 'unknown') return;
+    await Clipboard.setData(ClipboardData(text: _userId!));
+    if (mounted) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l10n.playerIdCopied),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(milliseconds: 1400),
+          ),
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final idText = _userId ?? '...';
+
+    return GestureDetector(
+      onTap: _copyId,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: GameColors.glass,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: GameColors.glassBorder),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: GameColors.mint.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(Icons.fingerprint_rounded, color: GameColors.mint, size: 26),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GameText(l10n.playerId, size: 16, textAlign: TextAlign.left, shadow: null, weight: 700),
+                  const SizedBox(height: 3),
+                  Text(
+                    idText,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                      color: Colors.white.withValues(alpha: 0.75),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    maxLines: 1,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    l10n.playerIdTapToCopy,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: GameColors.mint.withValues(alpha: 0.9),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: GameColors.pill,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.copy_rounded, color: Colors.white, size: 20),
+            ),
           ],
         ),
       ),

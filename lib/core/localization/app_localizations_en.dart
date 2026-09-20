@@ -359,4 +359,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feverPlayAgain => 'Play again';
+
+  @override
+  String get playerId => 'Player ID';
+
+  @override
+  String get playerIdCopied => 'Player ID copied to clipboard';
+
+  @override
+  String get playerIdTapToCopy => 'Tap to copy';
 }

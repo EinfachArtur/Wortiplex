@@ -26,6 +26,23 @@ class RevenueCatService implements IapService {
   String? get userId => _userId;
   bool get isInitialized => _isInitialized;
 
+  Future<String> getAppUserId() async {
+    if (_userId != null && _userId!.isNotEmpty) {
+      return _userId!;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final storedId = prefs.getString('local_user_id');
+    if (storedId != null && storedId.isNotEmpty) {
+      _userId = storedId;
+      return storedId;
+    }
+    try {
+      final id = await Purchases.appUserID;
+      if (id.isNotEmpty) return id;
+    } catch (_) {}
+    return 'unknown';
+  }
+
   @override
   Future<void> initialize() async {
     if (_isInitialized) return;

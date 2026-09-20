@@ -148,5 +148,8 @@
   "feverWordsSolved": "Разгадано слов",
   "feverBestLabel": "Рекорд",
   "feverNewBest": "Новый рекорд!",
-  "feverPlayAgain": "Ещё раз"
+  "feverPlayAgain": "Ещё раз",
+  "playerId": "ID игрока",
+  "playerIdCopied": "ID игрока скопирован в буфер обмена",
+  "playerIdTapToCopy": "Нажмите, чтобы скопировать"
 }

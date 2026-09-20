@@ -186,5 +186,8 @@
   "feverWordsSolved": "Words solved",
   "feverBestLabel": "Best",
   "feverNewBest": "New record!",
-  "feverPlayAgain": "Play again"
+  "feverPlayAgain": "Play again",
+  "playerId": "Player ID",
+  "playerIdCopied": "Player ID copied to clipboard",
+  "playerIdTapToCopy": "Tap to copy"
 }

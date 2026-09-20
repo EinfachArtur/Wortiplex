@@ -360,4 +360,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get feverPlayAgain => 'Ещё раз';
+
+  @override
+  String get playerId => 'ID игрока';
+
+  @override
+  String get playerIdCopied => 'ID игрока скопирован в буфер обмена';
+
+  @override
+  String get playerIdTapToCopy => 'Нажмите, чтобы скопировать';
 }

@@ -359,4 +359,13 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get feverPlayAgain => 'Nochmal';
+
+  @override
+  String get playerId => 'Spieler-ID';
+
+  @override
+  String get playerIdCopied => 'Spieler-ID in Zwischenablage kopiert';
+
+  @override
+  String get playerIdTapToCopy => 'Tippen zum Kopieren';
 }
