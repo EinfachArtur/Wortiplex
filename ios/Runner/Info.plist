@@ -45,10 +45,9 @@
 		<true/>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
-		<!-- AdMob test App ID. Replace with the production App ID from the
-	     AdMob console before release. -->
+		<!-- AdMob production App ID for iOS -->
 		<key>GADApplicationIdentifier</key>
-		<string>ca-app-pub-3940256099942544~1458002511</string>
+		<string>ca-app-pub-6732651353828402~7623202046</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

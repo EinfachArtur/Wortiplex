@@ -17,9 +17,9 @@ class AdUnitIds {
   // Google's test *video* interstitials, so development shows real ad clips.
   static const _androidInterstitial = 'ca-app-pub-3940256099942544/8691691433';
   static const _androidRewarded = 'ca-app-pub-3940256099942544/5224354917';
-  static const _iosBanner = 'ca-app-pub-3940256099942544/2934735716';
-  static const _iosInterstitial = 'ca-app-pub-3940256099942544/5135589807';
-  static const _iosRewarded = 'ca-app-pub-3940256099942544/1712485313';
+  static const _iosBanner = 'ca-app-pub-6732651353828402/2175434242';
+  static const _iosInterstitial = 'ca-app-pub-6732651353828402/9178072277';
+  static const _iosRewarded = 'ca-app-pub-6732651353828402/1926268211';
 
   static bool get defaultTargetPlatformIsIOS => defaultTargetPlatform == TargetPlatform.iOS;
 }
