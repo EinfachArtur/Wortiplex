@@ -72,12 +72,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).toString();
-    final profile = ref.watch(profileControllerProvider).valueOrNull;
+    final profileState = ref.watch(profileControllerProvider);
+    final profile = profileState.valueOrNull;
 
     final streak = profile?.statsFor('classic', profile.language).currentStreak ?? 0;
     final dailyDone = profile != null && profile.dailyHistory.hasPlayed(profile.language, DateTime.now());
 
     final isAdFree = profile?.subscription.isAdFree ?? false;
+
+    // Show error details instead of infinite loading when something goes wrong
+    if (profileState.hasError) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                const SizedBox(height: 16),
+                const Text('Fehler beim Laden', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Text(
+                  profileState.error.toString(),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () => ref.invalidate(profileControllerProvider),
+                  child: const Text('Erneut versuchen'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return GameScaffold(
       showBack: false,
