@@ -23,6 +23,16 @@ class TileGrid extends StatefulWidget {
   /// separate DD | MM | YYYY groups in date-guess mode.
   final Set<int> groupBreaksAfter;
 
+  /// Tile size and font size, so a mode with fewer/narrower columns (like
+  /// date-guess) can size its tiles up instead of leaving the board small.
+  final double tileSize;
+  final double tileFontSize;
+
+  /// Tile height, when a mode wants tall rather than square tiles (e.g. 8
+  /// narrow date-guess columns, where width is tight but height is not).
+  /// Defaults to [tileSize] (a square tile).
+  final double? tileHeight;
+
   const TileGrid({
     super.key,
     required this.round,
@@ -31,6 +41,9 @@ class TileGrid extends StatefulWidget {
     this.onTileTap,
     this.shakeCount = 0,
     this.groupBreaksAfter = const {},
+    this.tileSize = 56.0,
+    this.tileFontSize = 28.0,
+    this.tileHeight,
   });
 
   /// Stagger delay between sequential letter reveals.
@@ -44,6 +57,25 @@ class TileGrid extends StatefulWidget {
 
   /// Extra time the win wave needs after the flip has finished.
   static const winWaveDuration = Duration(milliseconds: 800);
+
+  /// Horizontal gap on either side of a tile, and the wider gap used after a
+  /// [groupBreaksAfter] column. Exposed so a caller can size tiles to exactly
+  /// fill the width it has available (see date-guess mode).
+  static const tileGap = 3.5;
+  static const groupGap = 14.0;
+
+  /// Total horizontal space the gaps around [columns] tiles take up, [breaksAfter]
+  /// of them wider group breaks.
+  static double horizontalGapsFor(int columns, Set<int> breaksAfter) {
+    var total = columns * tileGap; // every tile's left gap
+    for (var col = 0; col < columns; col++) {
+      total += breaksAfter.contains(col) ? groupGap : tileGap; // that tile's right gap
+    }
+    return total;
+  }
+
+  /// Total vertical space one row's padding takes up.
+  static const rowVerticalPadding = 8.0; // 4 top + 4 bottom
 
   @override
   State<TileGrid> createState() => _TileGridState();
@@ -75,7 +107,7 @@ class _TileGridState extends State<TileGrid> with SingleTickerProviderStateMixin
       children: [
         for (var row = 0; row < round.maxAttempts; row++)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: TileGrid.rowVerticalPadding / 2),
             // Every row maintains the same widget tree structure so that when a row
             // transitions from current to guessed, its tiles preserve state for the flip.
             child: AnimatedBuilder(
@@ -104,7 +136,10 @@ class _TileGridState extends State<TileGrid> with SingleTickerProviderStateMixin
       children: [
         for (var col = 0; col < wordLength; col++)
           Padding(
-            padding: EdgeInsets.only(left: 3.5, right: widget.groupBreaksAfter.contains(col) ? 14 : 3.5),
+            padding: EdgeInsets.only(
+              left: TileGrid.tileGap,
+              right: widget.groupBreaksAfter.contains(col) ? TileGrid.groupGap : TileGrid.tileGap,
+            ),
             child: AnimatedWordleTile(
               key: ValueKey('tile_${row}_$col'),
               letter: isPastGuess
@@ -116,6 +151,9 @@ class _TileGridState extends State<TileGrid> with SingleTickerProviderStateMixin
               winWave: winningRow,
               isSelected: isCurrentRow && !round.isFinished && col == widget.cursorIndex,
               onTap: isCurrentRow && !round.isFinished ? () => widget.onTileTap?.call(col) : null,
+              size: widget.tileSize,
+              height: widget.tileHeight,
+              fontSize: widget.tileFontSize,
             ),
           ),
       ],

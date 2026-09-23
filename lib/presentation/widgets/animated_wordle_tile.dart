@@ -22,6 +22,11 @@ class AnimatedWordleTile extends StatefulWidget {
   final bool isSelected;
   final VoidCallback? onTap;
   final double size;
+
+  /// Tile height, when it should differ from [size] (its width) — e.g. a
+  /// tall, narrow tile in date-guess mode, where 8 columns leave little
+  /// width to spare but plenty of height. Defaults to a square tile.
+  final double? height;
   final double borderRadius;
   final double fontSize;
 
@@ -37,6 +42,7 @@ class AnimatedWordleTile extends StatefulWidget {
     this.isSelected = false,
     this.onTap,
     this.size = 56.0,
+    this.height,
     this.borderRadius = 14.0,
     this.fontSize = 28.0,
   });
@@ -46,30 +52,15 @@ class AnimatedWordleTile extends StatefulWidget {
 }
 
 class _AnimatedWordleTileState extends State<AnimatedWordleTile> with TickerProviderStateMixin {
-  late final AnimationController _popController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 130),
-  );
+  late final AnimationController _popController = AnimationController(vsync: this, duration: const Duration(milliseconds: 130));
 
-  late final AnimationController _flipController = AnimationController(
-    vsync: this,
-    duration: widget.flipDuration,
-  );
+  late final AnimationController _flipController = AnimationController(vsync: this, duration: widget.flipDuration);
 
-  late final AnimationController _winWaveController = AnimationController(
-    vsync: this,
-    duration: widget.winWaveDuration,
-  );
+  late final AnimationController _winWaveController = AnimationController(vsync: this, duration: widget.winWaveDuration);
 
   late final Animation<double> _popScaleAnimation = TweenSequence<double>([
-    TweenSequenceItem(
-      tween: Tween<double>(begin: 0.85, end: 1.15).chain(CurveTween(curve: Curves.easeOutQuad)),
-      weight: 45,
-    ),
-    TweenSequenceItem(
-      tween: Tween<double>(begin: 1.15, end: 1.0).chain(CurveTween(curve: Curves.easeInOutQuad)),
-      weight: 55,
-    ),
+    TweenSequenceItem(tween: Tween<double>(begin: 0.85, end: 1.15).chain(CurveTween(curve: Curves.easeOutQuad)), weight: 45),
+    TweenSequenceItem(tween: Tween<double>(begin: 1.15, end: 1.0).chain(CurveTween(curve: Curves.easeInOutQuad)), weight: 55),
   ]).animate(_popController);
 
   late final Animation<double> _borderHighlightAnimation = Tween<double>(
@@ -151,12 +142,8 @@ class _AnimatedWordleTileState extends State<AnimatedWordleTile> with TickerProv
         }
 
         final popScale = _popController.isAnimating ? _popScaleAnimation.value : 1.0;
-        final hopY = _winWaveController.isAnimating
-            ? -18.0 * math.sin(_winWaveController.value * math.pi)
-            : 0.0;
-        final hopScale = _winWaveController.isAnimating
-            ? 1.0 + 0.06 * math.sin(_winWaveController.value * math.pi)
-            : 1.0;
+        final hopY = _winWaveController.isAnimating ? -18.0 * math.sin(_winWaveController.value * math.pi) : 0.0;
+        final hopScale = _winWaveController.isAnimating ? 1.0 + 0.06 * math.sin(_winWaveController.value * math.pi) : 1.0;
 
         return Transform.translate(
           offset: Offset(0, hopY),
@@ -193,19 +180,17 @@ class _AnimatedWordleTileState extends State<AnimatedWordleTile> with TickerProv
     final borderHighlight = _popController.isAnimating ? _borderHighlightAnimation.value : 0.0;
     final Color borderColor = widget.isSelected
         ? GameColors.mint
-        : (hasLetter
-            ? (Color.lerp(Colors.white70, Colors.white, borderHighlight) ?? Colors.white70)
-            : AppColors.tileBorder);
+        : (hasLetter ? (Color.lerp(Colors.white70, Colors.white, borderHighlight) ?? Colors.white70) : AppColors.tileBorder);
 
     final double borderWidth = widget.isSelected ? 2.5 : (_popController.isAnimating ? 2.2 : 2.0);
 
     final List<BoxShadow>? shadows = evaluated && state != LetterState.absent
         ? [BoxShadow(color: fill.withValues(alpha: 0.45), blurRadius: 10, offset: const Offset(0, 3))]
         : (widget.isSelected
-            ? [BoxShadow(color: GameColors.mint.withValues(alpha: 0.55), blurRadius: 12)]
-            : (_popController.isAnimating && hasLetter
-                ? [BoxShadow(color: Colors.white.withValues(alpha: 0.25 * borderHighlight), blurRadius: 8)]
-                : null));
+              ? [BoxShadow(color: GameColors.mint.withValues(alpha: 0.55), blurRadius: 12)]
+              : (_popController.isAnimating && hasLetter
+                    ? [BoxShadow(color: Colors.white.withValues(alpha: 0.25 * borderHighlight), blurRadius: 8)]
+                    : null));
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -213,7 +198,7 @@ class _AnimatedWordleTileState extends State<AnimatedWordleTile> with TickerProv
         duration: const Duration(milliseconds: 160),
         curve: Curves.easeOut,
         width: widget.size,
-        height: widget.size,
+        height: widget.height ?? widget.size,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: fill,
