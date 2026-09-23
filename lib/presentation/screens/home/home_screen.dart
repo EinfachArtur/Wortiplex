@@ -224,14 +224,14 @@ class _ModeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
-    const iconSize = 56.0;
+    const iconSize = 76.0;
     return GestureDetector(
       onTap: onTap,
       child: Opacity(
         opacity: enabled ? 1 : 0.55,
         child: GlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          radius: 24,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+          radius: 26,
           child: Row(
             children: [
               if (imageAsset != null)
@@ -245,7 +245,7 @@ class _ModeCard extends StatelessWidget {
                   width: iconSize,
                   height: iconSize,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(20),
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -253,22 +253,22 @@ class _ModeCard extends StatelessWidget {
                     ),
                     boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 3))],
                   ),
-                  child: Icon(icon, color: GameColors.night0, size: 28),
+                  child: Icon(icon, color: GameColors.night0, size: 40),
                 ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 18),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GameText(title, size: 20, textAlign: TextAlign.left, shadow: null),
+                    GameText(title, size: 23, textAlign: TextAlign.left, shadow: null),
                     const SizedBox(height: 3),
-                    GameText(subtitle, size: 13, color: GameColors.textDim, textAlign: TextAlign.left, shadow: null, weight: 500),
+                    GameText(subtitle, size: 14, color: GameColors.textDim, textAlign: TextAlign.left, shadow: null, weight: 500),
                   ],
                 ),
               ),
               if (trailing != null) ...[const SizedBox(width: 10), trailing!, const SizedBox(width: 6)],
-              if (enabled) const Icon(Icons.chevron_right_rounded, color: GameColors.textDim, size: 26),
+              if (enabled) const Icon(Icons.chevron_right_rounded, color: GameColors.textDim, size: 28),
             ],
           ),
         ),
