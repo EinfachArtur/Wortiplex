@@ -118,64 +118,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
               child: Column(
                 children: [
+                  const SizedBox(height: 8),
+                  const WordmarkTiles(),
+                  const SizedBox(height: 18),
+                  const SizedBox(height: 150, child: DailyRewardsCard(fill: true)),
+                  const SizedBox(height: 18),
+                  // The game list scrolls: it keeps a comfortable, fixed card
+                  // size no matter how many modes are added over time,
+                  // instead of everything shrinking to squeeze onto one screen.
                   Expanded(
-                    child: _HomeContent(
-                      children: (s) => [
-                        _Section(height: 48 * s, child: const WordmarkTiles()),
-                        _Section(height: 156 * s, child: const DailyRewardsCard(fill: true)),
-                        _Section(
-                          height: 84 * s,
-                          child: _ModeCard(
-                            scale: s,
-                            imageAsset: 'assets/images/logo_2.png',
-                            color: GameColors.mint,
-                            title: l10n.menuClassic,
-                            subtitle: '${l10n.currentStreak}: $streak',
-                            trailing: streak > 0
-                                ? _Chip(icon: Icons.local_fire_department_rounded, label: '$streak', color: GameColors.amber)
-                                : null,
-                            onTap: () => _open(context, const GameBoardScreen(mode: GameMode.classic)),
-                          ),
+                    child: ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        _ModeCard(
+                          imageAsset: 'assets/images/logo_2.png',
+                          color: GameColors.mint,
+                          title: l10n.menuClassic,
+                          subtitle: '${l10n.currentStreak}: $streak',
+                          trailing: streak > 0
+                              ? _Chip(icon: Icons.local_fire_department_rounded, label: '$streak', color: GameColors.amber)
+                              : null,
+                          onTap: () => _open(context, const GameBoardScreen(mode: GameMode.classic)),
                         ),
-                        _Section(
-                          height: 84 * s,
-                          child: _ModeCard(
-                            scale: s,
-                            imageAsset: 'assets/images/kalender.png',
-                            color: GameColors.amber,
-                            title: l10n.menuDaily,
-                            subtitle: DateFormat.MMMd(locale).format(DateTime.now()),
-                            trailing: dailyDone ? const _Chip(icon: Icons.check_rounded, label: '', color: GameColors.mint) : null,
-                            onTap: () => _open(context, const DailyPuzzleScreen()),
-                          ),
+                        const SizedBox(height: 12),
+                        _ModeCard(
+                          imageAsset: 'assets/images/kalender.png',
+                          color: GameColors.amber,
+                          title: l10n.menuDaily,
+                          subtitle: DateFormat.MMMd(locale).format(DateTime.now()),
+                          trailing: dailyDone ? const _Chip(icon: Icons.check_rounded, label: '', color: GameColors.mint) : null,
+                          onTap: () => _open(context, const DailyPuzzleScreen()),
                         ),
-                        _Section(
-                          height: 84 * s,
-                          child: _ModeCard(
-                            scale: s,
-                            imageAsset: 'assets/images/Blitz.png',
-                            color: GameColors.coral,
-                            title: l10n.menuWordFever,
-                            subtitle: l10n.wordFeverDesc(WordFeverConfig.startSeconds),
-                            trailing: profile.wordFeverBest > 0
-                                ? _Chip(icon: Icons.emoji_events_rounded, label: '${profile.wordFeverBest}', color: GameColors.amber)
-                                : null,
-                            onTap: () => _open(context, const GameBoardScreen(mode: GameMode.wordFever)),
-                          ),
+                        const SizedBox(height: 12),
+                        _ModeCard(
+                          imageAsset: 'assets/images/Blitz.png',
+                          color: GameColors.coral,
+                          title: l10n.menuWordFever,
+                          subtitle: l10n.wordFeverDesc(WordFeverConfig.startSeconds),
+                          trailing: profile.wordFeverBest > 0
+                              ? _Chip(icon: Icons.emoji_events_rounded, label: '${profile.wordFeverBest}', color: GameColors.amber)
+                              : null,
+                          onTap: () => _open(context, const GameBoardScreen(mode: GameMode.wordFever)),
                         ),
-                        _Section(
-                          height: 84 * s,
-                          child: _ModeCard(
-                            scale: s,
-                            icon: Icons.event_rounded,
-                            color: GameColors.sky,
-                            title: l10n.menuDateGuess,
-                            subtitle: l10n.dateGuessDesc(DateGuessConfig.minYear, DateGuessConfig.maxYear),
-                            trailing: dateGuessStreak > 0
-                                ? _Chip(icon: Icons.local_fire_department_rounded, label: '$dateGuessStreak', color: GameColors.amber)
-                                : null,
-                            onTap: () => _open(context, const GameBoardScreen(mode: GameMode.dateGuess)),
-                          ),
+                        const SizedBox(height: 12),
+                        _ModeCard(
+                          icon: Icons.event_rounded,
+                          color: GameColors.sky,
+                          title: l10n.menuDateGuess,
+                          subtitle: l10n.dateGuessDesc(DateGuessConfig.minYear, DateGuessConfig.maxYear),
+                          trailing: dateGuessStreak > 0
+                              ? _Chip(icon: Icons.local_fire_department_rounded, label: '$dateGuessStreak', color: GameColors.amber)
+                              : null,
+                          onTap: () => _open(context, const GameBoardScreen(mode: GameMode.dateGuess)),
                         ),
                       ],
                     ),
@@ -208,71 +202,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-/// One block of the home screen with a fixed height. The first two blocks
-/// (name and daily rewards) are separated from the game modes by more space
-/// than the modes are from each other.
-class _Section {
-  final double height;
-  final Widget child;
-  const _Section({required this.height, required this.child});
-}
-
-/// Lays the sections out at their natural size, scales them up a little on
-/// tall screens, and spreads whatever space is still left between the groups,
-/// so the screen never ends up with one huge empty area. Very short screens
-/// scroll instead.
-class _HomeContent extends StatelessWidget {
-  /// Builds the sections for a size factor (1.0 = base size).
-  final List<_Section> Function(double scale) children;
-  const _HomeContent({required this.children});
-
-  static const _minScale = 0.9;
-  static const _maxScale = 1.3;
-  static const _modeGap = 12.0;
-  static const _groupGap = 18.0;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Sections are: name, daily rewards, then N mode cards. A "group gap"
-        // separates the first three; a tighter "mode gap" separates the cards.
-        final sampleCount = children(1.0).length;
-        final modeGapCount = sampleCount - 3;
-
-        // Height at scale 1.0: sections + the gaps between them.
-        final base = children(1.0).fold<double>(0, (sum, s) => sum + s.height) + 2 * _groupGap + modeGapCount * _modeGap;
-        final scale = (constraints.maxHeight / base).clamp(_minScale, _maxScale);
-        final sections = children(scale);
-
-        final used = sections.fold<double>(0, (sum, s) => sum + s.height) + 2 * _groupGap * scale + modeGapCount * _modeGap;
-        final spare = constraints.maxHeight - used;
-        final scrolls = spare < 0;
-        // Leftover space goes above the name, between the groups and below the modes.
-        final extra = scrolls ? 0.0 : spare / 4;
-        final groupGap = _groupGap * scale + extra;
-
-        final column = Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(height: extra),
-            for (var i = 0; i < sections.length; i++) ...[
-              if (i > 0) SizedBox(height: i <= 2 ? groupGap : _modeGap),
-              sections[i].child.sized(sections[i].height),
-            ],
-            SizedBox(height: extra),
-          ],
-        );
-        return scrolls ? SingleChildScrollView(child: column) : column;
-      },
-    );
-  }
-}
-
-extension on Widget {
-  Widget sized(double height) => SizedBox(height: height, child: this);
-}
-
 class _ModeCard extends StatelessWidget {
   final IconData? icon;
   final String? imageAsset;
@@ -281,7 +210,6 @@ class _ModeCard extends StatelessWidget {
   final String subtitle;
   final Widget? trailing;
   final VoidCallback? onTap;
-  final double scale;
 
   const _ModeCard({
     this.icon,
@@ -291,19 +219,18 @@ class _ModeCard extends StatelessWidget {
     required this.subtitle,
     this.trailing,
     this.onTap,
-    this.scale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
     final enabled = onTap != null;
-    final iconSize = 56.0 * scale;
+    const iconSize = 56.0;
     return GestureDetector(
       onTap: onTap,
       child: Opacity(
         opacity: enabled ? 1 : 0.55,
         child: GlassCard(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10 * scale),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           radius: 24,
           child: Row(
             children: [
@@ -334,9 +261,9 @@ class _ModeCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GameText(title, size: 20 * scale, textAlign: TextAlign.left, shadow: null),
+                    GameText(title, size: 20, textAlign: TextAlign.left, shadow: null),
                     const SizedBox(height: 3),
-                    GameText(subtitle, size: 13 * scale, color: GameColors.textDim, textAlign: TextAlign.left, shadow: null, weight: 500),
+                    GameText(subtitle, size: 13, color: GameColors.textDim, textAlign: TextAlign.left, shadow: null, weight: 500),
                   ],
                 ),
               ),
