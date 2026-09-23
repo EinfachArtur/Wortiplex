@@ -25,6 +25,21 @@ const _layouts = {
     'ФЫВАПРОЛДЖЭ',
     'ЯЧСМИТЬБЮ',
   ],
+  Language.fr: [
+    'QWERTYUIOP',
+    'ASDFGHJKL',
+    'ZXCVBNM',
+  ],
+  Language.it: [
+    'QWERTYUIOP',
+    'ASDFGHJKL',
+    'ZXCVBNM',
+  ],
+  Language.es: [
+    'QWERTYUIOP',
+    'ASDFGHJKL',
+    'ZXCVBNM',
+  ],
 };
 
 class VirtualKeyboard extends StatefulWidget {

@@ -23,6 +23,11 @@ const _alphabets = {
   Language.en: 'QWERTYUIOPASDFGHJKLZXCVBNM',
   Language.de: 'QWERTZUIOPÜASDFGHJKLÖÄYXCVBNM',
   Language.ru: 'ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ',
+  // French/Italian/Spanish word lists fold accents to their plain Latin
+  // letter (é -> E), so they share the plain A-Z keyboard used for English.
+  Language.fr: 'QWERTYUIOPASDFGHJKLZXCVBNM',
+  Language.it: 'QWERTYUIOPASDFGHJKLZXCVBNM',
+  Language.es: 'QWERTYUIOPASDFGHJKLZXCVBNM',
 };
 
 List<String> alphabetFor(Language language) => _alphabets[language]!.split('');

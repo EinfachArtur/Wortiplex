@@ -28,6 +28,11 @@ void main() {
     'de': 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ',
     'en': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
     'ru': 'АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
+    // French/Italian/Spanish words are stored with accents folded to their
+    // plain Latin letter, so they share the English A-Z keyboard.
+    'fr': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    'it': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    'es': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
   };
 
   for (final code in alphabets.keys) {
@@ -74,5 +79,16 @@ void main() {
       LetterState.correct,
       LetterState.absent,
     ]);
+  });
+
+  test('French, Italian and Spanish have real common words as valid guesses', () {
+    final fr = load('fr');
+    expect(fr.solutions.union(fr.valid), containsAll(['MERCI', 'CHIEN', 'TABLE']));
+
+    final it = load('it');
+    expect(it.solutions.union(it.valid), containsAll(['AMORE', 'NOTTE', 'GATTO']));
+
+    final es = load('es');
+    expect(es.solutions.union(es.valid), containsAll(['AMIGO', 'PERRO', 'LIBRO']));
   });
 }

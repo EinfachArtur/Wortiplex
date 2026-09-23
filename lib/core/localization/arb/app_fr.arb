@@ -1,0 +1,155 @@
+{
+  "@@locale": "fr",
+  "appTitle": "WortiPlex",
+  "menuClassic": "Classique",
+  "menuDaily": "Défi du jour",
+  "menuWordFever": "Word Fever",
+  "menuSecretWord": "Mot secret",
+  "menuTogether": "WortiPlex Together",
+  "comingSoon": "Bientôt disponible",
+  "coins": "Pièces",
+  "shop": "Boutique",
+  "settings": "Réglages",
+  "statistics": "Statistiques",
+  "howToPlay": "Règles du jeu",
+  "language": "Langue",
+  "hint": "Indice",
+  "strikeOutLetter": "Barrer une lettre",
+  "skip": "Passer",
+  "newGame": "Nouvelle partie",
+  "youWon": "Gagné !",
+  "youLost": "Plus d'essais",
+  "solutionWas": "Le mot était {word}",
+  "@solutionWas": {
+    "placeholders": {
+      "word": {}
+    }
+  },
+  "notEnoughLetters": "Pas assez de lettres",
+  "notInWordList": "Absent de la liste de mots",
+  "notEnoughCoins": "Pas assez de pièces",
+  "watchAdFor20Coins": "Regarder une pub pour 20 pièces",
+  "removeAds": "Supprimer les publicités",
+  "restorePurchases": "Restaurer les achats",
+  "subscriptionTitle": "WortiPlex+",
+  "gamesPlayed": "Parties jouées",
+  "winRate": "Taux de victoire",
+  "currentStreak": "Série actuelle",
+  "maxStreak": "Meilleure série",
+  "play": "Jouer",
+  "mostPopular": "Le plus populaire",
+  "bestValue": "Meilleure offre",
+  "dailyAlreadyPlayed": "Tu as déjà résolu le défi du jour. Reviens demain !",
+  "dailyLoginTitle": "Cadeau du jour",
+  "dailyLoginClaim": "Récupérer {coins} pièces",
+  "@dailyLoginClaim": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
+  "dailyLoginClaimed": "Reviens demain pour plus",
+  "spinWheelTitle": "Roue de la chance",
+  "spinWheelAction": "Tourner",
+  "spinWheelUsed": "Reviens demain pour tourner à nouveau",
+  "spinWheelWon": "Tu as gagné {coins} pièces !",
+  "@spinWheelWon": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
+  "score": "Série",
+  "submit": "Valider",
+  "notAWord": "Pas un mot",
+  "spinButton": "TOURNER",
+  "free": "GRATUIT",
+  "claim": "RÉCUPÉRER",
+  "prizeHint": "Indice",
+  "prizeStrikeout": "Barrer",
+  "prizeSkip": "Passer",
+  "prizeSpin": "Tour",
+  "tabPuzzles": "Défis",
+  "tabTrophies": "Trophées",
+  "monthlyPrizes": "Objectifs du mois",
+  "winsCount": "{count, plural, one{{count} victoire} other{{count} victoires}}",
+  "playDate": "JOUER {date}",
+  "puzzleLocked": "Ce défi n'est pas encore disponible",
+  "prizeClaimed": "Prix récupéré !",
+  "subBenefitNoAds": "Plus jamais de pub",
+  "subBenefitBonus": "Bonus de pièces quotidien, sans vidéo",
+  "subBenefitDiscount": "Indices et lettres barrées moins chers",
+  "planMonthly": "Mensuel",
+  "planYearly": "Annuel",
+  "subscriptionActive": "Actif",
+  "subscriptionRenews": "Renouvellement le {date}",
+  "guessDistribution": "Répartition des essais",
+  "resultWon": "GÉNIAL !",
+  "resultLost": "Si près du but !",
+  "resultWonSub": "Tu as trouvé le mot !",
+  "resultLostSub": "La prochaine sera la bonne.",
+  "solutionLabel": "Mot à trouver",
+  "attemptsLabel": "Essais",
+  "streakLabel": "Série",
+  "shareResult": "Partager le résultat",
+  "copiedToClipboard": "Résultat copié !",
+  "ok": "OK",
+  "coinsEarned": "{coins} pièces",
+  "continueTitleStreak": "Perdre ta série ?",
+  "continueBodyStreak": "Veux-tu vraiment perdre ta série de {streak} ?",
+  "continueTitleNoStreak": "Un essai de plus ?",
+  "continueBodyNoStreak": "Sauve cette manche avec un essai supplémentaire.",
+  "continueBuy": "Essai supplémentaire",
+  "continueDeclineStreak": "Perdre la série",
+  "continueDeclineNoStreak": "Abandonner",
+  "continueGetCoins": "Obtenir des pièces",
+  "mainMenu": "Menu principal",
+  "removeAdsPromptTitle": "Marre de la pub ?",
+  "removeAdsPromptBody": "Joue sans interruption entre les manches.",
+  "removeAdsPromptOnce": "Un seul paiement, pour toujours",
+  "removeAdsPromptBuy": "Sans pub pour {price}",
+  "removeAdsPromptLater": "Plus tard",
+  "boosterHintTitle": "Boost d'indices",
+  "boosterStrikeoutTitle": "Boost lettres barrées",
+  "boosterSkipTitle": "Boost de passe",
+  "boosterGet": "Obtenir {count}",
+  "@boosterGet": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterOwned": "Tu en as {count}",
+  "@boosterOwned": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterBought": "Acheté !",
+  "wordFeverDesc": "{seconds} s contre la montre",
+  "@wordFeverDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "wordFeverBest": "Record : {score}",
+  "@wordFeverBest": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "feverScore": "Score",
+  "feverTimeUp": "Temps écoulé !",
+  "feverWordsSolved": "Mots trouvés",
+  "feverBestLabel": "Record",
+  "feverNewBest": "Nouveau record !",
+  "feverPlayAgain": "Rejouer",
+  "playerId": "ID joueur",
+  "playerIdCopied": "ID joueur copié dans le presse-papiers",
+  "playerIdTapToCopy": "Toucher pour copier"
+}

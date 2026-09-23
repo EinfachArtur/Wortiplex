@@ -16,6 +16,9 @@ class SettingsScreen extends ConsumerWidget {
         Language.de => 'Deutsch',
         Language.en => 'English',
         Language.ru => 'Русский',
+        Language.fr => 'Français',
+        Language.it => 'Italiano',
+        Language.es => 'Español',
       };
 
   @override
@@ -36,7 +39,7 @@ class SettingsScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: _LanguageTile(
-                      code: lang.code.toUpperCase(),
+                      flag: lang.flagEmoji,
                       label: _label(lang),
                       selected: profile.language == lang,
                       onTap: () => ref.read(profileControllerProvider.notifier).setLanguage(lang),
@@ -53,12 +56,12 @@ class SettingsScreen extends ConsumerWidget {
 }
 
 class _LanguageTile extends StatelessWidget {
-  final String code;
+  final String flag;
   final String label;
   final bool selected;
   final VoidCallback onTap;
 
-  const _LanguageTile({required this.code, required this.label, required this.selected, required this.onTap});
+  const _LanguageTile({required this.flag, required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +82,7 @@ class _LanguageTile extends StatelessWidget {
               height: 46,
               alignment: Alignment.center,
               decoration: BoxDecoration(color: selected ? GameColors.mint : GameColors.pill, borderRadius: BorderRadius.circular(15)),
-              child: GameText(code, size: 16, color: selected ? GameColors.night0 : Colors.white, shadow: null),
+              child: Text(flag, style: const TextStyle(fontSize: 24)),
             ),
             const SizedBox(width: 14),
             Expanded(child: GameText(label, size: 18, textAlign: TextAlign.left, shadow: null)),

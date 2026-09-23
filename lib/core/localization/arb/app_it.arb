@@ -1,0 +1,155 @@
+{
+  "@@locale": "it",
+  "appTitle": "WortiPlex",
+  "menuClassic": "Classico",
+  "menuDaily": "Sfida del giorno",
+  "menuWordFever": "Word Fever",
+  "menuSecretWord": "Parola segreta",
+  "menuTogether": "WortiPlex Together",
+  "comingSoon": "Prossimamente",
+  "coins": "Monete",
+  "shop": "Negozio",
+  "settings": "Impostazioni",
+  "statistics": "Statistiche",
+  "howToPlay": "Come si gioca",
+  "language": "Lingua",
+  "hint": "Suggerimento",
+  "strikeOutLetter": "Elimina una lettera",
+  "skip": "Salta",
+  "newGame": "Nuova partita",
+  "youWon": "Hai vinto!",
+  "youLost": "Tentativi finiti",
+  "solutionWas": "La parola era {word}",
+  "@solutionWas": {
+    "placeholders": {
+      "word": {}
+    }
+  },
+  "notEnoughLetters": "Lettere insufficienti",
+  "notInWordList": "Non è nella lista di parole",
+  "notEnoughCoins": "Monete insufficienti",
+  "watchAdFor20Coins": "Guarda una pubblicità per 20 monete",
+  "removeAds": "Rimuovi pubblicità",
+  "restorePurchases": "Ripristina acquisti",
+  "subscriptionTitle": "WortiPlex+",
+  "gamesPlayed": "Partite giocate",
+  "winRate": "Percentuale vittorie",
+  "currentStreak": "Serie attuale",
+  "maxStreak": "Serie migliore",
+  "play": "Gioca",
+  "mostPopular": "Più popolare",
+  "bestValue": "Miglior offerta",
+  "dailyAlreadyPlayed": "Hai già risolto la sfida di oggi. Torna domani!",
+  "dailyLoginTitle": "Regalo del giorno",
+  "dailyLoginClaim": "Ritira {coins} monete",
+  "@dailyLoginClaim": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
+  "dailyLoginClaimed": "Torna domani per altre",
+  "spinWheelTitle": "Ruota della fortuna",
+  "spinWheelAction": "Gira ora",
+  "spinWheelUsed": "Torna domani per girare di nuovo",
+  "spinWheelWon": "Hai vinto {coins} monete!",
+  "@spinWheelWon": {
+    "placeholders": {
+      "coins": {}
+    }
+  },
+  "score": "Serie",
+  "submit": "Invia",
+  "notAWord": "Non è una parola",
+  "spinButton": "GIRA",
+  "free": "GRATIS",
+  "claim": "RITIRA",
+  "prizeHint": "Suggerimento",
+  "prizeStrikeout": "Elimina",
+  "prizeSkip": "Salta",
+  "prizeSpin": "Giro",
+  "tabPuzzles": "Sfide",
+  "tabTrophies": "Trofei",
+  "monthlyPrizes": "Obiettivi del mese",
+  "winsCount": "{count, plural, one{{count} vittoria} other{{count} vittorie}}",
+  "playDate": "GIOCA {date}",
+  "puzzleLocked": "Questa sfida non è ancora disponibile",
+  "prizeClaimed": "Premio ritirato!",
+  "subBenefitNoAds": "Mai più pubblicità",
+  "subBenefitBonus": "Bonus monete giornaliero, senza video",
+  "subBenefitDiscount": "Suggerimenti ed eliminazioni più economici",
+  "planMonthly": "Mensile",
+  "planYearly": "Annuale",
+  "subscriptionActive": "Attivo",
+  "subscriptionRenews": "Si rinnova il {date}",
+  "guessDistribution": "Distribuzione dei tentativi",
+  "resultWon": "FANTASTICO!",
+  "resultLost": "Quasi!",
+  "resultWonSub": "Hai indovinato la parola!",
+  "resultLostSub": "Andrà meglio la prossima volta.",
+  "solutionLabel": "Parola da indovinare",
+  "attemptsLabel": "Tentativi",
+  "streakLabel": "Serie",
+  "shareResult": "Condividi risultato",
+  "copiedToClipboard": "Risultato copiato!",
+  "ok": "OK",
+  "coinsEarned": "{coins} monete",
+  "continueTitleStreak": "Perdere la serie?",
+  "continueBodyStreak": "Vuoi davvero perdere la tua serie di {streak}?",
+  "continueTitleNoStreak": "Un altro tentativo?",
+  "continueBodyNoStreak": "Salva questo turno con un tentativo extra.",
+  "continueBuy": "Tentativo extra",
+  "continueDeclineStreak": "Perdi la serie",
+  "continueDeclineNoStreak": "Arrenditi",
+  "continueGetCoins": "Ottieni monete",
+  "mainMenu": "Menu principale",
+  "removeAdsPromptTitle": "Stanco della pubblicità?",
+  "removeAdsPromptBody": "Gioca senza interruzioni tra i turni.",
+  "removeAdsPromptOnce": "Un solo pagamento, per sempre",
+  "removeAdsPromptBuy": "Senza pubblicità per {price}",
+  "removeAdsPromptLater": "Forse più tardi",
+  "boosterHintTitle": "Booster suggerimenti",
+  "boosterStrikeoutTitle": "Booster eliminazione",
+  "boosterSkipTitle": "Booster salto",
+  "boosterGet": "Prendi {count}",
+  "@boosterGet": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterOwned": "Ne hai {count}",
+  "@boosterOwned": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "boosterBought": "Acquistato!",
+  "wordFeverDesc": "{seconds} secondi contro il tempo",
+  "@wordFeverDesc": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "wordFeverBest": "Record: {score}",
+  "@wordFeverBest": {
+    "placeholders": {
+      "score": {
+        "type": "int"
+      }
+    }
+  },
+  "feverScore": "Punti",
+  "feverTimeUp": "Tempo scaduto!",
+  "feverWordsSolved": "Parole risolte",
+  "feverBestLabel": "Record",
+  "feverNewBest": "Nuovo record!",
+  "feverPlayAgain": "Rigioca",
+  "playerId": "ID giocatore",
+  "playerIdCopied": "ID giocatore copiato negli appunti",
+  "playerIdTapToCopy": "Tocca per copiare"
+}
