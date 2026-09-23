@@ -77,14 +77,23 @@ Future<void> _typeDigits(WidgetTester tester, String digits) async {
 }
 
 void main() {
-  testWidgets('shows a digit pad and the DD MM YYYY format hint, not the letter keyboard', (tester) async {
+  testWidgets('shows a digit pad and placeholders in tiles, with the WortiPlex header', (tester) async {
     await _pumpDateGuess(tester);
 
-    expect(find.text('TT MM JJJJ'), findsOneWidget);
+    expect(find.text('WortiPlex'), findsOneWidget);
+    expect(find.text('T'), findsNWidgets(2));
+    expect(find.text('M'), findsNWidgets(2));
+    expect(find.text('J'), findsNWidgets(4));
+
     for (final digit in '1234567890'.split('')) {
       expect(find.descendant(of: find.byType(VirtualKeyboard), matching: find.text(digit)), findsOneWidget);
     }
     expect(find.descendant(of: find.byType(VirtualKeyboard), matching: find.text('Q')), findsNothing);
+
+    // Typing a digit replaces the first 'T' placeholder with the digit
+    await _typeDigits(tester, '1');
+    expect(find.text('T'), findsOneWidget);
+    expect(find.text('1'), findsWidgets);
   });
 
   testWidgets('an invalid calendar date is rejected without being submitted', (tester) async {

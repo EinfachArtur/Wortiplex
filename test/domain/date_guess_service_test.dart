@@ -19,9 +19,9 @@ void main() {
     }
   });
 
-  test('defaults to a range ending at the current year', () {
+  test('defaults to a range ending at DateGuessConfig.maxYear (3000)', () {
     final service = DateGuessService(minYear: 2020);
-    expect(service.maxYear, DateTime.now().year);
+    expect(service.maxYear, 3000);
   });
 
   test('a single-year range always returns that year', () {

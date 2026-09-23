@@ -33,6 +33,13 @@ class TileGrid extends StatefulWidget {
   /// Defaults to [tileSize] (a square tile).
   final double? tileHeight;
 
+  /// Border radius of each tile in the grid.
+  final double borderRadius;
+
+  /// Optional placeholder characters (e.g. ['T', 'T', 'M', 'M', 'J', 'J', 'J', 'J'])
+  /// displayed in unevaluated empty tiles of the active row.
+  final List<String>? placeholders;
+
   const TileGrid({
     super.key,
     required this.round,
@@ -44,6 +51,8 @@ class TileGrid extends StatefulWidget {
     this.tileSize = 56.0,
     this.tileFontSize = 28.0,
     this.tileHeight,
+    this.borderRadius = 14.0,
+    this.placeholders,
   });
 
   /// Stagger delay between sequential letter reveals.
@@ -145,6 +154,9 @@ class _TileGridState extends State<TileGrid> with SingleTickerProviderStateMixin
               letter: isPastGuess
                   ? round.guesses[row].evaluation[col].letter
                   : (isCurrentRow && col < widget.currentLetters.length ? widget.currentLetters[col] : ''),
+              placeholder: isCurrentRow && widget.placeholders != null && col < widget.placeholders!.length
+                  ? widget.placeholders![col]
+                  : null,
               state: isPastGuess ? round.guesses[row].evaluation[col].state : LetterState.unknown,
               flipDelay: _flipStagger * col,
               flipDuration: _flipDuration,
@@ -153,6 +165,7 @@ class _TileGridState extends State<TileGrid> with SingleTickerProviderStateMixin
               onTap: isCurrentRow && !round.isFinished ? () => widget.onTileTap?.call(col) : null,
               size: widget.tileSize,
               height: widget.tileHeight,
+              borderRadius: widget.borderRadius,
               fontSize: widget.tileFontSize,
             ),
           ),

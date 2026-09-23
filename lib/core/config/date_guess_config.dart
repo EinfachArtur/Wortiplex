@@ -3,8 +3,7 @@
 class DateGuessConfig {
   const DateGuessConfig._();
 
-  static const int minYear = 1900;
+  static const int minYear = 0;
 
-  /// Never in the future: today's year.
-  static int get maxYear => DateTime.now().year;
+  static const int maxYear = 3000;
 }

@@ -550,54 +550,49 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
     );
   }
 
-  /// Date-guess: 8 columns make the board much wider than it is tall, so
-  /// scaling it down to fit *both* dimensions (like [_buildLetterBoard] does)
-  /// would leave most of the available height empty. Instead the tile size is
-  /// computed directly from the available width, so the board actually fills
-  /// the screen instead of floating in a mostly empty box.
+  /// Date-guess: 8 columns displaying DD MM YYYY with faint placeholders
+  /// in the active row and the classic WortiPlex logo header.
   Widget _buildDateBoard(Round round) {
     final l10n = AppLocalizations.of(context);
-    final wordLength = round.solutionWord.length;
-    const groupBreaks = {1, 3};
-    const hintRowHeight = 40.0 + 22.0; // icon/text row + the spacing below it
+    final placeholders = l10n.dateFormatHint.replaceAll(' ', '').split('');
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // 8 narrow columns cap how wide a tile can be well below what the
-        // available height would allow, so width and height are sized
-        // separately: tiles end up tall rather than square, using the
-        // generous vertical space instead of wasting it.
-        final gaps = TileGrid.horizontalGapsFor(wordLength, groupBreaks);
-        final tileWidth = ((constraints.maxWidth - 24 - gaps) / wordLength).clamp(36.0, 76.0);
-        final tileHeight = ((constraints.maxHeight - hintRowHeight) / round.maxAttempts - TileGrid.rowVerticalPadding).clamp(
-          tileWidth,
-          108.0,
-        );
-
-        return Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _DateFormatHint(text: l10n.dateFormatHint),
-                const SizedBox(height: 22),
-                TileGrid(
-                  round: round,
-                  currentLetters: _currentLetters,
-                  cursorIndex: _cursorIndex,
-                  onTileTap: _onTileTap,
-                  shakeCount: _shakeCount,
-                  groupBreaksAfter: groupBreaks,
-                  tileSize: tileWidth,
-                  tileHeight: tileHeight,
-                  tileFontSize: tileWidth * 0.52,
-                ),
-              ],
-            ),
+    return Center(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset('assets/images/logo.png', width: 36, height: 36),
+                  ),
+                  const SizedBox(width: 10),
+                  const GameText('WortiPlex', size: 28),
+                ],
+              ),
+              const SizedBox(height: 22),
+              TileGrid(
+                round: round,
+                currentLetters: _currentLetters,
+                cursorIndex: _cursorIndex,
+                onTileTap: _onTileTap,
+                shakeCount: _shakeCount,
+                groupBreaksAfter: const {1, 3},
+                tileSize: 42.0,
+                tileHeight: 52.0,
+                borderRadius: 10.0,
+                tileFontSize: 24.0,
+                placeholders: placeholders,
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -688,38 +683,6 @@ class _FeverClock extends StatelessWidget {
   }
 }
 
-/// Caption above the date grid showing the DD MM YYYY digit grouping, sized
-/// to match the weight of the classic mode's logo row above its grid.
-class _DateFormatHint extends StatelessWidget {
-  final String text;
-  const _DateFormatHint({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(13),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color.lerp(GameColors.sky, Colors.white, 0.25)!, GameColors.sky],
-            ),
-            boxShadow: [BoxShadow(color: GameColors.sky.withValues(alpha: 0.4), blurRadius: 10, offset: const Offset(0, 3))],
-          ),
-          child: const Icon(Icons.event_rounded, color: GameColors.night0, size: 24),
-        ),
-        const SizedBox(width: 12),
-        GameText(text, size: 26, shadow: null),
-      ],
-    );
-  }
-}
 
 class _ScoreChip extends StatelessWidget {
   final IconData icon;

@@ -13,6 +13,7 @@ import '../../domain/models/letter_state.dart';
 /// 3. Staggered vertical bounce wave on victory.
 class AnimatedWordleTile extends StatefulWidget {
   final String letter;
+  final String? placeholder;
   final LetterState state;
   final Duration flipDelay;
   final Duration flipDuration;
@@ -33,6 +34,7 @@ class AnimatedWordleTile extends StatefulWidget {
   const AnimatedWordleTile({
     super.key,
     required this.letter,
+    this.placeholder,
     required this.state,
     this.flipDelay = Duration.zero,
     this.flipDuration = const Duration(milliseconds: 500),
@@ -176,6 +178,7 @@ class _AnimatedWordleTileState extends State<AnimatedWordleTile> with TickerProv
       _ => Colors.white,
     };
     final hasLetter = widget.letter.isNotEmpty;
+    final hasPlaceholder = !hasLetter && widget.placeholder != null && widget.placeholder!.isNotEmpty;
 
     final borderHighlight = _popController.isAnimating ? _borderHighlightAnimation.value : 0.0;
     final Color borderColor = widget.isSelected
@@ -219,7 +222,16 @@ class _AnimatedWordleTileState extends State<AnimatedWordleTile> with TickerProv
                 ),
                 child: Text(widget.letter, style: gameText(widget.fontSize, color: textColor, weight: 800)),
               )
-            : Text(widget.letter, style: gameText(widget.fontSize, color: textColor, weight: 800)),
+            : (!evaluated && hasPlaceholder
+                ? Text(
+                    widget.placeholder!,
+                    style: gameText(
+                      widget.fontSize,
+                      color: Colors.white.withValues(alpha: 0.22),
+                      weight: 700,
+                    ),
+                  )
+                : Text(widget.letter, style: gameText(widget.fontSize, color: textColor, weight: 800))),
       ),
     );
   }

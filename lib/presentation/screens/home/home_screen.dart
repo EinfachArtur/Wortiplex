@@ -162,7 +162,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         const SizedBox(height: 12),
                         _ModeCard(
-                          icon: Icons.event_rounded,
+                          imageAsset: 'assets/images/datum.png',
                           color: GameColors.sky,
                           title: l10n.menuDateGuess,
                           subtitle: l10n.dateGuessDesc(DateGuessConfig.minYear, DateGuessConfig.maxYear),
