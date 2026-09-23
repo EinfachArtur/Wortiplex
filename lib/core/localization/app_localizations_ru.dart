@@ -369,4 +369,21 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get playerIdTapToCopy => 'Нажмите, чтобы скопировать';
+
+  @override
+  String get menuDateGuess => 'Угадай дату';
+
+  @override
+  String dateGuessDesc(int minYear, int maxYear) {
+    return 'Угадайте дату между $minYear и $maxYear';
+  }
+
+  @override
+  String get dateFormatHint => 'ДД ММ ГГГГ';
+
+  @override
+  String get notAValidDate => 'Не существующая дата';
+
+  @override
+  String get notEnoughDigits => 'Недостаточно цифр';
 }

@@ -10,36 +10,12 @@ import '../../domain/models/language.dart';
 import '../../domain/models/letter_state.dart';
 
 const _layouts = {
-  Language.en: [
-    'QWERTYUIOP',
-    'ASDFGHJKL',
-    'ZXCVBNM',
-  ],
-  Language.de: [
-    'QWERTZUIOPÜ',
-    'ASDFGHJKLÖÄ',
-    'YXCVBNM',
-  ],
-  Language.ru: [
-    'ЙЦУКЕНГШЩЗХЪ',
-    'ФЫВАПРОЛДЖЭ',
-    'ЯЧСМИТЬБЮ',
-  ],
-  Language.fr: [
-    'QWERTYUIOP',
-    'ASDFGHJKL',
-    'ZXCVBNM',
-  ],
-  Language.it: [
-    'QWERTYUIOP',
-    'ASDFGHJKL',
-    'ZXCVBNM',
-  ],
-  Language.es: [
-    'QWERTYUIOP',
-    'ASDFGHJKL',
-    'ZXCVBNM',
-  ],
+  Language.en: ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'],
+  Language.de: ['QWERTZUIOPÜ', 'ASDFGHJKLÖÄ', 'YXCVBNM'],
+  Language.ru: ['ЙЦУКЕНГШЩЗХЪ', 'ФЫВАПРОЛДЖЭ', 'ЯЧСМИТЬБЮ'],
+  Language.fr: ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'],
+  Language.it: ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'],
+  Language.es: ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'],
 };
 
 class VirtualKeyboard extends StatefulWidget {
@@ -55,6 +31,11 @@ class VirtualKeyboard extends StatefulWidget {
   /// keyboard does not spoil the tile flip that is still running.
   final Duration revealDelay;
 
+  /// Overrides the language's letter rows, e.g. with a digit pad for
+  /// date-guess mode. Each string is one row; backspace is always appended
+  /// to the last row.
+  final List<String>? layout;
+
   const VirtualKeyboard({
     super.key,
     required this.language,
@@ -64,6 +45,7 @@ class VirtualKeyboard extends StatefulWidget {
     required this.onBackspace,
     this.guessCount = 0,
     this.revealDelay = const Duration(milliseconds: 1600),
+    this.layout,
   });
 
   @override
@@ -120,19 +102,14 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = _layouts[widget.language]!;
+    final rows = widget.layout ?? _layouts[widget.language]!;
     // Every row is laid out on the width of the longest row so that keys keep
     // one uniform size regardless of how many letters a language has per row.
     final maxKeys = rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (var i = 0; i < rows.length; i++) _buildRow(rows, i, maxKeys),
-        ],
-      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [for (var i = 0; i < rows.length; i++) _buildRow(rows, i, maxKeys)]),
     );
   }
 

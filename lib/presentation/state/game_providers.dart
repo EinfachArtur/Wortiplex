@@ -6,7 +6,10 @@ import '../../core/config/economy_config.dart';
 import '../../data/repositories/word_repository.dart';
 import '../../domain/economy/booster_rules.dart';
 import '../../domain/economy/coin_transaction.dart';
+import '../../domain/game/date_guess_service.dart';
+import '../../domain/game/date_guess_validator.dart';
 import '../../domain/game/game_session.dart';
+import '../../domain/game/guess_validator.dart';
 import '../../domain/game/word_validator.dart';
 import '../../domain/models/game_mode.dart';
 import '../../domain/models/language.dart';
@@ -18,6 +21,10 @@ import 'profile_providers.dart';
 final wordRepositoryProvider = Provider<WordRepository>((ref) => AssetWordRepository());
 final dailyPuzzleServiceProvider = Provider((ref) => const DailyPuzzleService());
 final boosterRulesProvider = Provider((ref) => const BoosterRules());
+final dateGuessServiceProvider = Provider((ref) => DateGuessService());
+
+/// Digits used as the "alphabet" to strike out in date-guess mode.
+const dateDigitAlphabet = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 const _alphabets = {
   Language.en: 'QWERTYUIOPASDFGHJKLZXCVBNM',
@@ -40,46 +47,44 @@ class GameParams {
   final DateTime? date;
 
   GameParams({required this.mode, required this.language, DateTime? date})
-      : date = date == null ? null : DateTime(date.year, date.month, date.day);
+    : date = date == null ? null : DateTime(date.year, date.month, date.day);
 
   @override
-  bool operator ==(Object other) =>
-      other is GameParams && other.mode == mode && other.language == language && other.date == date;
+  bool operator ==(Object other) => other is GameParams && other.mode == mode && other.language == language && other.date == date;
   @override
   int get hashCode => Object.hash(mode, language, date);
 }
 
-final roundControllerProvider =
-    AsyncNotifierProvider.family<RoundController, Round, GameParams>(RoundController.new);
+final roundControllerProvider = AsyncNotifierProvider.family<RoundController, Round, GameParams>(RoundController.new);
 
 class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
-  late WordList _wordList;
+  WordList? _wordList; // unused (null) in date-guess mode, which has no dictionary.
   late GameSession _gameSession;
-  late WordValidator _validator;
+  late GuessValidator _validator;
 
   @override
   Future<Round> build(GameParams params) async {
-    final repo = ref.read(wordRepositoryProvider);
-    _wordList = await repo.loadWordList(params.language);
-    _validator = WordValidator(
-      solutions: _wordList.solutions.toSet(),
-      validGuesses: _wordList.validGuesses.toSet(),
-    );
+    if (params.mode == GameMode.dateGuess) {
+      _validator = const DateGuessValidator();
+    } else {
+      final repo = ref.read(wordRepositoryProvider);
+      final wordList = await repo.loadWordList(params.language);
+      _wordList = wordList;
+      _validator = WordValidator(solutions: wordList.solutions.toSet(), validGuesses: wordList.validGuesses.toSet());
+    }
     _gameSession = GameSession(validator: _validator);
     return _startNewRound(params);
   }
 
   Round _startNewRound(GameParams params) {
     String solution;
-    if (params.mode == GameMode.daily) {
+    if (params.mode == GameMode.dateGuess) {
+      solution = ref.read(dateGuessServiceProvider).randomSolution();
+    } else if (params.mode == GameMode.daily) {
       final service = ref.read(dailyPuzzleServiceProvider);
-      solution = service.solutionFor(
-        language: params.language,
-        solutionPool: _wordList.solutions,
-        date: params.date ?? DateTime.now(),
-      );
+      solution = service.solutionFor(language: params.language, solutionPool: _wordList!.solutions, date: params.date ?? DateTime.now());
     } else {
-      solution = _wordList.solutions[Random().nextInt(_wordList.solutions.length)];
+      solution = _wordList!.solutions[Random().nextInt(_wordList!.solutions.length)];
     }
     return Round(
       id: '${params.mode.name}_${DateTime.now().microsecondsSinceEpoch}',
@@ -127,9 +132,7 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
 
   bool get canOfferExtraAttempt {
     final round = state.valueOrNull;
-    return round != null &&
-        round.result == RoundResult.lost &&
-        round.extraAttempts < EconomyConfig.maxExtraAttemptsPerRound;
+    return round != null && round.result == RoundResult.lost && round.extraAttempts < EconomyConfig.maxExtraAttemptsPerRound;
   }
 
   /// Pays for one more attempt and re-opens the lost round. Returns false
@@ -179,14 +182,11 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
     }
 
     final profile = ref.read(profileControllerProvider.notifier);
-    final affordable = await profile.useHintToken() ||
-        await profile.spendCoins(EconomyConfig.hintCost, CoinTransactionReason.hintPurchase);
+    final affordable = await profile.useHintToken() || await profile.spendCoins(EconomyConfig.hintCost, CoinTransactionReason.hintPurchase);
     if (!affordable) return null;
     final rules = ref.read(boosterRulesProvider);
     final result = rules.revealHint(round);
-    state = AsyncData(round.copyWith(
-      revealedHints: {...round.revealedHints, result.position: result.letter},
-    ));
+    state = AsyncData(round.copyWith(revealedHints: {...round.revealedHints, result.position: result.letter}));
     return result;
   }
 
@@ -194,11 +194,13 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
     final round = state.valueOrNull;
     if (round == null) return null;
     final profile = ref.read(profileControllerProvider.notifier);
-    final affordable = await profile.useStrikeoutToken() ||
+    final affordable =
+        await profile.useStrikeoutToken() ||
         await profile.spendCoins(EconomyConfig.letterStrikeoutCost, CoinTransactionReason.letterStrikeoutPurchase);
     if (!affordable) return null;
     final rules = ref.read(boosterRulesProvider);
-    final letter = rules.pickLetterToStrikeOut(round, alphabet: alphabetFor(round.language));
+    final alphabet = round.mode == GameMode.dateGuess ? dateDigitAlphabet : alphabetFor(round.language);
+    final letter = rules.pickLetterToStrikeOut(round, alphabet: alphabet);
     if (letter == null) return null;
     state = AsyncData(round.copyWith(disabledLetters: {...round.disabledLetters, letter}));
     return letter;

@@ -54,6 +54,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
   int _bonusFlash = 0; // seconds just gained, shown briefly next to the clock
 
   bool get _isFever => widget.mode == GameMode.wordFever;
+  bool get _isDateGuess => widget.mode == GameMode.dateGuess;
 
   @override
   void initState() {
@@ -136,9 +137,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
     if (_runOver) return;
     _runOver = true;
     _clock?.cancel();
-    final payout = await ref
-        .read(profileControllerProvider.notifier)
-        .recordWordFeverRun(score: _run.score, solved: _run.solved);
+    final payout = await ref.read(profileControllerProvider.notifier).recordWordFeverRun(score: _run.score, solved: _run.solved);
     final isAdFree = ref.read(profileControllerProvider).valueOrNull?.subscription.isAdFree ?? false;
     if (!isAdFree) {
       ref.read(adsServiceProvider).onRoundCompleted();
@@ -200,10 +199,10 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
   }
 
   GameParams get _params => GameParams(
-        mode: widget.mode,
-        language: ref.read(profileControllerProvider).requireValue.language,
-        date: widget.mode == GameMode.daily ? (widget.dailyDate ?? DateTime.now()) : null,
-      );
+    mode: widget.mode,
+    language: ref.read(profileControllerProvider).requireValue.language,
+    date: widget.mode == GameMode.daily ? (widget.dailyDate ?? DateTime.now()) : null,
+  );
 
   RoundController get _controller => ref.read(roundControllerProvider(_params).notifier);
 
@@ -265,6 +264,10 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
 
     final char = event.character;
     if (char != null && char.isNotEmpty) {
+      if (_isDateGuess) {
+        if (dateDigitAlphabet.contains(char)) _onLetter(char, round);
+        return;
+      }
       final upper = char.toUpperCase();
       final normalized = upper == 'ß' ? 'S' : upper;
       final alphabet = alphabetFor(round.language);
@@ -287,12 +290,12 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
     final len = round.solutionWord.length;
     _ensureLetterList(len);
     if (_currentLetters.any((l) => l.isEmpty)) {
-      _reject(l10n.notEnoughLetters);
+      _reject(_isDateGuess ? l10n.notEnoughDigits : l10n.notEnoughLetters);
       return;
     }
     final word = _currentLetters.join('');
     if (!_controller.isValidWord(word)) {
-      _reject(l10n.notInWordList);
+      _reject(_isDateGuess ? l10n.notAValidDate : l10n.notInWordList);
       return;
     }
     final outcome = await _controller.submitGuess(word);
@@ -406,23 +409,16 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
   @override
   Widget build(BuildContext context) {
     final roundAsync = ref.watch(roundControllerProvider(_params));
-    final streak = ref.watch(profileControllerProvider.select(
-      (p) => p.valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0,
-    ));
-    final isAdFree = ref.watch(profileControllerProvider.select(
-      (p) => p.valueOrNull?.subscription.isAdFree ?? false,
-    ));
+    final streak = ref.watch(
+      profileControllerProvider.select((p) => p.valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0),
+    );
+    final isAdFree = ref.watch(profileControllerProvider.select((p) => p.valueOrNull?.subscription.isAdFree ?? false));
     final l10n = AppLocalizations.of(context);
 
     return GameScaffold(
       titleWidget: Row(
         children: [
-          if (!isAdFree)
-            NoAdsButton(
-              onTap: () => RemoveAdsPromptDialog.show(),
-            )
-          else
-            const SizedBox(width: 42),
+          if (!isAdFree) NoAdsButton(onTap: () => RemoveAdsPromptDialog.show()) else const SizedBox(width: 42),
           const Spacer(),
           if (_isFever)
             _ScoreChip(icon: Icons.bolt_rounded, label: l10n.feverScore, value: _run.score)
@@ -467,23 +463,18 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
                     children: [
                       if (_isFever)
                         _FeverClock(secondsLeft: _run.secondsLeft, bonus: _bonusFlash, combo: _run.combo)
+                      else if (_isDateGuess)
+                        _DateFormatHint(text: l10n.dateFormatHint)
                       else
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(
-                                'assets/images/logo.png',
-                                width: 36,
-                                height: 36,
-                              ),
+                              child: Image.asset('assets/images/logo.png', width: 36, height: 36),
                             ),
                             const SizedBox(width: 10),
-                            const GameText(
-                              'WortiPlex',
-                              size: 28,
-                            ),
+                            const GameText('WortiPlex', size: 28),
                           ],
                         ),
                       const SizedBox(height: 22),
@@ -493,6 +484,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
                         cursorIndex: _cursorIndex,
                         onTileTap: _onTileTap,
                         shakeCount: _shakeCount,
+                        groupBreaksAfter: _isDateGuess ? const {1, 3} : const {},
                       ),
                     ],
                   ),
@@ -505,6 +497,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
             letterStates: keyboardStates.cast(),
             disabledLetters: round.disabledLetters,
             guessCount: round.guesses.length,
+            layout: _isDateGuess ? const ['12345', '67890'] : null,
             onLetter: (l) => _onLetter(l, round),
             onBackspace: _onBackspace,
           ),
@@ -581,10 +574,11 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
       color = GameColors.coral;
       base = const Color(0xFFC24545);
       textColor = Colors.white;
-      label = l10n.notAWord;
+      label = _isDateGuess ? l10n.notAValidDate : l10n.notAWord;
     }
 
     return ChunkyButton(
+      key: const ValueKey('submit_button'),
       height: 54,
       color: color,
       baseColor: base,
@@ -628,12 +622,7 @@ class _FeverClock extends StatelessWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 10,
-                color: color,
-                backgroundColor: GameColors.pill,
-              ),
+              child: LinearProgressIndicator(value: progress, minHeight: 10, color: color, backgroundColor: GameColors.pill),
             ),
           ),
           SizedBox(
@@ -646,6 +635,24 @@ class _FeverClock extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Small caption above the date grid showing the DD MM YYYY digit grouping.
+class _DateFormatHint extends StatelessWidget {
+  final String text;
+  const _DateFormatHint({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.event_rounded, color: GameColors.textDim, size: 20),
+        const SizedBox(width: 8),
+        GameText(text, size: 16, color: GameColors.textDim, shadow: null, weight: 700),
+      ],
     );
   }
 }
@@ -734,12 +741,7 @@ class _ToolButton extends StatelessWidget {
                     child: imageAsset != null
                         ? Opacity(
                             opacity: enabled ? 1.0 : 0.4,
-                            child: Image.asset(
-                              imageAsset!,
-                              width: 32,
-                              height: 32,
-                              fit: BoxFit.contain,
-                            ),
+                            child: Image.asset(imageAsset!, width: 32, height: 32, fit: BoxFit.contain),
                           )
                         : Icon(icon, color: enabled ? color : color.withValues(alpha: 0.35), size: 28),
                   ),
@@ -762,11 +764,7 @@ class _ToolButton extends StatelessWidget {
                           ? GameText('×$tokens', size: 12, color: GameColors.mint, shadow: null)
                           : Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const CoinIcon(size: 13),
-                                const SizedBox(width: 3),
-                                GameText('$cost', size: 12, shadow: null),
-                              ],
+                              children: [const CoinIcon(size: 13), const SizedBox(width: 3), GameText('$cost', size: 12, shadow: null)],
                             ),
                     ),
                   ),
@@ -779,7 +777,11 @@ class _ToolButton extends StatelessWidget {
                     width: 24,
                     height: 24,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(color: GameColors.amber, shape: BoxShape.circle, border: Border.all(color: GameColors.night0, width: 2)),
+                    decoration: BoxDecoration(
+                      color: GameColors.amber,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: GameColors.night0, width: 2),
+                    ),
                     child: GameText(badge!, size: 12, color: GameColors.night0, shadow: null),
                   ),
                 ),

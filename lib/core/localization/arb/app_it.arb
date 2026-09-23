@@ -151,5 +151,20 @@
   "feverPlayAgain": "Rigioca",
   "playerId": "ID giocatore",
   "playerIdCopied": "ID giocatore copiato negli appunti",
-  "playerIdTapToCopy": "Tocca per copiare"
+  "playerIdTapToCopy": "Tocca per copiare",
+  "menuDateGuess": "Indovina la data",
+  "dateGuessDesc": "Indovina la data tra il {minYear} e il {maxYear}",
+  "@dateGuessDesc": {
+    "placeholders": {
+      "minYear": {
+        "type": "int"
+      },
+      "maxYear": {
+        "type": "int"
+      }
+    }
+  },
+  "dateFormatHint": "GG MM AAAA",
+  "notAValidDate": "Non è una data valida",
+  "notEnoughDigits": "Cifre insufficienti"
 }

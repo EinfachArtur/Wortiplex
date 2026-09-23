@@ -759,6 +759,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tap to copy'**
   String get playerIdTapToCopy;
+
+  /// No description provided for @menuDateGuess.
+  ///
+  /// In en, this message translates to:
+  /// **'Date Guess'**
+  String get menuDateGuess;
+
+  /// No description provided for @dateGuessDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Guess the date between {minYear} and {maxYear}'**
+  String dateGuessDesc(int minYear, int maxYear);
+
+  /// No description provided for @dateFormatHint.
+  ///
+  /// In en, this message translates to:
+  /// **'DD MM YYYY'**
+  String get dateFormatHint;
+
+  /// No description provided for @notAValidDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Not a valid date'**
+  String get notAValidDate;
+
+  /// No description provided for @notEnoughDigits.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough digits'**
+  String get notEnoughDigits;
 }
 
 class _AppLocalizationsDelegate

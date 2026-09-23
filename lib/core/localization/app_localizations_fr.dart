@@ -368,4 +368,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get playerIdTapToCopy => 'Toucher pour copier';
+
+  @override
+  String get menuDateGuess => 'Devine la date';
+
+  @override
+  String dateGuessDesc(int minYear, int maxYear) {
+    return 'Devine la date entre $minYear et $maxYear';
+  }
+
+  @override
+  String get dateFormatHint => 'JJ MM AAAA';
+
+  @override
+  String get notAValidDate => 'Ce n\'est pas une date valide';
+
+  @override
+  String get notEnoughDigits => 'Pas assez de chiffres';
 }

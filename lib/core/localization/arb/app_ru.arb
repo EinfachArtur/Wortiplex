@@ -151,5 +151,20 @@
   "feverPlayAgain": "Ещё раз",
   "playerId": "ID игрока",
   "playerIdCopied": "ID игрока скопирован в буфер обмена",
-  "playerIdTapToCopy": "Нажмите, чтобы скопировать"
+  "playerIdTapToCopy": "Нажмите, чтобы скопировать",
+  "menuDateGuess": "Угадай дату",
+  "dateGuessDesc": "Угадайте дату между {minYear} и {maxYear}",
+  "@dateGuessDesc": {
+    "placeholders": {
+      "minYear": {
+        "type": "int"
+      },
+      "maxYear": {
+        "type": "int"
+      }
+    }
+  },
+  "dateFormatHint": "ДД ММ ГГГГ",
+  "notAValidDate": "Не существующая дата",
+  "notEnoughDigits": "Недостаточно цифр"
 }

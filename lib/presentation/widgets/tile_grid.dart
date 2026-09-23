@@ -19,6 +19,10 @@ class TileGrid extends StatefulWidget {
   /// Increment to make the current row shake (e.g. for an invalid word).
   final int shakeCount;
 
+  /// Column indices (0-based) after which a wider gap is inserted, e.g. to
+  /// separate DD | MM | YYYY groups in date-guess mode.
+  final Set<int> groupBreaksAfter;
+
   const TileGrid({
     super.key,
     required this.round,
@@ -26,6 +30,7 @@ class TileGrid extends StatefulWidget {
     this.cursorIndex = 0,
     this.onTileTap,
     this.shakeCount = 0,
+    this.groupBreaksAfter = const {},
   });
 
   /// Stagger delay between sequential letter reveals.
@@ -45,10 +50,7 @@ class TileGrid extends StatefulWidget {
 }
 
 class _TileGridState extends State<TileGrid> with SingleTickerProviderStateMixin {
-  late final AnimationController _shake = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 500),
-  );
+  late final AnimationController _shake = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
 
   @override
   void didUpdateWidget(covariant TileGrid old) {
@@ -81,9 +83,7 @@ class _TileGridState extends State<TileGrid> with SingleTickerProviderStateMixin
               builder: (context, child) {
                 final t = _shake.value;
                 // Damped sinusoidal horizontal shake for the active row.
-                final dx = row == round.guesses.length
-                    ? math.sin(t * math.pi * 8) * 12.0 * (1.0 - t)
-                    : 0.0;
+                final dx = row == round.guesses.length ? math.sin(t * math.pi * 8) * 12.0 * (1.0 - t) : 0.0;
                 return Transform.translate(offset: Offset(dx, 0), child: child);
               },
               child: _buildRow(row, wordLength),
@@ -104,7 +104,7 @@ class _TileGridState extends State<TileGrid> with SingleTickerProviderStateMixin
       children: [
         for (var col = 0; col < wordLength; col++)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3.5),
+            padding: EdgeInsets.only(left: 3.5, right: widget.groupBreaksAfter.contains(col) ? 14 : 3.5),
             child: AnimatedWordleTile(
               key: ValueKey('tile_${row}_$col'),
               letter: isPastGuess

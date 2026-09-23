@@ -367,4 +367,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get playerIdTapToCopy => 'Toca para copiar';
+
+  @override
+  String get menuDateGuess => 'Adivina la fecha';
+
+  @override
+  String dateGuessDesc(int minYear, int maxYear) {
+    return 'Adivina la fecha entre $minYear y $maxYear';
+  }
+
+  @override
+  String get dateFormatHint => 'DD MM AAAA';
+
+  @override
+  String get notAValidDate => 'No es una fecha válida';
+
+  @override
+  String get notEnoughDigits => 'Faltan dígitos';
 }

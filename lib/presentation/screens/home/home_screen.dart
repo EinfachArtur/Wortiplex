@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/config/date_guess_config.dart';
 import '../../../core/config/word_fever_config.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/game_style.dart';
@@ -76,6 +77,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final profile = profileState.valueOrNull;
 
     final streak = profile?.statsFor('classic', profile.language).currentStreak ?? 0;
+    final dateGuessStreak = profile?.statsFor('dateGuess', profile.language).currentStreak ?? 0;
     final dailyDone = profile != null && profile.dailyHistory.hasPlayed(profile.language, DateTime.now());
 
     final isAdFree = profile?.subscription.isAdFree ?? false;
@@ -99,10 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () => ref.invalidate(profileControllerProvider),
-                  child: const Text('Erneut versuchen'),
-                ),
+                ElevatedButton(onPressed: () => ref.invalidate(profileControllerProvider), child: const Text('Erneut versuchen')),
               ],
             ),
           ),
@@ -122,14 +121,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Expanded(
                     child: _HomeContent(
                       children: (s) => [
-                        _Section(
-                          height: 48 * s,
-                          child: const WordmarkTiles(),
-                        ),
-                        _Section(
-                          height: 156 * s,
-                          child: const DailyRewardsCard(fill: true),
-                        ),
+                        _Section(height: 48 * s, child: const WordmarkTiles()),
+                        _Section(height: 156 * s, child: const DailyRewardsCard(fill: true)),
                         _Section(
                           height: 84 * s,
                           child: _ModeCard(
@@ -168,6 +161,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 ? _Chip(icon: Icons.emoji_events_rounded, label: '${profile.wordFeverBest}', color: GameColors.amber)
                                 : null,
                             onTap: () => _open(context, const GameBoardScreen(mode: GameMode.wordFever)),
+                          ),
+                        ),
+                        _Section(
+                          height: 84 * s,
+                          child: _ModeCard(
+                            scale: s,
+                            icon: Icons.event_rounded,
+                            color: GameColors.sky,
+                            title: l10n.menuDateGuess,
+                            subtitle: l10n.dateGuessDesc(DateGuessConfig.minYear, DateGuessConfig.maxYear),
+                            trailing: dateGuessStreak > 0
+                                ? _Chip(icon: Icons.local_fire_department_rounded, label: '$dateGuessStreak', color: GameColors.amber)
+                                : null,
+                            onTap: () => _open(context, const GameBoardScreen(mode: GameMode.dateGuess)),
                           ),
                         ),
                       ],
@@ -228,12 +235,17 @@ class _HomeContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Height at scale 1.0: sections + gaps between them (2 group gaps, 2 mode gaps).
-        final base = children(1.0).fold<double>(0, (sum, s) => sum + s.height) + 2 * _groupGap + 2 * _modeGap;
+        // Sections are: name, daily rewards, then N mode cards. A "group gap"
+        // separates the first three; a tighter "mode gap" separates the cards.
+        final sampleCount = children(1.0).length;
+        final modeGapCount = sampleCount - 3;
+
+        // Height at scale 1.0: sections + the gaps between them.
+        final base = children(1.0).fold<double>(0, (sum, s) => sum + s.height) + 2 * _groupGap + modeGapCount * _modeGap;
         final scale = (constraints.maxHeight / base).clamp(_minScale, _maxScale);
         final sections = children(scale);
 
-        final used = sections.fold<double>(0, (sum, s) => sum + s.height) + 2 * _groupGap * scale + 2 * _modeGap;
+        final used = sections.fold<double>(0, (sum, s) => sum + s.height) + 2 * _groupGap * scale + modeGapCount * _modeGap;
         final spare = constraints.maxHeight - used;
         final scrolls = spare < 0;
         // Leftover space goes above the name, between the groups and below the modes.
@@ -244,15 +256,10 @@ class _HomeContent extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(height: extra),
-            sections[0].child.sized(sections[0].height),
-            SizedBox(height: groupGap),
-            sections[1].child.sized(sections[1].height),
-            SizedBox(height: groupGap),
-            sections[2].child.sized(sections[2].height),
-            const SizedBox(height: _modeGap),
-            sections[3].child.sized(sections[3].height),
-            const SizedBox(height: _modeGap),
-            sections[4].child.sized(sections[4].height),
+            for (var i = 0; i < sections.length; i++) ...[
+              if (i > 0) SizedBox(height: i <= 2 ? groupGap : _modeGap),
+              sections[i].child.sized(sections[i].height),
+            ],
             SizedBox(height: extra),
           ],
         );
@@ -329,14 +336,7 @@ class _ModeCard extends StatelessWidget {
                   children: [
                     GameText(title, size: 20 * scale, textAlign: TextAlign.left, shadow: null),
                     const SizedBox(height: 3),
-                    GameText(
-                      subtitle,
-                      size: 13 * scale,
-                      color: GameColors.textDim,
-                      textAlign: TextAlign.left,
-                      shadow: null,
-                      weight: 500,
-                    ),
+                    GameText(subtitle, size: 13 * scale, color: GameColors.textDim, textAlign: TextAlign.left, shadow: null, weight: 500),
                   ],
                 ),
               ),

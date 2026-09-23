@@ -189,5 +189,20 @@
   "feverPlayAgain": "Play again",
   "playerId": "Player ID",
   "playerIdCopied": "Player ID copied to clipboard",
-  "playerIdTapToCopy": "Tap to copy"
+  "playerIdTapToCopy": "Tap to copy",
+  "menuDateGuess": "Date Guess",
+  "dateGuessDesc": "Guess the date between {minYear} and {maxYear}",
+  "@dateGuessDesc": {
+    "placeholders": {
+      "minYear": {
+        "type": "int"
+      },
+      "maxYear": {
+        "type": "int"
+      }
+    }
+  },
+  "dateFormatHint": "DD MM YYYY",
+  "notAValidDate": "Not a valid date",
+  "notEnoughDigits": "Not enough digits"
 }
