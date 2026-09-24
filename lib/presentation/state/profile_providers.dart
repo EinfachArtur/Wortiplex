@@ -48,13 +48,7 @@ class ProfileController extends AsyncNotifier<UserProfile> {
   @override
   Future<UserProfile> build() async {
     final repo = ref.read(profileRepositoryProvider);
-    final profile = await repo.load();
-    if (profile.coins >= 10000) {
-      final updated = profile.copyWith(coins: 300);
-      await repo.save(updated);
-      return updated;
-    }
-    return profile;
+    return repo.load();
   }
 
   Future<void> _persist(UserProfile profile) async {

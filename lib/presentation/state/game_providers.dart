@@ -171,20 +171,13 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
     final round = state.valueOrNull;
     if (round == null || round.isFinished) return null;
 
-    final solved = <int>{...round.revealedHints.keys};
-    for (final guess in round.guesses) {
-      for (var i = 0; i < guess.evaluation.length; i++) {
-        if (guess.evaluation[i].state == LetterState.correct) solved.add(i);
-      }
-    }
-    if (solved.length >= round.solutionWord.length) {
-      return null;
-    }
+    final rules = ref.read(boosterRulesProvider);
+    if (!rules.canHint(round)) return null;
 
     final profile = ref.read(profileControllerProvider.notifier);
     final affordable = await profile.useHintToken() || await profile.spendCoins(EconomyConfig.hintCost, CoinTransactionReason.hintPurchase);
     if (!affordable) return null;
-    final rules = ref.read(boosterRulesProvider);
+
     final result = rules.revealHint(round);
     state = AsyncData(round.copyWith(revealedHints: {...round.revealedHints, result.position: result.letter}));
     return result;
@@ -192,16 +185,19 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
 
   Future<String?> buyLetterStrikeout() async {
     final round = state.valueOrNull;
-    if (round == null) return null;
+    if (round == null || round.isFinished) return null;
+
+    final rules = ref.read(boosterRulesProvider);
+    final alphabet = round.mode == GameMode.dateGuess ? dateDigitAlphabet : alphabetFor(round.language);
+    final letter = rules.pickLetterToStrikeOut(round, alphabet: alphabet);
+    if (letter == null) return null;
+
     final profile = ref.read(profileControllerProvider.notifier);
     final affordable =
         await profile.useStrikeoutToken() ||
         await profile.spendCoins(EconomyConfig.letterStrikeoutCost, CoinTransactionReason.letterStrikeoutPurchase);
     if (!affordable) return null;
-    final rules = ref.read(boosterRulesProvider);
-    final alphabet = round.mode == GameMode.dateGuess ? dateDigitAlphabet : alphabetFor(round.language);
-    final letter = rules.pickLetterToStrikeOut(round, alphabet: alphabet);
-    if (letter == null) return null;
+
     state = AsyncData(round.copyWith(disabledLetters: {...round.disabledLetters, letter}));
     return letter;
   }

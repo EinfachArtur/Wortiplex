@@ -102,14 +102,73 @@ class _VirtualKeyboardState extends State<VirtualKeyboard> {
 
   @override
   Widget build(BuildContext context) {
-    final rows = widget.layout ?? _layouts[widget.language]!;
+    if (widget.layout != null) {
+      return Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 440),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          child: _buildCustomLayout(widget.layout!),
+        ),
+      );
+    }
+
+    final rows = _layouts[widget.language]!;
     // Every row is laid out on the width of the longest row so that keys keep
     // one uniform size regardless of how many letters a language has per row.
     final maxKeys = rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [for (var i = 0; i < rows.length; i++) _buildRow(rows, i, maxKeys)]),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (var i = 0; i < rows.length; i++) _buildRow(rows, i, maxKeys),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCustomLayout(List<String> rows) {
+    final lettersPerRow = rows.map((r) => r.length).reduce((a, b) => a > b ? a : b);
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            flex: lettersPerRow,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < rows.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      for (final letter in rows[i].split(''))
+                        Expanded(
+                          child: _Key(
+                            color: _keyColor(letter),
+                            enabled: !widget.disabledLetters.contains(letter),
+                            onTap: () => widget.onLetter(letter),
+                            child: Text(letter, style: gameText(22, color: _textColor(letter), weight: 700)),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: _Key(
+              color: AppColors.keyDefault,
+              height: double.infinity,
+              onTap: widget.onBackspace,
+              child: const Icon(Icons.backspace_rounded, color: Colors.white, size: 24),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -193,8 +252,15 @@ class _Key extends StatefulWidget {
   final Color color;
   final bool enabled;
   final VoidCallback onTap;
+  final double? height;
 
-  const _Key({required this.child, required this.color, required this.onTap, this.enabled = true});
+  const _Key({
+    required this.child,
+    required this.color,
+    required this.onTap,
+    this.enabled = true,
+    this.height = 56,
+  });
 
   @override
   State<_Key> createState() => _KeyState();
@@ -230,7 +296,7 @@ class _KeyState extends State<_Key> {
           child: AnimatedContainer(
             duration: Duration(milliseconds: _pressed ? 50 : 320),
             curve: Curves.easeOut,
-            height: 56,
+            height: widget.height,
             alignment: Alignment.center,
             decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(10)),
             child: widget.child,

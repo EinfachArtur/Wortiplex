@@ -139,9 +139,9 @@ class _GameResultDialogState extends State<GameResultDialog> with TickerProvider
           child: Material(
             color: Colors.transparent,
             child: Container(
-              width: 330,
-              margin: const EdgeInsets.symmetric(vertical: 24),
-              padding: const EdgeInsets.fromLTRB(22, 26, 22, 18),
+              constraints: const BoxConstraints(maxWidth: 340),
+              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              padding: const EdgeInsets.fromLTRB(20, 26, 20, 18),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF3B2A8C), Color(0xFF221860)]),
                 borderRadius: BorderRadius.circular(34),
@@ -243,30 +243,34 @@ class _SolutionRow extends StatelessWidget {
     final letters = word.split('');
     return AnimatedBuilder(
       animation: animation,
-      builder: (context, _) => Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          for (var i = 0; i < letters.length; i++)
-            Builder(builder: (context) {
-              final start = i / (letters.length + 1);
-              final t = Curves.easeOutBack.transform(((animation.value - start) / 0.4).clamp(0.0, 1.0));
-              return Transform.scale(
-                scale: t,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(13),
-                    boxShadow: [BoxShadow(color: color.withValues(alpha: 0.45), blurRadius: 10, offset: const Offset(0, 3))],
+      builder: (context, _) => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < letters.length; i++)
+              Builder(builder: (context) {
+                final start = i / (letters.length + 1);
+                final t = Curves.easeOutBack.transform(((animation.value - start) / 0.4).clamp(0.0, 1.0));
+                return Transform.scale(
+                  scale: t,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(13),
+                      boxShadow: [BoxShadow(color: color.withValues(alpha: 0.45), blurRadius: 10, offset: const Offset(0, 3))],
+                    ),
+                    child: GameText(letters[i], size: 24, shadow: null),
                   ),
-                  child: GameText(letters[i], size: 24, shadow: null),
-                ),
-              );
-            }),
-        ],
+                );
+              }),
+          ],
+        ),
       ),
     );
   }

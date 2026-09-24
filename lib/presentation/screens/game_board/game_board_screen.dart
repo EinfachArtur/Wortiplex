@@ -374,13 +374,17 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
 
   Future<void> _buyHint() async {
     final l10n = AppLocalizations.of(context);
+    final round = ref.read(roundControllerProvider(_params)).valueOrNull;
+    if (round == null || round.isFinished) return;
+    final rules = ref.read(boosterRulesProvider);
+    if (!rules.canHint(round)) return;
+
     final result = await _controller.buyHint();
     if (result == null) {
       _showSnack(l10n.notEnoughCoins);
       return;
     }
-    final round = ref.read(roundControllerProvider(_params)).valueOrNull;
-    final len = round?.solutionWord.length ?? 5;
+    final len = round.solutionWord.length;
     _ensureLetterList(len);
     setState(() {
       _currentLetters[result.position] = result.letter;
@@ -390,6 +394,12 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
 
   Future<void> _buyStrikeout() async {
     final l10n = AppLocalizations.of(context);
+    final round = ref.read(roundControllerProvider(_params)).valueOrNull;
+    if (round == null || round.isFinished) return;
+    final rules = ref.read(boosterRulesProvider);
+    final alphabet = _isDateGuess ? dateDigitAlphabet : alphabetFor(round.language);
+    if (!rules.canStrikeOut(round, alphabet: alphabet)) return;
+
     final letter = await _controller.buyLetterStrikeout();
     if (letter == null) _showSnack(l10n.notEnoughCoins);
   }
@@ -445,6 +455,10 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
     final keyboardStates = _controller.keyboardStates();
     final profile = ref.watch(profileControllerProvider).valueOrNull;
     final skipsAvailable = profile?.skipsAvailable ?? 0;
+    final rules = ref.watch(boosterRulesProvider);
+    final alphabet = _isDateGuess ? dateDigitAlphabet : alphabetFor(round.language);
+    final canStrikeOut = !round.isFinished && rules.canStrikeOut(round, alphabet: alphabet);
+    final canHint = !round.isFinished && rules.canHint(round);
 
     return KeyboardListener(
       focusNode: _focusNode,
@@ -472,7 +486,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
                   tooltip: l10n.hint,
                   cost: EconomyConfig.hintCost,
                   tokens: profile?.hintTokens ?? 0,
-                  onTap: round.isFinished ? null : _buyHint,
+                  onTap: canHint ? _buyHint : null,
                 ),
                 const SizedBox(width: 8),
                 _ToolButton(
@@ -481,7 +495,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
                   tooltip: l10n.strikeOutLetter,
                   cost: EconomyConfig.letterStrikeoutCost,
                   tokens: profile?.strikeoutTokens ?? 0,
-                  onTap: round.isFinished ? null : _buyStrikeout,
+                  onTap: canStrikeOut ? _buyStrikeout : null,
                 ),
                 const SizedBox(width: 10),
                 Expanded(child: _buildSubmitButton(round, l10n)),

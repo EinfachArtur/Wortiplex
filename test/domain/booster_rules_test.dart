@@ -82,4 +82,47 @@ void main() {
       expect(states['U'], LetterState.correct);
     });
   });
+
+  group('BoosterRules - canStrikeOut & canHint', () {
+    const rules = BoosterRules();
+
+    test('canStrikeOut returns true when eligible letters remain and false when exhausted', () {
+      const alphabet = ['A', 'B', 'C'];
+      final round = Round(
+        id: 'r4',
+        mode: GameMode.classic,
+        language: Language.de,
+        solutionWord: 'A',
+        startedAt: DateTime.now(),
+      );
+
+      // 'B' and 'C' are candidates
+      expect(rules.canStrikeOut(round, alphabet: alphabet), isTrue);
+
+      final roundWithBDisabled = round.copyWith(disabledLetters: {'B'});
+      expect(rules.canStrikeOut(roundWithBDisabled, alphabet: alphabet), isTrue);
+
+      final roundWithAllDisabled = round.copyWith(disabledLetters: {'B', 'C'});
+      expect(rules.canStrikeOut(roundWithAllDisabled, alphabet: alphabet), isFalse);
+      expect(rules.pickLetterToStrikeOut(roundWithAllDisabled, alphabet: alphabet), isNull);
+    });
+
+    test('canHint returns true until all positions are hinted or solved', () {
+      final round = Round(
+        id: 'r5',
+        mode: GameMode.classic,
+        language: Language.de,
+        solutionWord: 'AB',
+        startedAt: DateTime.now(),
+      );
+
+      expect(rules.canHint(round), isTrue);
+
+      final roundHint1 = round.copyWith(revealedHints: {0: 'A'});
+      expect(rules.canHint(roundHint1), isTrue);
+
+      final roundHint2 = roundHint1.copyWith(revealedHints: {0: 'A', 1: 'B'});
+      expect(rules.canHint(roundHint2), isFalse);
+    });
+  });
 }

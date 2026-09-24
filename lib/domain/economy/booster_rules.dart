@@ -36,6 +36,26 @@ class BoosterRules {
     return HintResult(position: position, letter: round.solutionWord[position]);
   }
 
+  /// Returns true if there are unsolved letter positions left to hint.
+  bool canHint(Round round) {
+    final solved = <int>{...round.revealedHints.keys};
+    for (final guess in round.guesses) {
+      for (var i = 0; i < guess.evaluation.length; i++) {
+        if (guess.evaluation[i].state == LetterState.correct) solved.add(i);
+      }
+    }
+    return solved.length < round.solutionWord.length;
+  }
+
+  /// Returns true if there are letters/digits left in the alphabet that are not in the
+  /// solution and not yet disabled.
+  bool canStrikeOut(Round round, {required List<String> alphabet}) {
+    final solutionLetters = round.solutionWord.toUpperCase().split('').toSet();
+    return alphabet
+        .map((l) => l.toUpperCase())
+        .any((l) => !solutionLetters.contains(l) && !round.disabledLetters.contains(l));
+  }
+
   /// Picks a letter that does not appear in the solution and is not yet
   /// disabled, to strike out on the virtual keyboard.
   String? pickLetterToStrikeOut(Round round, {required List<String> alphabet, Random? random}) {
