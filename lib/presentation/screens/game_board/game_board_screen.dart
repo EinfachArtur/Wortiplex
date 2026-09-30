@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../core/config/economy_config.dart';
+import '../../../core/config/video_presets.dart';
 import '../../../core/config/word_fever_config.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../domain/game/game_session.dart';
@@ -31,7 +32,11 @@ class GameBoardScreen extends ConsumerStatefulWidget {
 
   /// The calendar day of the daily puzzle to play (today if null).
   final DateTime? dailyDate;
-  const GameBoardScreen({super.key, required this.mode, this.dailyDate});
+
+  /// Scripted round for video recordings (debug video menu). Fixes the
+  /// solution, widens the dictionary and hides ads, rewards and stats.
+  final VideoPreset? videoPreset;
+  const GameBoardScreen({super.key, required this.mode, this.dailyDate, this.videoPreset});
 
   @override
   ConsumerState<GameBoardScreen> createState() => _GameBoardScreenState();
@@ -55,6 +60,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
 
   bool get _isFever => widget.mode == GameMode.wordFever;
   bool get _isDateGuess => widget.mode == GameMode.dateGuess;
+  bool get _isVideo => widget.videoPreset != null;
 
   @override
   void initState() {
@@ -82,6 +88,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
   }
 
   void _maybeLoadBanner() {
+    if (_isVideo) return;
     final profile = ref.read(profileControllerProvider).valueOrNull;
     if (profile != null && profile.subscription.isAdFree) return;
     if (_bannerAd != null) return;
@@ -202,6 +209,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
     mode: widget.mode,
     language: ref.read(profileControllerProvider).requireValue.language,
     date: widget.mode == GameMode.daily ? (widget.dailyDate ?? DateTime.now()) : null,
+    videoPresetId: widget.videoPreset?.id,
   );
 
   RoundController get _controller => ref.read(roundControllerProvider(_params).notifier);
@@ -330,7 +338,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
   Future<void> _finishRound(Round lostOrWon) async {
     if (lostOrWon.result == RoundResult.lost) await _controller.finalizeLoss();
     final isAdFree = ref.read(profileControllerProvider).valueOrNull?.subscription.isAdFree ?? false;
-    if (!isAdFree) {
+    if (!isAdFree && !_isVideo) {
       ref.read(adsServiceProvider).onRoundCompleted();
     }
     if (mounted) _showResultDialog(lostOrWon);
@@ -350,7 +358,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
       context,
       round: round,
       streak: streak,
-      coinsWon: won ? EconomyConfig.roundCompletionReward : null,
+      coinsWon: won && !_isVideo ? EconomyConfig.roundCompletionReward : null,
       onNextRound: () {
         if (isDaily) {
           Navigator.of(context).pop(); // the daily puzzle can only be played once
@@ -422,7 +430,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
     final streak = ref.watch(
       profileControllerProvider.select((p) => p.valueOrNull?.statsFor(widget.mode.name, _params.language).currentStreak ?? 0),
     );
-    final isAdFree = ref.watch(profileControllerProvider.select((p) => p.valueOrNull?.subscription.isAdFree ?? false));
+    final isAdFree = _isVideo || ref.watch(profileControllerProvider.select((p) => p.valueOrNull?.subscription.isAdFree ?? false));
     final l10n = AppLocalizations.of(context);
 
     return GameScaffold(
@@ -510,7 +518,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
               ],
             ),
           ),
-          if (profile == null || !profile.subscription.isAdFree)
+          if (!_isVideo && (profile == null || !profile.subscription.isAdFree))
             Container(
               height: 52,
               alignment: Alignment.center,

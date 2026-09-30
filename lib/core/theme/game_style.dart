@@ -88,9 +88,13 @@ class GameBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(
-        gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [GameColors.night1, GameColors.night0]),
+        color: GameColors.night0,
+        image: DecorationImage(
+          image: AssetImage('assets/images/Hintergrund.png'),
+          fit: BoxFit.cover,
+        ),
       ),
-      child: CustomPaint(painter: _SparklePainter(), child: SizedBox.expand(child: child)),
+      child: SizedBox.expand(child: child),
     );
   }
 }

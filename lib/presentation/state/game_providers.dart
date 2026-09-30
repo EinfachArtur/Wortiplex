@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/economy_config.dart';
+import '../../core/config/video_presets.dart';
 import '../../data/repositories/word_repository.dart';
 import '../../domain/economy/booster_rules.dart';
 import '../../domain/economy/coin_transaction.dart';
@@ -46,13 +47,19 @@ class GameParams {
   /// Calendar day of a daily puzzle (time of day is ignored). Null for other modes.
   final DateTime? date;
 
-  GameParams({required this.mode, required this.language, DateTime? date})
+  /// Id of a scripted [VideoPreset] (debug video menu). Null for normal play.
+  final String? videoPresetId;
+
+  GameParams({required this.mode, required this.language, DateTime? date, this.videoPresetId})
     : date = date == null ? null : DateTime(date.year, date.month, date.day);
 
+  VideoPreset? get videoPreset => VideoPresets.byId(videoPresetId);
+
   @override
-  bool operator ==(Object other) => other is GameParams && other.mode == mode && other.language == language && other.date == date;
+  bool operator ==(Object other) =>
+      other is GameParams && other.mode == mode && other.language == language && other.date == date && other.videoPresetId == videoPresetId;
   @override
-  int get hashCode => Object.hash(mode, language, date);
+  int get hashCode => Object.hash(mode, language, date, videoPresetId);
 }
 
 final roundControllerProvider = AsyncNotifierProvider.family<RoundController, Round, GameParams>(RoundController.new);
@@ -70,7 +77,10 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
       final repo = ref.read(wordRepositoryProvider);
       final wordList = await repo.loadWordList(params.language);
       _wordList = wordList;
-      _validator = WordValidator(solutions: wordList.solutions.toSet(), validGuesses: wordList.validGuesses.toSet());
+      _validator = WordValidator(
+        solutions: wordList.solutions.toSet(),
+        validGuesses: {...wordList.validGuesses, ...?params.videoPreset?.acceptedWords},
+      );
     }
     _gameSession = GameSession(validator: _validator);
     return _startNewRound(params);
@@ -78,7 +88,10 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
 
   Round _startNewRound(GameParams params) {
     String solution;
-    if (params.mode == GameMode.dateGuess) {
+    final preset = params.videoPreset;
+    if (preset != null) {
+      solution = preset.targetWord;
+    } else if (params.mode == GameMode.dateGuess) {
       solution = ref.read(dateGuessServiceProvider).randomSolution();
     } else if (params.mode == GameMode.daily) {
       final service = ref.read(dailyPuzzleServiceProvider);
@@ -117,6 +130,8 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
   Future<void> _recordResult(Round round) async {
     // Word Fever pays out once per run, not per word.
     if (round.mode == GameMode.wordFever) return;
+    // Scripted video rounds must not touch stats, streaks or coins.
+    if (arg.videoPresetId != null) return;
     final won = round.result == RoundResult.won;
     final profile = ref.read(profileControllerProvider.notifier);
     await profile.recordRoundResult(
@@ -132,7 +147,10 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
 
   bool get canOfferExtraAttempt {
     final round = state.valueOrNull;
-    return round != null && round.result == RoundResult.lost && round.extraAttempts < EconomyConfig.maxExtraAttemptsPerRound;
+    return round != null &&
+        arg.videoPresetId == null &&
+        round.result == RoundResult.lost &&
+        round.extraAttempts < EconomyConfig.maxExtraAttemptsPerRound;
   }
 
   /// Pays for one more attempt and re-opens the lost round. Returns false

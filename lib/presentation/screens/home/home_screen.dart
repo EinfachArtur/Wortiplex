@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -15,6 +16,7 @@ import '../../widgets/game_pills.dart';
 import '../../widgets/game_scaffold.dart';
 import '../../widgets/wordmark_tiles.dart';
 import '../daily/daily_puzzle_screen.dart';
+import '../debug/video_debug_screen.dart';
 import '../game_board/game_board_screen.dart';
 import '../settings/settings_screen.dart';
 import '../shop/shop_screen.dart';
@@ -111,7 +113,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return GameScaffold(
       showBack: false,
-      titleWidget: Row(children: [if (!isAdFree) const NoAdsButton(), const Spacer()]),
+      titleWidget: Row(
+        children: [
+          if (!isAdFree) const NoAdsButton(),
+          const Spacer(),
+          // Video-recording presets; never shipped in release builds.
+          if (kDebugMode)
+            IconButton(
+              tooltip: 'Video-Szenarien',
+              icon: const Icon(Icons.videocam_rounded, color: Colors.white),
+              onPressed: () => _open(context, const VideoDebugScreen()),
+            ),
+        ],
+      ),
       body: profile == null
           ? const Center(child: CircularProgressIndicator())
           : Padding(
