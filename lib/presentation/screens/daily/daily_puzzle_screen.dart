@@ -5,9 +5,11 @@ import 'package:intl/intl.dart';
 import '../../../core/config/economy_config.dart';
 import '../../../core/localization/app_localizations.dart';
 import '../../../core/theme/game_style.dart';
+import '../../../domain/economy/coin_transaction.dart';
 import '../../../domain/economy/monthly_prizes.dart';
 import '../../../domain/models/game_mode.dart';
 import '../../../domain/models/language.dart';
+import '../../state/ads_providers.dart';
 import '../../state/profile_providers.dart';
 import '../../widgets/coin_icon.dart';
 import '../../widgets/game_pills.dart';
@@ -34,7 +36,9 @@ class DailyPuzzleScreen extends ConsumerStatefulWidget {
 class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
   int _tab = 0;
   late DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
+  late DateTime _selectedDate = _today;
   int _year = DateTime.now().year;
+  bool _watchingAd = false;
 
   DateTime get _today {
     final n = DateTime.now();
@@ -59,13 +63,64 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
 
   void _onDayTap(DateTime date, Language language) {
     final l10n = AppLocalizations.of(context);
-    final history = ref.read(profileControllerProvider).requireValue.dailyHistory;
     if (date.isAfter(_today)) {
       _snack(l10n.puzzleLocked);
-    } else if (history.hasPlayed(language, date)) {
-      _snack(l10n.dailyAlreadyPlayed);
-    } else {
+      return;
+    }
+    setState(() => _selectedDate = date);
+  }
+
+  Future<void> _unlockAndPlayWithCoins(DateTime date) async {
+    final l10n = AppLocalizations.of(context);
+    final profile = ref.read(profileControllerProvider).valueOrNull;
+    if (profile == null) return;
+    if (profile.coins < EconomyConfig.pastDailyPuzzleCost) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(l10n.notEnoughCoins),
+            action: SnackBarAction(
+              label: l10n.shop,
+              textColor: GameColors.amber,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const ShopScreen()),
+              ),
+            ),
+          ),
+        );
+      return;
+    }
+    final spent = await ref.read(profileControllerProvider.notifier).spendCoins(
+      EconomyConfig.pastDailyPuzzleCost,
+      CoinTransactionReason.pastDailyPuzzleUnlock,
+    );
+    if (spent && mounted) {
       _play(date);
+    }
+  }
+
+  Future<void> _unlockAndPlayWithAd(DateTime date) async {
+    final profile = ref.read(profileControllerProvider).valueOrNull;
+    if (profile == null) return;
+
+    if (profile.subscription.isAdFree) {
+      _play(date);
+      return;
+    }
+
+    setState(() => _watchingAd = true);
+    try {
+      final ads = ref.read(adsServiceProvider);
+      await ads.loadRewarded();
+      final earned = await ads.showRewardedIfReady(onReward: (_) {});
+      if (earned && mounted) {
+        _play(date);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _watchingAd = false);
+      }
     }
   }
 
@@ -192,6 +247,11 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
           arrow(Icons.chevron_left_rounded, canPrev, () => setState(() {
                 if (_tab == 0) {
                   _month = DateTime(_month.year, _month.month - 1);
+                  if (_month.year == _today.year && _month.month == _today.month) {
+                    _selectedDate = _today;
+                  } else {
+                    _selectedDate = DateTime(_month.year, _month.month, 1);
+                  }
                 } else {
                   _year--;
                 }
@@ -207,6 +267,11 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
           arrow(Icons.chevron_right_rounded, canNext, () => setState(() {
                 if (_tab == 0) {
                   _month = DateTime(_month.year, _month.month + 1);
+                  if (_month.year == _today.year && _month.month == _today.month) {
+                    _selectedDate = _today;
+                  } else {
+                    _selectedDate = DateTime(_month.year, _month.month, 1);
+                  }
                 } else {
                   _year++;
                 }
@@ -223,8 +288,12 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
     final profile = ref.watch(profileControllerProvider).requireValue;
     final wins = profile.dailyHistory.winsInMonth(language, _month.year, _month.month);
     final today = _today;
-    final todayPlayed = profile.dailyHistory.hasPlayed(language, today);
+    final selected = _selectedDate;
+    final isToday = selected == today;
+    final isPast = selected.isBefore(today);
+    final selectedPlayed = profile.dailyHistory.hasPlayed(language, selected);
     final locale = Localizations.localeOf(context).toString();
+    final formattedDate = DateFormat.MMMd(locale).format(selected).toUpperCase();
 
     return Column(
       children: [
@@ -232,26 +301,140 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
         const SizedBox(height: 14),
         _buildCalendar(context, language, locale),
         const SizedBox(height: 22),
-        ChunkyButton(
-          width: 290,
-          height: 64,
-          onPressed: todayPlayed ? null : () => _play(today),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+        if (selectedPlayed)
+          ChunkyButton(
+            width: 290,
+            height: 64,
+            onPressed: null,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.check_rounded, color: GameColors.night0, size: 28),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: GameText(
+                    l10n.playDate(formattedDate),
+                    size: 18,
+                    color: GameColors.night0,
+                    shadow: null,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (isToday)
+          ChunkyButton(
+            width: 290,
+            height: 64,
+            onPressed: () => _play(today),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.play_arrow_rounded, color: GameColors.night0, size: 30),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: GameText(
+                    l10n.playDate(formattedDate),
+                    size: 20,
+                    color: GameColors.night0,
+                    shadow: null,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else if (isPast)
+          Row(
             children: [
-              Icon(todayPlayed ? Icons.check_rounded : Icons.play_arrow_rounded, color: GameColors.night0, size: 30),
-              const SizedBox(width: 8),
-              Flexible(
-                child: GameText(
-                  l10n.playDate(DateFormat.MMMd(locale).format(today).toUpperCase()),
-                  size: 20,
-                  color: GameColors.night0,
-                  shadow: null,
+              Expanded(
+                child: ChunkyButton(
+                  height: 64,
+                  color: GameColors.mint,
+                  baseColor: GameColors.mintDark,
+                  onPressed: () => _unlockAndPlayWithCoins(selected),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: GameText(
+                            l10n.playDate(formattedDate),
+                            size: 14,
+                            color: GameColors.night0,
+                            shadow: null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const CoinIcon(size: 16),
+                          const SizedBox(width: 4),
+                          GameText(
+                            '${EconomyConfig.pastDailyPuzzleCost}',
+                            size: 15,
+                            color: GameColors.night0,
+                            shadow: null,
+                            weight: 800,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ChunkyButton(
+                  height: 64,
+                  color: const Color(0xFFE94086),
+                  baseColor: const Color(0xFFB81B58),
+                  onPressed: _watchingAd ? null : () => _unlockAndPlayWithAd(selected),
+                  child: _watchingAd
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                                child: GameText(
+                                  l10n.playDate(formattedDate),
+                                  size: 14,
+                                  color: Colors.white,
+                                  shadow: null,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.play_circle_fill_rounded, size: 16, color: Colors.white),
+                                const SizedBox(width: 4),
+                                GameText(
+                                  l10n.free,
+                                  size: 15,
+                                  color: Colors.white,
+                                  shadow: null,
+                                  weight: 800,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                 ),
               ),
             ],
           ),
-        ),
       ],
     );
   }
@@ -359,9 +542,13 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
                       final day = r * 7 + c - offset + 1;
                       if (day < 1 || day > daysInMonth) return const SizedBox(height: 50);
                       final date = DateTime(_month.year, _month.month, day);
+                      final isSelected = date.year == _selectedDate.year &&
+                          date.month == _selectedDate.month &&
+                          date.day == _selectedDate.day;
                       return _DayCell(
                         day: day,
                         isToday: date == today,
+                        isSelected: isSelected,
                         isFuture: date.isAfter(today),
                         result: history.resultFor(language, date),
                         onTap: () => _onDayTap(date, language),
@@ -428,6 +615,7 @@ class _DailyPuzzleScreenState extends ConsumerState<DailyPuzzleScreen> {
 class _DayCell extends StatelessWidget {
   final int day;
   final bool isToday;
+  final bool isSelected;
   final bool isFuture;
   final bool? result; // null = not played
   final VoidCallback onTap;
@@ -435,6 +623,7 @@ class _DayCell extends StatelessWidget {
   const _DayCell({
     required this.day,
     required this.isToday,
+    this.isSelected = false,
     required this.isFuture,
     required this.result,
     required this.onTap,
@@ -452,14 +641,28 @@ class _DayCell extends StatelessWidget {
     } else if (result == true) {
       decoration = BoxDecoration(
         borderRadius: BorderRadius.circular(14),
+        border: isSelected ? Border.all(color: const Color(0xFF56CCF2), width: 2.5) : null,
+        boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF56CCF2).withValues(alpha: 0.6), blurRadius: 10)] : null,
         gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [GameColors.mint, GameColors.mintDark]),
       );
       textColor = GameColors.night0;
       badge = Icons.check_rounded;
     } else if (result == false) {
-      decoration = BoxDecoration(borderRadius: BorderRadius.circular(14), color: GameColors.slate);
+      decoration = BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: isSelected ? Border.all(color: const Color(0xFF56CCF2), width: 2.5) : null,
+        boxShadow: isSelected ? [BoxShadow(color: const Color(0xFF56CCF2).withValues(alpha: 0.6), blurRadius: 10)] : null,
+        color: GameColors.slate,
+      );
       badge = Icons.close_rounded;
       badgeColor = GameColors.coral;
+    } else if (isSelected) {
+      decoration = BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        color: const Color(0xFF56CCF2),
+        boxShadow: [BoxShadow(color: const Color(0xFF56CCF2).withValues(alpha: 0.5), blurRadius: 10)],
+      );
+      textColor = Colors.white;
     } else if (isToday) {
       decoration = BoxDecoration(
         borderRadius: BorderRadius.circular(14),
@@ -469,7 +672,10 @@ class _DayCell extends StatelessWidget {
       );
       textColor = GameColors.amber;
     } else {
-      decoration = BoxDecoration(borderRadius: BorderRadius.circular(14), border: Border.all(color: GameColors.coral.withValues(alpha: 0.7), width: 1.5));
+      decoration = BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: GameColors.coral.withValues(alpha: 0.7), width: 1.5),
+      );
       textColor = GameColors.coral;
     }
 

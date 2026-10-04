@@ -7,6 +7,18 @@ class Guess {
   final List<LetterGuess> evaluation;
 
   const Guess({required this.word, required this.evaluation});
+
+  Map<String, dynamic> toMap() => {
+    'word': word,
+    'evaluation': evaluation.map((e) => e.toMap()).toList(),
+  };
+
+  factory Guess.fromMap(Map map) => Guess(
+    word: map['word'] as String,
+    evaluation: ((map['evaluation'] as List?) ?? [])
+        .map((e) => LetterGuess.fromMap(e as Map))
+        .toList(),
+  );
 }
 
 class Round {
@@ -84,6 +96,46 @@ class Round {
       disabledLetters: disabledLetters,
       revealedHints: revealedHints,
       extraAttempts: extraAttempts + 1,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'mode': mode.name,
+    'language': language.code,
+    'solutionWord': solutionWord,
+    'maxAttempts': maxAttempts,
+    'guesses': guesses.map((g) => g.toMap()).toList(),
+    'result': result.name,
+    'startedAt': startedAt.toIso8601String(),
+    'completedAt': completedAt?.toIso8601String(),
+    'disabledLetters': disabledLetters.toList(),
+    'revealedHints': revealedHints.map((k, v) => MapEntry(k.toString(), v)),
+    'extraAttempts': extraAttempts,
+  };
+
+  factory Round.fromMap(Map map) {
+    final hintsRaw = (map['revealedHints'] as Map?) ?? {};
+    final hints = <int, String>{};
+    hintsRaw.forEach((k, v) {
+      hints[int.parse(k.toString())] = v.toString();
+    });
+
+    return Round(
+      id: map['id'] as String,
+      mode: GameMode.values.byName(map['mode'] as String),
+      language: LanguageCode.fromCode(map['language'] as String? ?? 'de'),
+      solutionWord: map['solutionWord'] as String,
+      maxAttempts: (map['maxAttempts'] as num?)?.toInt() ?? 6,
+      guesses: ((map['guesses'] as List?) ?? [])
+          .map((g) => Guess.fromMap(g as Map))
+          .toList(),
+      result: RoundResult.values.byName(map['result'] as String),
+      startedAt: DateTime.parse(map['startedAt'] as String),
+      completedAt: map['completedAt'] != null ? DateTime.parse(map['completedAt'] as String) : null,
+      disabledLetters: ((map['disabledLetters'] as List?) ?? []).map((e) => e.toString()).toSet(),
+      revealedHints: hints,
+      extraAttempts: (map['extraAttempts'] as num?)?.toInt() ?? 0,
     );
   }
 }

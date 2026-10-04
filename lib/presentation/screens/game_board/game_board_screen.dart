@@ -9,6 +9,7 @@ import '../../../core/config/economy_config.dart';
 import '../../../core/config/video_presets.dart';
 import '../../../core/config/word_fever_config.dart';
 import '../../../core/localization/app_localizations.dart';
+import '../../../domain/economy/coin_transaction.dart';
 import '../../../domain/game/game_session.dart';
 import '../../../domain/game/word_fever_run.dart';
 import '../../../domain/models/game_mode.dart';
@@ -413,8 +414,14 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
   }
 
   Future<void> _skipRound() async {
-    final used = await ref.read(profileControllerProvider.notifier).useSkip();
-    if (!used) return;
+    final l10n = AppLocalizations.of(context);
+    final profile = ref.read(profileControllerProvider.notifier);
+    final used = await profile.useSkip() ||
+        await profile.spendCoins(EconomyConfig.skipCost, CoinTransactionReason.skipPurchase);
+    if (!used) {
+      _showSnack(l10n.notEnoughCoins);
+      return;
+    }
     if (_isFever) setState(() => _run = _run.withFailed());
     await _controller.newRound(_params);
     final len = ref.read(roundControllerProvider(_params)).valueOrNull?.solutionWord.length ?? 5;
@@ -467,6 +474,7 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
     final alphabet = _isDateGuess ? dateDigitAlphabet : alphabetFor(round.language);
     final canStrikeOut = !round.isFinished && rules.canStrikeOut(round, alphabet: alphabet);
     final canHint = !round.isFinished && rules.canHint(round);
+    final canSkip = !round.isFinished && widget.mode != GameMode.daily;
 
     return KeyboardListener(
       focusNode: _focusNode,
@@ -505,16 +513,17 @@ class _GameBoardScreenState extends ConsumerState<GameBoardScreen> with WidgetsB
                   tokens: profile?.strikeoutTokens ?? 0,
                   onTap: canStrikeOut ? _buyStrikeout : null,
                 ),
-                const SizedBox(width: 10),
-                Expanded(child: _buildSubmitButton(round, l10n)),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 _ToolButton(
                   imageAsset: 'assets/images/Skip_1.png',
                   color: GameColors.mint,
                   tooltip: l10n.skip,
-                  badge: '$skipsAvailable',
-                  onTap: skipsAvailable > 0 && widget.mode != GameMode.daily && !round.isFinished ? _skipRound : null,
+                  cost: EconomyConfig.skipCost,
+                  tokens: skipsAvailable,
+                  onTap: canSkip ? _skipRound : null,
                 ),
+                const SizedBox(width: 10),
+                Expanded(child: _buildSubmitButton(round, l10n)),
               ],
             ),
           ),
@@ -798,12 +807,12 @@ class _ToolButton extends StatelessWidget {
               ),
               if (cost != null)
                 Positioned(
-                  left: 0,
-                  right: 0,
+                  left: -6,
+                  right: -6,
                   bottom: 0,
                   child: Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                       decoration: BoxDecoration(
                         color: GameColors.night0,
                         borderRadius: BorderRadius.circular(12),
@@ -813,7 +822,7 @@ class _ToolButton extends StatelessWidget {
                           ? GameText('×$tokens', size: 12, color: GameColors.mint, shadow: null)
                           : Row(
                               mainAxisSize: MainAxisSize.min,
-                              children: [const CoinIcon(size: 13), const SizedBox(width: 3), GameText('$cost', size: 12, shadow: null)],
+                              children: [const CoinIcon(size: 13), const SizedBox(width: 2.5), GameText('$cost', size: 12, shadow: null)],
                             ),
                     ),
                   ),

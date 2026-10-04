@@ -11,6 +11,7 @@ enum CoinTransactionReason {
   spinPurchase,
   monthlyPrize,
   extraAttemptPurchase,
+  pastDailyPuzzleUnlock,
 }
 
 class CoinTransaction {

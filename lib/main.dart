@@ -8,6 +8,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'app.dart';
 import 'core/theme/game_style.dart';
 import 'data/repositories/profile_repository.dart';
+import 'data/repositories/round_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,7 @@ void main() async {
   await initializeDateFormatting();
   await Hive.initFlutter();
   await HiveProfileRepository.ensureOpen();
+  await HiveRoundRepository.ensureOpen();
   await MobileAds.instance.initialize();
   runApp(const ProviderScope(child: WortiplexApp()));
 }

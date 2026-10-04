@@ -27,6 +27,7 @@ class EconomyConfig {
   static const int dailyLoginMaxStreakDays = 7;
 
   static const int spinCost = 150;
+  static const int pastDailyPuzzleCost = 150;
 
   /// Price of one extra attempt after losing a round, and how many a single
   /// round may contain.

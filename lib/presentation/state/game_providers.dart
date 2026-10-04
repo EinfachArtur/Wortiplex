@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/config/economy_config.dart';
 import '../../core/config/video_presets.dart';
+import '../../data/repositories/round_repository.dart';
 import '../../data/repositories/word_repository.dart';
 import '../../domain/economy/booster_rules.dart';
 import '../../domain/economy/coin_transaction.dart';
@@ -20,6 +21,7 @@ import '../../services/daily_puzzle_service.dart';
 import 'profile_providers.dart';
 
 final wordRepositoryProvider = Provider<WordRepository>((ref) => AssetWordRepository());
+final roundRepositoryProvider = Provider<RoundRepository>((ref) => HiveRoundRepository());
 final dailyPuzzleServiceProvider = Provider((ref) => const DailyPuzzleService());
 final boosterRulesProvider = Provider((ref) => const BoosterRules());
 final dateGuessServiceProvider = Provider((ref) => DateGuessService());
@@ -39,6 +41,11 @@ const _alphabets = {
 };
 
 List<String> alphabetFor(Language language) => _alphabets[language]!.split('');
+
+String roundStorageKey(GameParams params) {
+  final datePart = params.date != null ? '_${params.date!.year}-${params.date!.month}-${params.date!.day}' : '';
+  return '${params.mode.name}_${params.language.code}$datePart';
+}
 
 class GameParams {
   final GameMode mode;
@@ -69,6 +76,19 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
   late GameSession _gameSession;
   late GuessValidator _validator;
 
+  bool get _shouldPersist => arg.videoPresetId == null && arg.mode != GameMode.wordFever;
+
+  Future<void> _persistRound(Round round) async {
+    if (!_shouldPersist) return;
+    final repo = ref.read(roundRepositoryProvider);
+    final key = roundStorageKey(arg);
+    if (round.isFinished) {
+      await repo.clearActiveRound(key);
+    } else {
+      await repo.saveActiveRound(key, round);
+    }
+  }
+
   @override
   Future<Round> build(GameParams params) async {
     if (params.mode == GameMode.dateGuess) {
@@ -83,7 +103,21 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
       );
     }
     _gameSession = GameSession(validator: _validator);
-    return _startNewRound(params);
+
+    if (_shouldPersist) {
+      final roundRepo = ref.read(roundRepositoryProvider);
+      final key = roundStorageKey(params);
+      final saved = await roundRepo.loadActiveRound(key);
+      if (saved != null && !saved.isFinished) {
+        return saved;
+      }
+    }
+
+    final fresh = _startNewRound(params);
+    if (_shouldPersist) {
+      await ref.read(roundRepositoryProvider).saveActiveRound(roundStorageKey(params), fresh);
+    }
+    return fresh;
   }
 
   Round _startNewRound(GameParams params) {
@@ -122,6 +156,7 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
     final outcome = _session().submitGuess(round, word);
     if (outcome is GuessAccepted) {
       state = AsyncData(outcome.round);
+      await _persistRound(outcome.round);
       if (outcome.round.result == RoundResult.won) await _recordResult(outcome.round);
     }
     return outcome;
@@ -162,7 +197,9 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
         .read(profileControllerProvider.notifier)
         .spendCoins(EconomyConfig.extraAttemptCost, CoinTransactionReason.extraAttemptPurchase);
     if (!paid) return false;
-    state = AsyncData(round.withExtraAttempt());
+    final updated = round.withExtraAttempt();
+    state = AsyncData(updated);
+    await _persistRound(updated);
     return true;
   }
 
@@ -182,6 +219,9 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
   Future<bool> newRound(GameParams params) async {
     final fresh = _startNewRound(params);
     state = AsyncData(fresh);
+    if (_shouldPersist) {
+      await ref.read(roundRepositoryProvider).saveActiveRound(roundStorageKey(params), fresh);
+    }
     return true;
   }
 
@@ -197,7 +237,9 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
     if (!affordable) return null;
 
     final result = rules.revealHint(round);
-    state = AsyncData(round.copyWith(revealedHints: {...round.revealedHints, result.position: result.letter}));
+    final updated = round.copyWith(revealedHints: {...round.revealedHints, result.position: result.letter});
+    state = AsyncData(updated);
+    await _persistRound(updated);
     return result;
   }
 
@@ -216,7 +258,9 @@ class RoundController extends FamilyAsyncNotifier<Round, GameParams> {
         await profile.spendCoins(EconomyConfig.letterStrikeoutCost, CoinTransactionReason.letterStrikeoutPurchase);
     if (!affordable) return null;
 
-    state = AsyncData(round.copyWith(disabledLetters: {...round.disabledLetters, letter}));
+    final updated = round.copyWith(disabledLetters: {...round.disabledLetters, letter});
+    state = AsyncData(updated);
+    await _persistRound(updated);
     return letter;
   }
 }
