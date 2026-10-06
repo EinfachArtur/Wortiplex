@@ -7,6 +7,11 @@ import '../../services/monetization/ads_service.dart';
 import '../../services/monetization/iap_service.dart';
 import '../../services/monetization/revenue_cat_service.dart';
 import '../../services/monetization/subscription_service.dart';
+import '../../services/tracking/tracking_service.dart';
+
+final trackingServiceProvider = Provider<TrackingService>((ref) {
+  return const TrackingService();
+});
 
 final adsServiceProvider = Provider<AdsService>((ref) {
   final service = AdMobAdsService(interstitialEveryNRounds: EconomyConfig.interstitialAdEveryNRounds);

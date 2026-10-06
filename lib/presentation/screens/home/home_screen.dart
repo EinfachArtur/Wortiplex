@@ -35,8 +35,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _maybeLoadBanner();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await ref.read(trackingServiceProvider).requestTrackingAuthorization();
+      if (mounted) {
+        _maybeLoadBanner();
+      }
     });
   }
 
